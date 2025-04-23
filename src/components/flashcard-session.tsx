@@ -11,10 +11,16 @@ import {
   CardHeader,
   CardTitle,
 } from "./ui/card";
-import { Brain, BarChart2 } from "lucide-react";
+import { Brain, BarChart2, RotateCw } from "lucide-react";
 
 export function FlashcardSession() {
-  const { flashcards, getNextCard } = useFlashcardStore();
+  const {
+    flashcards,
+    getNextCard,
+    resetSession,
+    sessionComplete,
+    skippedCards,
+  } = useFlashcardStore();
   const [currentCard, setCurrentCard] = useState(getNextCard());
   const [sessionStats, setSessionStats] = useState({
     cardsStudied: 0,
@@ -42,6 +48,11 @@ export function FlashcardSession() {
   }, [flashcards]);
 
   const handleNextCard = () => {
+    setCurrentCard(getNextCard());
+  };
+
+  const handleRestartSession = () => {
+    resetSession();
     setCurrentCard(getNextCard());
   };
 
@@ -83,6 +94,15 @@ export function FlashcardSession() {
         </Card>
       </div>
 
+      {skippedCards.length > 0 && (
+        <Card className="p-3">
+          <div className="text-center">
+            <h4 className="text-sm font-medium text-amber-600">Skipped</h4>
+            <p className="text-2xl font-bold">{skippedCards.length}</p>
+          </div>
+        </Card>
+      )}
+
       {currentCard ? (
         <Flashcard card={currentCard} onNext={handleNextCard} />
       ) : (
@@ -94,15 +114,14 @@ export function FlashcardSession() {
             <div className="space-y-2 text-center">
               <h3 className="font-semibold text-xl">All Caught Up!</h3>
               <p className="text-muted-foreground">
-                You've reviewed all your flashcards for now.
+                {sessionComplete && skippedCards.length > 0
+                  ? `You've reviewed all your flashcards, including ${skippedCards.length} skipped cards.`
+                  : "You've reviewed all your flashcards for now."}
               </p>
             </div>
-            <Button
-              onClick={() => setCurrentCard(getNextCard())}
-              className="mt-4"
-            >
-              <BarChart2 className="mr-2 h-4 w-4" />
-              Review Again
+            <Button onClick={handleRestartSession} className="mt-4">
+              <RotateCw className="mr-2 h-4 w-4" />
+              {sessionComplete ? "Restart Session" : "Review Again"}
             </Button>
           </CardContent>
         </Card>

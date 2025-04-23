@@ -39,7 +39,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [originalIndices, setOriginalIndices] = useState<number[]>([]);
-  const { markCorrect, markIncorrect } = useFlashcardStore();
+  const { markCorrect, markIncorrect, skipCard } = useFlashcardStore();
 
   // Shuffle options when card changes
   useEffect(() => {
@@ -77,6 +77,14 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
   };
 
   const handleNext = () => {
+    setIsFlipped(false);
+    setSelectedOptionIndex(null);
+    setIsAnswered(false);
+    onNext();
+  };
+
+  const handleSkip = () => {
+    skipCard(card.id);
     setIsFlipped(false);
     setSelectedOptionIndex(null);
     setIsAnswered(false);
@@ -201,6 +209,14 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
               Next Card
             </Button>
           )}
+
+          <Button
+            onClick={handleSkip}
+            variant="outline"
+            className="flex-1 border-gray-500"
+          >
+            Skip
+          </Button>
         </div>
       </CardFooter>
     </Card>
