@@ -8,6 +8,7 @@ import { FlashcardGenerator } from "@/components/flashcard-generator";
 import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
+import { AppSettings } from "@/components/app-settings";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -69,10 +70,7 @@ export function ProjectView() {
             )}
           </div>
         </div>
-        <Button variant="outline" size="sm">
-          <Settings className="mr-2 h-4 w-4" />
-          Project Settings
-        </Button>
+        <AppSettings />
       </div>
 
       <div className="mb-8 flex justify-center">
