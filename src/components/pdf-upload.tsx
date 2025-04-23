@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { extractTextFromPDF } from "@/lib/pdf-service";
+// import { extractTextFromPDF } from "@/lib/pdf-service";
 import { FileUp, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -63,6 +63,9 @@ export function PdfUpload() {
           return prev + 10;
         });
       }, 300);
+
+      // Client-side dynamic import (avoids SSR issues)
+      const { extractTextFromPDF } = await import("@/lib/pdf-service");
 
       // Extract text from PDF
       const content = await extractTextFromPDF(file);
