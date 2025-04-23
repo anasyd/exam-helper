@@ -13,6 +13,14 @@ export type Flashcard = {
   lastSeen: Date | null;
   timesCorrect: number;
   timesIncorrect: number;
+  sourceHash?: string; // Hash of the source PDF content
+};
+
+// Define the structure of the persisted state for internal use
+type StoreData = {
+  flashcards: Flashcard[];
+  geminiApiKey: string | null;
+  processedHashes: Set<string> | string[];
 };
 
 // Helper function to ensure lastSeen is a proper Date object
@@ -21,14 +29,26 @@ const ensureDate = (lastSeen: Date | string | null): Date | null => {
   return lastSeen instanceof Date ? lastSeen : new Date(lastSeen);
 };
 
+// Helper function to create a simple hash from PDF content
+const createContentHash = (content: string): string => {
+  let hash = 0;
+  for (let i = 0; i < content.length; i++) {
+    const char = content.charCodeAt(i);
+    hash = ((hash << 5) - hash) + char;
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return hash.toString(16);
+};
+
 interface FlashcardState {
   flashcards: Flashcard[];
   isProcessing: boolean;
   currentCardIndex: number | null;
   pdfContent: string | null;
+  processedHashes: Set<string>;
   geminiApiKey: string | null;
   addFlashcard: (flashcard: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>) => void;
-  addFlashcards: (flashcards: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>[]) => void;
+  addFlashcards: (flashcards: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>[], sourceContent?: string | null) => number;
   markCorrect: (id: string) => void;
   markIncorrect: (id: string) => void;
   setIsProcessing: (isProcessing: boolean) => void;
@@ -36,6 +56,8 @@ interface FlashcardState {
   setGeminiApiKey: (apiKey: string | null) => void;
   clearFlashcards: () => void;
   getNextCard: () => Flashcard | null;
+  hasProcessedContent: (content: string) => boolean;
+  getDuplicateQuestionCount: (questions: string[]) => number;
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -45,6 +67,7 @@ export const useFlashcardStore = create<FlashcardState>()(
       isProcessing: false,
       currentCardIndex: null,
       pdfContent: null,
+      processedHashes: new Set<string>(),
       geminiApiKey: null,
 
       addFlashcard: (flashcard) => {
@@ -66,11 +89,33 @@ export const useFlashcardStore = create<FlashcardState>()(
         }));
       },
 
-      addFlashcards: (flashcards) => {
+      addFlashcards: (flashcards, sourceContent = null) => {
+        let contentHash: string | undefined = undefined;
+        
+        // If source content is provided, create a hash for it
+        if (sourceContent) {
+          contentHash = createContentHash(sourceContent);
+          
+          // Add to processed hashes
+          set((state) => ({
+            processedHashes: new Set([...Array.from(state.processedHashes), contentHash as string])
+          }));
+        }
+
+        // Get existing questions to check for duplicates
+        const existingQuestions = new Set(get().flashcards.map(card => card.question));
+        
+        // Filter out duplicate flashcards
+        const uniqueFlashcards = flashcards.filter(card => !existingQuestions.has(card.question));
+        
+        if (uniqueFlashcards.length === 0) {
+          return 0;
+        }
+        
         set((state) => ({
           flashcards: [
             ...state.flashcards,
-            ...flashcards.map((flashcard) => ({
+            ...uniqueFlashcards.map((flashcard) => ({
               ...flashcard,
               id: crypto.randomUUID(),
               difficulty: 3, // Start at medium difficulty
@@ -80,9 +125,12 @@ export const useFlashcardStore = create<FlashcardState>()(
               // Ensure options and correctOptionIndex are set, default to empty array if not provided
               options: flashcard.options || [],
               correctOptionIndex: flashcard.correctOptionIndex ?? 0,
+              sourceHash: contentHash,
             })),
           ],
         }));
+
+        return uniqueFlashcards.length;
       },
 
       markCorrect: (id) => {
@@ -163,38 +211,68 @@ export const useFlashcardStore = create<FlashcardState>()(
         });
 
         return sortedCards[0] || null;
-      }
+      },
+
+      hasProcessedContent: (content) => {
+        const hash = createContentHash(content);
+        return get().processedHashes.has(hash);
+      },
+      
+      getDuplicateQuestionCount: (questions) => {
+        const existingQuestions = new Set(get().flashcards.map(card => card.question));
+        return questions.filter(q => existingQuestions.has(q)).length;
+      },
     }),
     {
       name: 'flashcards-storage',
       partialize: (state) => ({
         flashcards: state.flashcards,
         geminiApiKey: state.geminiApiKey,
+        processedHashes: Array.from(state.processedHashes),
       }),
       storage: createJSONStorage(() => ({
-        getItem: (name) => {
+        getItem: (name): string | null => {
           const str = localStorage.getItem(name);
-          if (!str) return null;
+          return str;
+        },
+        setItem: (name, value) => {
+          // Need to preprocess the value before stringifying
+          const valueObject = JSON.parse(value);
           
-          const parsed = JSON.parse(str);
-          
-          // Convert date strings back to Date objects
-          if (parsed.state && parsed.state.flashcards) {
-            parsed.state.flashcards = parsed.state.flashcards.map((card: any) => ({
+          // Handle flashcards dates
+          if (valueObject.state?.flashcards?.length > 0) {
+            valueObject.state.flashcards = valueObject.state.flashcards.map((card: any) => ({
               ...card,
-              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null
+              // No need to modify dates as they're already stringified in JSON
             }));
           }
           
-          return parsed;
-        },
-        setItem: (name, value) => {
-          localStorage.setItem(name, JSON.stringify(value));
+          // Handle processedHashes (already converted to array by partialize)
+          // No additional processing needed here
+          
+          // Store the processed value
+          localStorage.setItem(name, JSON.stringify(valueObject));
         },
         removeItem: (name) => {
           localStorage.removeItem(name);
         }
-      }))
+      })),
+      onRehydrateStorage: () => (state) => {
+        if (state) {
+          // Convert string arrays back to Sets
+          if (Array.isArray(state.processedHashes)) {
+            state.processedHashes = new Set(state.processedHashes);
+          }
+          
+          // Convert date strings back to Date objects
+          if (state.flashcards) {
+            state.flashcards = state.flashcards.map((card) => ({
+              ...card,
+              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null
+            }));
+          }
+        }
+      }
     }
   )
 );

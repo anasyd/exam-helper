@@ -126,22 +126,25 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
                       : "outline"
                   }
                   className={cn(
-                    "w-full justify-start text-left p-3 h-auto border-gray-500 rounded-md",
+                    "w-full justify-start text-left p-3 h-auto border-gray-500 rounded-md whitespace-normal",
+                    "flex items-start min-h-[3rem]",
                     selectedOptionIndex === null
                       ? ""
                       : index === shuffledCorrectIndex
-                      ? "border-green-500 bg-green-50"
+                      ? "border-green-500 bg-green-50  text-green-700"
                       : selectedOptionIndex === index
-                      ? "border-red-500 bg-red-50"
+                      ? "border-red-500 border bg-red-50 text-red-700"
                       : "opacity-70"
                   )}
                   onClick={() => handleOptionSelect(index)}
                   disabled={isAnswered}
                 >
-                  <span className="font-medium mr-2">
+                  <span className="font-medium mr-2 flex-shrink-0">
                     {String.fromCharCode(65 + index)}.
                   </span>
-                  <span>{option}</span>
+                  <span className="break-words overflow-wrap-anywhere">
+                    {option}
+                  </span>
                 </Button>
               ))}
             </div>
@@ -162,7 +165,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
                   Correct answer: {shuffledOptions[shuffledCorrectIndex]}
                 </p>
               </div>
-              <div className="prose">{card.answer}</div>
+              <div className="prose max-w-none break-words">{card.answer}</div>
             </div>
           </div>
         </div>

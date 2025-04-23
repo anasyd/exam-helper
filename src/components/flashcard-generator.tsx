@@ -5,7 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, BookOpen, ExternalLink, Save } from "lucide-react";
+import {
+  Loader2,
+  BookOpen,
+  ExternalLink,
+  Save,
+  AlertCircle,
+} from "lucide-react";
 import { useFlashcardStore } from "@/lib/store";
 import { createGeminiService } from "@/lib/ai-service";
 import { toast } from "sonner";
@@ -17,12 +23,15 @@ export function FlashcardGenerator() {
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [shouldRemember, setShouldRemember] = useState<boolean>(true);
+  const [forceRegenerate, setForceRegenerate] = useState<boolean>(false);
   const {
     pdfContent,
     addFlashcards,
     setIsProcessing,
     geminiApiKey,
     setGeminiApiKey,
+    hasProcessedContent,
+    getDuplicateQuestionCount,
   } = useFlashcardStore();
 
   // Load API key from store on component mount
@@ -44,6 +53,19 @@ export function FlashcardGenerator() {
 
     if (!pdfContent) {
       setError("No PDF content available. Please upload a PDF first.");
+      return;
+    }
+
+    // Check if this PDF has already been processed
+    if (!forceRegenerate && hasProcessedContent(pdfContent)) {
+      toast.error("This PDF has already been processed", {
+        description:
+          "Use the Force Regenerate option to generate new flashcards from this PDF.",
+        duration: 5000,
+      });
+      setError(
+        "This PDF has already been processed. Enable 'Force Regenerate' if you want to generate new flashcards."
+      );
       return;
     }
 
@@ -78,7 +100,7 @@ export function FlashcardGenerator() {
 
       // Create Gemini service and generate flashcards
       const geminiService = createGeminiService(apiKey);
-      const flashcards = await geminiService.generateFlashcards(
+      const generatedFlashcards = await geminiService.generateFlashcards(
         pdfContent,
         numberOfCards
       );
@@ -87,20 +109,41 @@ export function FlashcardGenerator() {
       clearInterval(progressInterval);
       setGenerationProgress(100);
 
-      // Add generated flashcards to store
-      addFlashcards(flashcards);
+      // Check for duplicates before adding
+      const duplicateCount = getDuplicateQuestionCount(
+        generatedFlashcards.map((card) => card.question)
+      );
+
+      // Add generated flashcards to store, passing source content for hashing
+      const addedCount = addFlashcards(generatedFlashcards, pdfContent);
 
       // Dismiss the loading toast and show success toast
       toast.dismiss(toastId);
-      toast.success(`Successfully generated ${flashcards.length} flashcards!`, {
-        description: "Switch to the Study tab to start learning.",
-      });
+
+      if (addedCount === 0) {
+        toast.error("No new flashcards generated", {
+          description:
+            "All generated questions are duplicates of existing flashcards.",
+        });
+        setError(
+          "No new flashcards were added. All generated questions are duplicates."
+        );
+      } else if (duplicateCount > 0) {
+        toast.success(`Generated ${addedCount} new flashcards!`, {
+          description: `${duplicateCount} duplicate questions were skipped. Switch to the Study tab to start learning.`,
+        });
+      } else {
+        toast.success(`Successfully generated ${addedCount} flashcards!`, {
+          description: "Switch to the Study tab to start learning.",
+        });
+      }
 
       // Reset state after a brief delay to show 100%
       setTimeout(() => {
         setIsGenerating(false);
         setGenerationProgress(0);
         setIsProcessing(false);
+        setForceRegenerate(false); // Reset force regenerate after successful generation
       }, 1000);
     } catch (error) {
       console.error("Error generating flashcards:", error);
@@ -147,22 +190,42 @@ export function FlashcardGenerator() {
           disabled={isGenerating}
         />
 
-        <div className="flex items-center mb-4">
-          <input
-            type="checkbox"
-            id="remember-api-key"
-            checked={shouldRemember}
-            onChange={(e) => setShouldRemember(e.target.checked)}
-            className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-            disabled={isGenerating}
-          />
-          <label
-            htmlFor="remember-api-key"
-            className="text-sm text-muted-foreground flex items-center"
-          >
-            <Save className="h-3 w-3 mr-1" />
-            Remember API key in this browser
-          </label>
+        <div className="flex flex-wrap items-center gap-3 mb-4">
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="remember-api-key"
+              checked={shouldRemember}
+              onChange={(e) => setShouldRemember(e.target.checked)}
+              className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              disabled={isGenerating}
+            />
+            <label
+              htmlFor="remember-api-key"
+              className="text-sm text-muted-foreground flex items-center"
+            >
+              <Save className="h-3 w-3 mr-1" />
+              Remember API key
+            </label>
+          </div>
+
+          <div className="flex items-center">
+            <input
+              type="checkbox"
+              id="force-regenerate"
+              checked={forceRegenerate}
+              onChange={(e) => setForceRegenerate(e.target.checked)}
+              className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+              disabled={isGenerating}
+            />
+            <label
+              htmlFor="force-regenerate"
+              className="text-sm text-muted-foreground flex items-center"
+            >
+              <AlertCircle className="h-3 w-3 mr-1" />
+              Force regenerate
+            </label>
+          </div>
         </div>
 
         <div className="text-xs text-muted-foreground space-y-2 mb-4 p-3 border rounded-md bg-muted/30">
