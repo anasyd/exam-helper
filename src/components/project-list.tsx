@@ -108,11 +108,24 @@ export function ProjectList() {
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-    }).format(date);
+    // Use a fixed format that will be consistent between server and client
+    const year = date.getFullYear();
+    const month = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ][date.getMonth()];
+    const day = date.getDate();
+    return `${month} ${day}, ${year}`;
   };
 
   return (

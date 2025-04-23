@@ -30,14 +30,25 @@ export function ProjectView() {
   const router = useRouter();
   const { getActiveProject, setActiveProject } = useFlashcardStore();
   const [activeTab, setActiveTab] = useState<string>("upload");
+  const [mounted, setMounted] = useState(false);
   const activeProject = getActiveProject();
+
+  // Handle client-side mounting to prevent hydration mismatch
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // If no active project is set, redirect to the projects list
   useEffect(() => {
-    if (!activeProject) {
+    if (mounted && !activeProject) {
       router.push("/");
     }
-  }, [activeProject, router]);
+  }, [activeProject, router, mounted]);
+
+  // Don't render anything until client-side hydration is complete
+  if (!mounted) {
+    return null;
+  }
 
   if (!activeProject) {
     return null; // Will redirect via the useEffect

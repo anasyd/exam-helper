@@ -41,11 +41,16 @@ export function FlashcardImportExport() {
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
 
-    // Set file name with date for better organization
-    const date = new Date().toISOString().split("T")[0];
+    // Format date in a way that's consistent between server and client
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, "0");
+    const day = String(today.getDate()).padStart(2, "0");
+    const dateString = `${year}-${month}-${day}`;
+
     const projectName =
       activeProject?.name.replace(/\s+/g, "_").toLowerCase() || "flashcards";
-    link.download = `${projectName}_${date}.json`;
+    link.download = `${projectName}_${dateString}.json`;
     link.href = url;
 
     // Trigger download

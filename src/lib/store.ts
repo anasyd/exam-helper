@@ -64,6 +64,7 @@ interface FlashcardState {
   // Flashcard management within active project
   addFlashcard: (flashcard: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>) => void;
   addFlashcards: (flashcards: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>[], sourceContent?: string | null) => number;
+  deleteFlashcard: (id: string) => boolean;
   markCorrect: (id: string) => void;
   markIncorrect: (id: string) => void;
   skipCard: (id: string) => void; 
@@ -79,6 +80,10 @@ interface FlashcardState {
   // Import/Export
   exportFlashcards: (projectId?: string) => string;
   importFlashcards: (jsonData: string, projectId?: string) => { success: boolean; count: number; error?: string };
+  exportProject: (projectId: string) => string | null; // Export a single project
+  importProject: (jsonData: string) => { success: boolean; newProjectId?: string; error?: string }; // Import a single project
+  exportAllProjects: () => string; // Export all projects
+  importProjects: (jsonData: string) => { success: boolean; count: number; error?: string }; // Import multiple projects
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -238,6 +243,25 @@ export const useFlashcardStore = create<FlashcardState>()(
         });
 
         return uniqueFlashcards.length;
+      },
+
+      deleteFlashcard: (id) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return false;
+
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  flashcards: project.flashcards.filter((card) => card.id !== id),
+                }
+              : project
+          ),
+        }));
+
+        return true;
       },
 
       markCorrect: (id) => {
@@ -506,6 +530,128 @@ export const useFlashcardStore = create<FlashcardState>()(
           return { success: true, count: uniqueFlashcards.length };
         } catch (error) {
           return { success: false, count: 0, error: error instanceof Error ? error.message : 'Unknown error' };
+        }
+      },
+
+      exportProject: (projectId) => {
+        const project = get().projects.find(p => p.id === projectId);
+        if (!project) return null;
+        // Serialize the project, converting dates to ISO strings
+        const projectToExport = {
+          ...project,
+          createdAt: project.createdAt.toISOString(),
+          updatedAt: project.updatedAt.toISOString(),
+          flashcards: project.flashcards.map(card => ({
+            ...card,
+            lastSeen: card.lastSeen ? card.lastSeen.toISOString() : null,
+          })),
+        };
+        return JSON.stringify(projectToExport);
+      },
+
+      importProject: (jsonData) => {
+        try {
+          const importedProjectData = JSON.parse(jsonData);
+          
+          // Basic validation (can be more thorough)
+          if (!importedProjectData || typeof importedProjectData !== 'object' || !importedProjectData.name || !Array.isArray(importedProjectData.flashcards)) {
+            throw new Error("Invalid project data format");
+          }
+
+          const newProjectId = crypto.randomUUID();
+          const now = new Date();
+
+          const newProject: Project = {
+            ...importedProjectData,
+            id: newProjectId, // Assign a new ID
+            createdAt: importedProjectData.createdAt ? new Date(importedProjectData.createdAt) : now, // Restore or set date
+            updatedAt: now, // Set updated time to now
+            // Ensure flashcards have new IDs and correct date formats
+            flashcards: importedProjectData.flashcards.map((card: any) => ({
+              ...card,
+              id: crypto.randomUUID(), // Assign new ID to each flashcard
+              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
+              // Reset stats or keep them? Let's reset for a fresh start
+              timesCorrect: card.timesCorrect || 0,
+              timesIncorrect: card.timesIncorrect || 0,
+              difficulty: card.difficulty || 3,
+            })),
+            // Reset session-specific data
+            skippedCards: [],
+            sessionComplete: false,
+          };
+
+          set((state) => ({
+            projects: [...state.projects, newProject],
+          }));
+
+          return { success: true, newProjectId: newProjectId };
+        } catch (error) {
+          return { success: false, error: error instanceof Error ? error.message : 'Failed to import project' };
+        }
+      },
+
+      exportAllProjects: () => {
+        const projectsToExport = get().projects.map(project => ({
+          ...project,
+          createdAt: project.createdAt.toISOString(),
+          updatedAt: project.updatedAt.toISOString(),
+          flashcards: project.flashcards.map(card => ({
+            ...card,
+            lastSeen: card.lastSeen ? card.lastSeen.toISOString() : null,
+          })),
+        }));
+        return JSON.stringify(projectsToExport);
+      },
+
+      importProjects: (jsonData) => {
+        try {
+          const importedProjectsData: any[] = JSON.parse(jsonData);
+          if (!Array.isArray(importedProjectsData)) {
+            throw new Error("Invalid data format: Expected an array of projects.");
+          }
+
+          const existingProjectIds = new Set(get().projects.map(p => p.id));
+          let importedCount = 0;
+          const projectsToAdd: Project[] = [];
+
+          for (const projectData of importedProjectsData) {
+            // Basic validation
+            if (!projectData || typeof projectData !== 'object' || !projectData.name || !Array.isArray(projectData.flashcards)) {
+              console.warn("Skipping invalid project data during import:", projectData);
+              continue; // Skip invalid entries
+            }
+
+            const newProjectId = existingProjectIds.has(projectData.id) ? crypto.randomUUID() : projectData.id || crypto.randomUUID();
+            const now = new Date();
+
+            const newProject: Project = {
+              ...projectData,
+              id: newProjectId,
+              createdAt: projectData.createdAt ? new Date(projectData.createdAt) : now,
+              updatedAt: projectData.updatedAt ? new Date(projectData.updatedAt) : now,
+              flashcards: projectData.flashcards.map((card: any) => ({
+                ...card,
+                id: card.id && !existingProjectIds.has(projectData.id) ? card.id : crypto.randomUUID(), // Keep card ID if project ID is new, else generate new
+                lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
+                timesCorrect: card.timesCorrect || 0,
+                timesIncorrect: card.timesIncorrect || 0,
+                difficulty: card.difficulty || 3,
+              })),
+              skippedCards: projectData.skippedCards || [],
+              sessionComplete: projectData.sessionComplete || false,
+            };
+            projectsToAdd.push(newProject);
+            importedCount++;
+          }
+
+          set((state) => ({
+            projects: [...state.projects, ...projectsToAdd],
+          }));
+
+          return { success: true, count: importedCount };
+        } catch (error) {
+          return { success: false, count: 0, error: error instanceof Error ? error.message : 'Failed to import projects' };
         }
       },
     }),
