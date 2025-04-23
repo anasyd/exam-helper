@@ -254,7 +254,7 @@ export function FlashcardGenerator() {
             <li>
               Visit{" "}
               <a
-                href="https://ai.google.dev/"
+                href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-primary underline underline-offset-2 inline-flex items-center"
