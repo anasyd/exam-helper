@@ -31,7 +31,7 @@ export class GeminiService {
       
       // Enhanced prompt that focuses on substantive content and avoids administrative details
       const prompt = `
-        Based on the following academic content, generate ${numberOfCards} substantive multiple-choice flashcards in JSON format.
+        Based on the following academic content, generate ${numberOfCards} substantive multiple-choice flashcards in valid JSON format.
 
         IMPORTANT GUIDELINES:
         1. Focus ONLY on the technical/academic content - concepts, theories, definitions, methods, etc.
@@ -39,6 +39,7 @@ export class GeminiService {
         3. Each question should test understanding of important concepts from the material
         4. Create challenging questions that test real understanding, not just memorization
         5. DO NOT duplicate or create similar questions to any of the existing questions provided below
+        6. CRITICAL: Your response MUST be a valid, parseable JSON array with no extra text before or after
 
         ${existingFlashcards.length > 0 ? existingFlashcardsText : ''}
 
@@ -51,7 +52,7 @@ export class GeminiService {
         Content to analyze:
         ${content.slice(0, 30000)} // Limit content length to avoid token limits
         
-        Response format (MUST follow exactly):
+        Response format (MUST follow exactly, with no additional text or markdown):
         [
           {
             "question": "Substantive question about a concept in the material",
@@ -66,30 +67,71 @@ export class GeminiService {
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
+
+      console.log("Raw AI response:", text.substring(0, 200) + "..."); // Log the beginning of the response for debugging
       
-      // Extract the JSON part from response
-      const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
-      if (!jsonMatch) {
-        throw new Error("Failed to parse AI response as JSON");
+      // Try several approaches to extract valid JSON
+      let parsedData: FlashcardData[] = [];
+      
+      try {
+        // First attempt: Direct parsing
+        parsedData = JSON.parse(text) as FlashcardData[];
+      } catch (parseError) {
+        // Second attempt: Extract JSON array pattern
+        const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+        if (jsonMatch) {
+          try {
+            parsedData = JSON.parse(jsonMatch[0]) as FlashcardData[];
+          } catch (matchError) {
+            // Third attempt: Find content between triple backticks if it looks like markdown code blocks
+            const codeBlockMatch = text.match(/```(?:json)?\s*(\[\s*\{[\s\S]*\}\s*\])\s*```/);
+            if (codeBlockMatch) {
+              try {
+                parsedData = JSON.parse(codeBlockMatch[1]) as FlashcardData[];
+              } catch (codeBlockError) {
+                throw new Error("Failed to parse AI response as JSON after multiple attempts");
+              }
+            } else {
+              throw new Error("Could not locate valid JSON in the AI response");
+            }
+          }
+        } else {
+          throw new Error("No JSON-like structure found in the AI response");
+        }
       }
       
-      const parsedData = JSON.parse(jsonMatch[0]) as FlashcardData[];
-      
+      if (!Array.isArray(parsedData) || parsedData.length === 0) {
+        throw new Error("Parsed data is not a valid array or is empty");
+      }
+
       // Validate the data structure
-      const validatedData = parsedData.filter(card => 
-        card.question && 
-        card.answer && 
-        Array.isArray(card.options) && 
-        card.options.length === 4 &&
-        typeof card.correctOptionIndex === 'number' &&
-        card.correctOptionIndex >= 0 && 
-        card.correctOptionIndex <= 3
-      );
+      const validatedData = parsedData.filter(card => {
+        try {
+          return (
+            card && 
+            typeof card === 'object' &&
+            typeof card.question === 'string' && 
+            typeof card.answer === 'string' && 
+            Array.isArray(card.options) && 
+            card.options.length >= 2 &&
+            typeof card.correctOptionIndex === 'number' &&
+            card.correctOptionIndex >= 0 && 
+            card.correctOptionIndex < card.options.length
+          );
+        } catch (validationError) {
+          return false;
+        }
+      });
+      
+      if (validatedData.length === 0) {
+        throw new Error("No valid flashcards could be extracted from the response");
+      }
       
       return validatedData;
     } catch (error) {
       console.error("Error generating flashcards:", error);
-      throw error;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      throw new Error(`Failed to generate flashcards: ${errorMessage}`);
     }
   }
 }

@@ -47,14 +47,18 @@ interface FlashcardState {
   pdfContent: string | null;
   processedHashes: Set<string>;
   geminiApiKey: string | null;
+  skippedCards: string[]; // Array of skipped card IDs
+  sessionComplete: boolean; // Flag to track if the current session is complete
   addFlashcard: (flashcard: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>) => void;
   addFlashcards: (flashcards: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>[], sourceContent?: string | null) => number;
   markCorrect: (id: string) => void;
   markIncorrect: (id: string) => void;
+  skipCard: (id: string) => void; // Add a card to the skipped cards array
   setIsProcessing: (isProcessing: boolean) => void;
   setPdfContent: (content: string | null) => void;
   setGeminiApiKey: (apiKey: string | null) => void;
   clearFlashcards: () => void;
+  resetSession: () => void; // Reset the current session (clear skipped cards and sessionComplete flag)
   getNextCard: () => Flashcard | null;
   hasProcessedContent: (content: string) => boolean;
   getDuplicateQuestionCount: (questions: string[]) => number;
@@ -69,6 +73,8 @@ export const useFlashcardStore = create<FlashcardState>()(
       pdfContent: null,
       processedHashes: new Set<string>(),
       geminiApiKey: null,
+      skippedCards: [],
+      sessionComplete: false,
 
       addFlashcard: (flashcard) => {
         set((state) => ({
@@ -163,6 +169,12 @@ export const useFlashcardStore = create<FlashcardState>()(
         }));
       },
 
+      skipCard: (id) => {
+        set((state) => ({
+          skippedCards: [...state.skippedCards, id],
+        }));
+      },
+
       setIsProcessing: (isProcessing) => {
         set({ isProcessing });
       },
@@ -179,16 +191,28 @@ export const useFlashcardStore = create<FlashcardState>()(
         set({ flashcards: [], pdfContent: null });
       },
 
+      resetSession: () => {
+        set({ skippedCards: [], sessionComplete: false });
+      },
+
       // Algorithm to get the next card based on difficulty and when last seen
       getNextCard: () => {
-        const { flashcards } = get();
+        const { flashcards, skippedCards } = get();
         if (flashcards.length === 0) return null;
+
+        // Filter out skipped cards
+        const availableCards = flashcards.filter(card => !skippedCards.includes(card.id));
+
+        if (availableCards.length === 0) {
+          set({ sessionComplete: true });
+          return null;
+        }
 
         // Sort cards by:
         // 1. Cards never seen before (lastSeen is null)
         // 2. Higher difficulty (more difficult cards)
         // 3. Cards not seen for longer
-        const sortedCards = [...flashcards].sort((a, b) => {
+        const sortedCards = [...availableCards].sort((a, b) => {
           // Ensure the lastSeen properties are proper Date objects
           const aLastSeen = ensureDate(a.lastSeen);
           const bLastSeen = ensureDate(b.lastSeen);
