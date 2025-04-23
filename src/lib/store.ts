@@ -16,12 +16,19 @@ export type Flashcard = {
   sourceHash?: string; // Hash of the source PDF content
 };
 
-// Define the structure of the persisted state for internal use
-type StoreData = {
+// Project type definition
+export type Project = {
+  id: string;
+  name: string;
+  description: string;
+  createdAt: Date;
+  updatedAt: Date;
   flashcards: Flashcard[];
-  geminiApiKey: string | null;
-  processedHashes: Set<string> | string[];
-};
+  pdfContent: string | null;
+  processedHashes: string[];
+  skippedCards: string[];
+  sessionComplete: boolean;
+}
 
 // Helper function to ensure lastSeen is a proper Date object
 const ensureDate = (lastSeen: Date | string | null): Date | null => {
@@ -41,77 +48,154 @@ const createContentHash = (content: string): string => {
 };
 
 interface FlashcardState {
-  flashcards: Flashcard[];
+  projects: Project[];
+  activeProjectId: string | null;
   isProcessing: boolean;
-  currentCardIndex: number | null;
-  pdfContent: string | null;
-  processedHashes: Set<string>;
+  currentCardIndex: number | null; 
   geminiApiKey: string | null;
-  skippedCards: string[]; // Array of skipped card IDs
-  sessionComplete: boolean; // Flag to track if the current session is complete
+
+  // Project management
+  createProject: (name: string, description: string) => string;
+  updateProject: (id: string, updates: Partial<Omit<Project, 'id' | 'flashcards' | 'processedHashes'>>) => void;
+  deleteProject: (id: string) => void;
+  setActiveProject: (id: string | null) => void;
+  getActiveProject: () => Project | null;
+
+  // Flashcard management within active project
   addFlashcard: (flashcard: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>) => void;
   addFlashcards: (flashcards: Omit<Flashcard, 'id' | 'difficulty' | 'lastSeen' | 'timesCorrect' | 'timesIncorrect'>[], sourceContent?: string | null) => number;
   markCorrect: (id: string) => void;
   markIncorrect: (id: string) => void;
-  skipCard: (id: string) => void; // Add a card to the skipped cards array
+  skipCard: (id: string) => void; 
   setIsProcessing: (isProcessing: boolean) => void;
   setPdfContent: (content: string | null) => void;
   setGeminiApiKey: (apiKey: string | null) => void;
   clearFlashcards: () => void;
-  resetSession: () => void; // Reset the current session (clear skipped cards and sessionComplete flag)
+  resetSession: () => void;
   getNextCard: () => Flashcard | null;
   hasProcessedContent: (content: string) => boolean;
   getDuplicateQuestionCount: (questions: string[]) => number;
-  exportFlashcards: () => string; // Export flashcards to JSON string
-  importFlashcards: (jsonData: string) => { success: boolean; count: number; error?: string }; // Import flashcards from JSON string
+  
+  // Import/Export
+  exportFlashcards: (projectId?: string) => string;
+  importFlashcards: (jsonData: string, projectId?: string) => { success: boolean; count: number; error?: string };
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
   persist(
     (set, get) => ({
-      flashcards: [],
+      projects: [],
+      activeProjectId: null,
       isProcessing: false,
       currentCardIndex: null,
-      pdfContent: null,
-      processedHashes: new Set<string>(),
       geminiApiKey: null,
-      skippedCards: [],
-      sessionComplete: false,
 
-      addFlashcard: (flashcard) => {
+      // Project management functions
+      createProject: (name, description) => {
+        const id = crypto.randomUUID();
+        const now = new Date();
+        
         set((state) => ({
-          flashcards: [
-            ...state.flashcards,
+          projects: [
+            ...state.projects,
             {
-              ...flashcard,
-              id: crypto.randomUUID(),
-              difficulty: 3, // Start at medium difficulty
-              lastSeen: null,
-              timesCorrect: 0,
-              timesIncorrect: 0,
-              // Ensure options and correctOptionIndex are set, default to empty array if not provided
-              options: flashcard.options || [],
-              correctOptionIndex: flashcard.correctOptionIndex ?? 0,
-            },
+              id,
+              name,
+              description,
+              createdAt: now,
+              updatedAt: now,
+              flashcards: [],
+              pdfContent: null,
+              processedHashes: [],
+              skippedCards: [],
+              sessionComplete: false,
+            }
           ],
+          activeProjectId: id, // Set newly created project as active
+        }));
+        
+        return id;
+      },
+
+      updateProject: (id, updates) => {
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === id
+              ? {
+                  ...project,
+                  ...updates,
+                  updatedAt: new Date(),
+                }
+              : project
+          ),
+        }));
+      },
+
+      deleteProject: (id) => {
+        set((state) => {
+          const newProjects = state.projects.filter((project) => project.id !== id);
+          return {
+            projects: newProjects,
+            // If the deleted project was active, clear active project
+            activeProjectId: state.activeProjectId === id ? (newProjects.length > 0 ? newProjects[0].id : null) : state.activeProjectId,
+          };
+        });
+      },
+
+      setActiveProject: (id) => {
+        set({ activeProjectId: id });
+      },
+
+      getActiveProject: () => {
+        const { projects, activeProjectId } = get();
+        if (!activeProjectId) return null;
+        
+        return projects.find((project) => project.id === activeProjectId) || null;
+      },
+
+      // Flashcard management functions
+      addFlashcard: (flashcard) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  flashcards: [
+                    ...project.flashcards,
+                    {
+                      ...flashcard,
+                      id: crypto.randomUUID(),
+                      difficulty: 3, // Start at medium difficulty
+                      lastSeen: null,
+                      timesCorrect: 0,
+                      timesIncorrect: 0,
+                      options: flashcard.options || [],
+                      correctOptionIndex: flashcard.correctOptionIndex ?? 0,
+                    },
+                  ],
+                }
+              : project
+          ),
         }));
       },
 
       addFlashcards: (flashcards, sourceContent = null) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return 0;
+
         let contentHash: string | undefined = undefined;
         
         // If source content is provided, create a hash for it
         if (sourceContent) {
           contentHash = createContentHash(sourceContent);
-          
-          // Add to processed hashes
-          set((state) => ({
-            processedHashes: new Set([...Array.from(state.processedHashes), contentHash as string])
-          }));
         }
 
         // Get existing questions to check for duplicates
-        const existingQuestions = new Set(get().flashcards.map(card => card.question));
+        const existingQuestions = new Set(activeProject.flashcards.map(card => card.question));
         
         // Filter out duplicate flashcards
         const uniqueFlashcards = flashcards.filter(card => !existingQuestions.has(card.question));
@@ -120,60 +204,108 @@ export const useFlashcardStore = create<FlashcardState>()(
           return 0;
         }
         
-        set((state) => ({
-          flashcards: [
-            ...state.flashcards,
-            ...uniqueFlashcards.map((flashcard) => ({
-              ...flashcard,
-              id: crypto.randomUUID(),
-              difficulty: 3, // Start at medium difficulty
-              lastSeen: null,
-              timesCorrect: 0,
-              timesIncorrect: 0,
-              // Ensure options and correctOptionIndex are set, default to empty array if not provided
-              options: flashcard.options || [],
-              correctOptionIndex: flashcard.correctOptionIndex ?? 0,
-              sourceHash: contentHash,
-            })),
-          ],
-        }));
+        set((state) => {
+          let updatedProcessedHashes = [...activeProject.processedHashes];
+          if (contentHash && !updatedProcessedHashes.includes(contentHash)) {
+            updatedProcessedHashes.push(contentHash);
+          }
+          
+          return {
+            projects: state.projects.map((project) =>
+              project.id === activeProject.id
+                ? {
+                    ...project,
+                    updatedAt: new Date(),
+                    processedHashes: updatedProcessedHashes,
+                    flashcards: [
+                      ...project.flashcards,
+                      ...uniqueFlashcards.map((flashcard) => ({
+                        ...flashcard,
+                        id: crypto.randomUUID(),
+                        difficulty: 3,
+                        lastSeen: null,
+                        timesCorrect: 0,
+                        timesIncorrect: 0,
+                        options: flashcard.options || [],
+                        correctOptionIndex: flashcard.correctOptionIndex ?? 0,
+                        sourceHash: contentHash,
+                      })),
+                    ],
+                  }
+                : project
+            ),
+          };
+        });
 
         return uniqueFlashcards.length;
       },
 
       markCorrect: (id) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
         set((state) => ({
-          flashcards: state.flashcards.map((card) =>
-            card.id === id
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
               ? {
-                  ...card,
-                  timesCorrect: card.timesCorrect + 1,
-                  difficulty: Math.max(1, card.difficulty - 1), // Decrease difficulty (make it show up less often)
-                  lastSeen: new Date(),
+                  ...project,
+                  updatedAt: new Date(),
+                  flashcards: project.flashcards.map((card) =>
+                    card.id === id
+                      ? {
+                          ...card,
+                          timesCorrect: card.timesCorrect + 1,
+                          difficulty: Math.max(1, card.difficulty - 1),
+                          lastSeen: new Date(),
+                        }
+                      : card
+                  ),
                 }
-              : card
+              : project
           ),
         }));
       },
 
       markIncorrect: (id) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
         set((state) => ({
-          flashcards: state.flashcards.map((card) =>
-            card.id === id
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
               ? {
-                  ...card,
-                  timesIncorrect: card.timesIncorrect + 1,
-                  difficulty: Math.min(5, card.difficulty + 1), // Increase difficulty (make it show up more often)
-                  lastSeen: new Date(),
+                  ...project,
+                  updatedAt: new Date(),
+                  flashcards: project.flashcards.map((card) =>
+                    card.id === id
+                      ? {
+                          ...card,
+                          timesIncorrect: card.timesIncorrect + 1,
+                          difficulty: Math.min(5, card.difficulty + 1),
+                          lastSeen: new Date(),
+                        }
+                      : card
+                  ),
                 }
-              : card
+              : project
           ),
         }));
       },
 
       skipCard: (id) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
         set((state) => ({
-          skippedCards: [...state.skippedCards, id],
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  skippedCards: [...project.skippedCards, id],
+                }
+              : project
+          ),
         }));
       },
 
@@ -182,7 +314,20 @@ export const useFlashcardStore = create<FlashcardState>()(
       },
 
       setPdfContent: (content) => {
-        set({ pdfContent: content });
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  pdfContent: content,
+                }
+              : project
+          ),
+        }));
       },
 
       setGeminiApiKey: (apiKey) => {
@@ -190,17 +335,46 @@ export const useFlashcardStore = create<FlashcardState>()(
       },
 
       clearFlashcards: () => {
-        set({ flashcards: [], pdfContent: null });
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  flashcards: [],
+                  pdfContent: null,
+                }
+              : project
+          ),
+        }));
       },
 
       resetSession: () => {
-        set({ skippedCards: [], sessionComplete: false });
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  skippedCards: [],
+                  sessionComplete: false,
+                }
+              : project
+          ),
+        }));
       },
 
-      // Algorithm to get the next card based on difficulty and when last seen
       getNextCard: () => {
-        const { flashcards, skippedCards } = get();
-        if (flashcards.length === 0) return null;
+        const activeProject = get().getActiveProject();
+        if (!activeProject || activeProject.flashcards.length === 0) return null;
+
+        const { flashcards, skippedCards } = activeProject;
 
         // First try to get cards that haven't been skipped
         const availableCards = flashcards.filter(card => !skippedCards.includes(card.id));
@@ -214,33 +388,46 @@ export const useFlashcardStore = create<FlashcardState>()(
             
             // Remove the card from skipped cards
             set((state) => ({
-              skippedCards: state.skippedCards.slice(1)
+              projects: state.projects.map((project) =>
+                project.id === activeProject.id
+                  ? {
+                      ...project,
+                      skippedCards: project.skippedCards.slice(1),
+                    }
+                  : project
+              ),
             }));
             
             return nextCard || null;
           }
           
           // If no regular cards and no skipped cards, session is complete
-          set({ sessionComplete: true });
+          set((state) => ({
+            projects: state.projects.map((project) =>
+              project.id === activeProject.id
+                ? {
+                    ...project,
+                    sessionComplete: true,
+                  }
+                : project
+            ),
+          }));
+          
           return null;
         }
 
-        // Sort regular cards by priority
+        // Sort cards by priority
         const sortedCards = [...availableCards].sort((a, b) => {
-          // Ensure the lastSeen properties are proper Date objects
           const aLastSeen = ensureDate(a.lastSeen);
           const bLastSeen = ensureDate(b.lastSeen);
           
-          // Priority for cards never seen before
           if (aLastSeen === null && bLastSeen !== null) return -1;
           if (aLastSeen !== null && bLastSeen === null) return 1;
           
-          // Then sort by difficulty (higher difficulty first)
           if (a.difficulty !== b.difficulty) {
             return b.difficulty - a.difficulty;
           }
           
-          // If both have been seen before, sort by time (older first)
           if (aLastSeen && bLastSeen) {
             return aLastSeen.getTime() - bLastSeen.getTime();
           }
@@ -252,39 +439,68 @@ export const useFlashcardStore = create<FlashcardState>()(
       },
 
       hasProcessedContent: (content) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return false;
+
         const hash = createContentHash(content);
-        return get().processedHashes.has(hash);
+        return activeProject.processedHashes.includes(hash);
       },
       
       getDuplicateQuestionCount: (questions) => {
-        const existingQuestions = new Set(get().flashcards.map(card => card.question));
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return 0;
+
+        const existingQuestions = new Set(activeProject.flashcards.map(card => card.question));
         return questions.filter(q => existingQuestions.has(q)).length;
       },
 
-      exportFlashcards: () => {
-        const { flashcards } = get();
-        return JSON.stringify(flashcards);
+      exportFlashcards: (projectId) => {
+        const id = projectId || get().activeProjectId;
+        if (!id) return '[]';
+        
+        const project = get().projects.find(p => p.id === id);
+        if (!project) return '[]';
+        
+        return JSON.stringify(project.flashcards);
       },
 
-      importFlashcards: (jsonData) => {
+      importFlashcards: (jsonData, projectId) => {
         try {
+          const id = projectId || get().activeProjectId;
+          if (!id) {
+            return { success: false, count: 0, error: 'No active project selected' };
+          }
+          
+          const project = get().projects.find(p => p.id === id);
+          if (!project) {
+            return { success: false, count: 0, error: 'Project not found' };
+          }
+
           const importedFlashcards: Flashcard[] = JSON.parse(jsonData);
           if (!Array.isArray(importedFlashcards)) {
             throw new Error("Invalid data format");
           }
 
-          const existingQuestions = new Set(get().flashcards.map(card => card.question));
+          const existingQuestions = new Set(project.flashcards.map(card => card.question));
           const uniqueFlashcards = importedFlashcards.filter(card => !existingQuestions.has(card.question));
 
           set((state) => ({
-            flashcards: [
-              ...state.flashcards,
-              ...uniqueFlashcards.map((flashcard) => ({
-                ...flashcard,
-                id: crypto.randomUUID(),
-                lastSeen: flashcard.lastSeen ? new Date(flashcard.lastSeen) : null,
-              })),
-            ],
+            projects: state.projects.map((p) =>
+              p.id === id
+                ? {
+                    ...p,
+                    updatedAt: new Date(),
+                    flashcards: [
+                      ...p.flashcards,
+                      ...uniqueFlashcards.map((flashcard) => ({
+                        ...flashcard,
+                        id: crypto.randomUUID(),
+                        lastSeen: flashcard.lastSeen ? new Date(flashcard.lastSeen) : null,
+                      })),
+                    ],
+                  }
+                : p
+            ),
           }));
 
           return { success: true, count: uniqueFlashcards.length };
@@ -294,55 +510,43 @@ export const useFlashcardStore = create<FlashcardState>()(
       },
     }),
     {
-      name: 'flashcards-storage',
+      name: 'flashcards-storage-v2',
       partialize: (state) => ({
-        flashcards: state.flashcards,
+        projects: state.projects.map(project => ({
+          ...project,
+          createdAt: project.createdAt.toISOString(),
+          updatedAt: project.updatedAt.toISOString(),
+          flashcards: project.flashcards.map(card => ({
+            ...card,
+            lastSeen: card.lastSeen ? card.lastSeen.toISOString() : null,
+          })),
+        })),
+        activeProjectId: state.activeProjectId,
         geminiApiKey: state.geminiApiKey,
-        processedHashes: Array.from(state.processedHashes),
-        sessionComplete: state.sessionComplete, // Persist session completion status
-        skippedCards: state.skippedCards, // Persist skipped cards
       }),
       storage: createJSONStorage(() => ({
         getItem: (name): string | null => {
-          const str = localStorage.getItem(name);
-          return str;
+          return localStorage.getItem(name);
         },
         setItem: (name, value) => {
-          // Need to preprocess the value before stringifying
-          const valueObject = JSON.parse(value);
-          
-          // Handle flashcards dates
-          if (valueObject.state?.flashcards?.length > 0) {
-            valueObject.state.flashcards = valueObject.state.flashcards.map((card: any) => ({
-              ...card,
-              // No need to modify dates as they're already stringified in JSON
-            }));
-          }
-          
-          // Handle processedHashes (already converted to array by partialize)
-          // No additional processing needed here
-          
-          // Store the processed value
-          localStorage.setItem(name, JSON.stringify(valueObject));
+          localStorage.setItem(name, value);
         },
         removeItem: (name) => {
           localStorage.removeItem(name);
         }
       })),
       onRehydrateStorage: () => (state) => {
-        if (state) {
-          // Convert string arrays back to Sets
-          if (Array.isArray(state.processedHashes)) {
-            state.processedHashes = new Set(state.processedHashes);
-          }
-          
+        if (state && state.projects) {
           // Convert date strings back to Date objects
-          if (state.flashcards) {
-            state.flashcards = state.flashcards.map((card) => ({
+          state.projects = state.projects.map(project => ({
+            ...project,
+            createdAt: new Date(project.createdAt),
+            updatedAt: new Date(project.updatedAt),
+            flashcards: project.flashcards.map(card => ({
               ...card,
-              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null
-            }));
-          }
+              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
+            })),
+          }));
         }
       }
     }

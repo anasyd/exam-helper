@@ -22,8 +22,10 @@ import { Download, Upload, AlertCircle } from "lucide-react";
 import { Alert } from "./ui/alert";
 
 export function FlashcardImportExport() {
-  const { flashcards, exportFlashcards, importFlashcards } =
+  const { getActiveProject, exportFlashcards, importFlashcards } =
     useFlashcardStore();
+
+  const activeProject = getActiveProject();
   const [importDialogOpen, setImportDialogOpen] = useState(false);
   const [importResult, setImportResult] = useState<{
     success: boolean;
@@ -41,7 +43,9 @@ export function FlashcardImportExport() {
 
     // Set file name with date for better organization
     const date = new Date().toISOString().split("T")[0];
-    link.download = `flashcards_${date}.json`;
+    const projectName =
+      activeProject?.name.replace(/\s+/g, "_").toLowerCase() || "flashcards";
+    link.download = `${projectName}_${date}.json`;
     link.href = url;
 
     // Trigger download
@@ -75,6 +79,17 @@ export function FlashcardImportExport() {
             message: `Successfully imported ${result.count} flashcards.`,
             count: result.count,
           });
+
+          // Automatically close dialog after successful import with a short delay
+          // so that the user can briefly see the success message
+          setTimeout(() => {
+            setImportDialogOpen(false);
+
+            // Clear the import result after dialog closes
+            setTimeout(() => {
+              setImportResult(null);
+            }, 300);
+          }, 1500);
         } else {
           setImportResult({
             success: false,
@@ -112,10 +127,10 @@ export function FlashcardImportExport() {
           onClick={handleExport}
           variant="outline"
           className="flex-1"
-          disabled={flashcards.length === 0}
+          disabled={activeProject?.flashcards.length === 0}
         >
           <Download className="mr-2 h-4 w-4" />
-          Export ({flashcards.length}) Flashcards
+          Export ({activeProject?.flashcards.length || 0}) Flashcards
         </Button>
 
         <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
