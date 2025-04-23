@@ -200,18 +200,30 @@ export const useFlashcardStore = create<FlashcardState>()(
         const { flashcards, skippedCards } = get();
         if (flashcards.length === 0) return null;
 
-        // Filter out skipped cards
+        // First try to get cards that haven't been skipped
         const availableCards = flashcards.filter(card => !skippedCards.includes(card.id));
 
+        // If no regular cards are available but we have skipped cards, use them
         if (availableCards.length === 0) {
+          // If there are skipped cards, use the first one
+          if (skippedCards.length > 0) {
+            const nextSkippedCardId = skippedCards[0];
+            const nextCard = flashcards.find(card => card.id === nextSkippedCardId);
+            
+            // Remove the card from skipped cards
+            set((state) => ({
+              skippedCards: state.skippedCards.slice(1)
+            }));
+            
+            return nextCard || null;
+          }
+          
+          // If no regular cards and no skipped cards, session is complete
           set({ sessionComplete: true });
           return null;
         }
 
-        // Sort cards by:
-        // 1. Cards never seen before (lastSeen is null)
-        // 2. Higher difficulty (more difficult cards)
-        // 3. Cards not seen for longer
+        // Sort regular cards by priority
         const sortedCards = [...availableCards].sort((a, b) => {
           // Ensure the lastSeen properties are proper Date objects
           const aLastSeen = ensureDate(a.lastSeen);
@@ -253,6 +265,8 @@ export const useFlashcardStore = create<FlashcardState>()(
         flashcards: state.flashcards,
         geminiApiKey: state.geminiApiKey,
         processedHashes: Array.from(state.processedHashes),
+        sessionComplete: state.sessionComplete, // Persist session completion status
+        skippedCards: state.skippedCards, // Persist skipped cards
       }),
       storage: createJSONStorage(() => ({
         getItem: (name): string | null => {
