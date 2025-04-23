@@ -15,9 +15,19 @@ export class GeminiService {
     this.client = new GoogleGenerativeAI(apiKey);
   }
 
-  async generateFlashcards(content: string, numberOfCards: number = 15): Promise<FlashcardData[]> {
+  async generateFlashcards(
+    content: string, 
+    numberOfCards: number = 15, 
+    existingFlashcards: { question: string; answer: string }[] = []
+  ): Promise<FlashcardData[]> {
     try {
       const model = this.client.getGenerativeModel({ model: this.modelName });
+      
+      // Format existing flashcards for the prompt - only sending questions to avoid duplicates
+      const existingFlashcardsText = existingFlashcards.length > 0 
+        ? `EXISTING FLASHCARD QUESTIONS TO AVOID DUPLICATING:
+          ${existingFlashcards.map((card, i) => `${i + 1}. ${card.question}`).join('\n')}`
+        : '';
       
       // Enhanced prompt that focuses on substantive content and avoids administrative details
       const prompt = `
@@ -28,6 +38,9 @@ export class GeminiService {
         2. DO NOT create questions about administrative details like study hours, course codes, due dates, etc.
         3. Each question should test understanding of important concepts from the material
         4. Create challenging questions that test real understanding, not just memorization
+        5. DO NOT duplicate or create similar questions to any of the existing questions provided below
+
+        ${existingFlashcards.length > 0 ? existingFlashcardsText : ''}
 
         Each flashcard should include:
         1. A clear, substantive question about the academic content
