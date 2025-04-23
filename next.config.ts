@@ -1,7 +1,24 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  webpack: (config, { isServer }) => {
+    // Client-side only
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        http: false, 
+        https: false,
+        url: false,
+        stream: false,
+        crypto: false,
+        zlib: false,
+        path: false,
+      };
+    }
+    
+    return config;
+  },
 };
 
 export default nextConfig;
