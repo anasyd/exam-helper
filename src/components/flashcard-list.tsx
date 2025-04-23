@@ -4,21 +4,50 @@ import { useState } from "react";
 import { useFlashcardStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronUp, Search } from "lucide-react";
+import { ChevronDown, ChevronUp, Search, Trash2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function FlashcardList() {
-  const { getActiveProject } = useFlashcardStore();
+  const { getActiveProject, deleteFlashcard } = useFlashcardStore();
   const activeProject = getActiveProject();
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "easy" | "medium" | "hard">(
     "all"
   );
+  const [cardToDelete, setCardToDelete] = useState<{
+    id: string;
+    question: string;
+  } | null>(null);
 
   // Toggle a card's expanded state
   const toggleCard = (id: string) => {
     setExpandedCardId(expandedCardId === id ? null : id);
+  };
+
+  // Handle delete flashcard
+  const handleDeleteCard = () => {
+    if (cardToDelete) {
+      deleteFlashcard(cardToDelete.id);
+      setCardToDelete(null);
+    }
+  };
+
+  // Stop event propagation when clicking on delete button to prevent toggling the card
+  const handleDeleteClick = (
+    e: React.MouseEvent,
+    card: { id: string; question: string }
+  ) => {
+    e.stopPropagation();
+    setCardToDelete(card);
   };
 
   // Early return if no active project
@@ -143,13 +172,27 @@ export function FlashcardList() {
                         )}
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      {expandedCardId === card.id ? (
-                        <ChevronUp className="h-4 w-4" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4" />
-                      )}
-                    </Button>
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) =>
+                          handleDeleteClick(e, {
+                            id: card.id,
+                            question: card.question,
+                          })
+                        }
+                      >
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
+                      <Button variant="ghost" size="sm">
+                        {expandedCardId === card.id ? (
+                          <ChevronUp className="h-4 w-4" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
 
@@ -189,6 +232,29 @@ export function FlashcardList() {
           </>
         )}
       </div>
+
+      <Dialog
+        open={!!cardToDelete}
+        onOpenChange={(open) => !open && setCardToDelete(null)}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Flashcard</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete the flashcard: "
+              {cardToDelete?.question}"? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCardToDelete(null)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCard}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
