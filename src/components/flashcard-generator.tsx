@@ -25,15 +25,16 @@ export function FlashcardGenerator() {
   const [shouldRemember, setShouldRemember] = useState<boolean>(true);
   const [forceRegenerate, setForceRegenerate] = useState<boolean>(false);
   const {
-    pdfContent,
+    getActiveProject,
     addFlashcards,
     setIsProcessing,
     geminiApiKey,
     setGeminiApiKey,
     hasProcessedContent,
     getDuplicateQuestionCount,
-    flashcards, // Get existing flashcards
   } = useFlashcardStore();
+
+  const activeProject = getActiveProject();
 
   // Load API key from store on component mount
   useEffect(() => {
@@ -52,13 +53,13 @@ export function FlashcardGenerator() {
       return;
     }
 
-    if (!pdfContent) {
+    if (!activeProject?.pdfContent) {
       setError("No PDF content available. Please upload a PDF first.");
       return;
     }
 
     // Check if this PDF has already been processed
-    if (!forceRegenerate && hasProcessedContent(pdfContent)) {
+    if (!forceRegenerate && hasProcessedContent(activeProject.pdfContent)) {
       toast.error("This PDF has already been processed", {
         description:
           "Use the Force Regenerate option to generate new flashcards from this PDF.",
@@ -100,7 +101,7 @@ export function FlashcardGenerator() {
       }, 1000);
 
       // Get existing flashcards to avoid duplicates
-      const existingFlashcards = flashcards.map((card) => ({
+      const existingFlashcards = activeProject.flashcards.map((card) => ({
         question: card.question,
         answer: card.answer,
       }));
@@ -108,7 +109,7 @@ export function FlashcardGenerator() {
       // Create Gemini service and generate flashcards with existing ones
       const geminiService = createGeminiService(apiKey);
       const generatedFlashcards = await geminiService.generateFlashcards(
-        pdfContent,
+        activeProject.pdfContent,
         numberOfCards,
         existingFlashcards // Pass existing flashcards to avoid duplicates
       );
@@ -123,7 +124,10 @@ export function FlashcardGenerator() {
       );
 
       // Add generated flashcards to store, passing source content for hashing
-      const addedCount = addFlashcards(generatedFlashcards, pdfContent);
+      const addedCount = addFlashcards(
+        generatedFlashcards,
+        activeProject.pdfContent
+      );
 
       // Dismiss the loading toast and show success toast
       toast.dismiss(toastId);
@@ -179,9 +183,9 @@ export function FlashcardGenerator() {
   };
 
   // Show a message about existing flashcards if we have some
-  const existingCardCount = flashcards.length;
+  const existingCardCount = activeProject?.flashcards.length || 0;
 
-  if (!pdfContent) {
+  if (!activeProject?.pdfContent) {
     return null;
   }
 

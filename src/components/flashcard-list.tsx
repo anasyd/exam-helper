@@ -8,7 +8,8 @@ import { ChevronDown, ChevronUp, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 export function FlashcardList() {
-  const { flashcards } = useFlashcardStore();
+  const { getActiveProject } = useFlashcardStore();
+  const activeProject = getActiveProject();
   const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filter, setFilter] = useState<"all" | "easy" | "medium" | "hard">(
@@ -20,8 +21,24 @@ export function FlashcardList() {
     setExpandedCardId(expandedCardId === id ? null : id);
   };
 
+  // Early return if no active project
+  if (!activeProject) {
+    return (
+      <Card className="w-full mb-6">
+        <CardHeader>
+          <CardTitle className="text-center">No Project Selected</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-muted-foreground">
+            Please select or create a project to view flashcards.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   // Filter flashcards based on search term and difficulty filter
-  const filteredFlashcards = flashcards.filter((card) => {
+  const filteredFlashcards = activeProject.flashcards.filter((card) => {
     // Text search
     const matchesSearch =
       searchTerm === "" ||
@@ -37,7 +54,7 @@ export function FlashcardList() {
     return matchesSearch && matchesDifficulty;
   });
 
-  if (flashcards.length === 0) {
+  if (activeProject.flashcards.length === 0) {
     return (
       <Card className="w-full mb-6">
         <CardHeader>
@@ -86,8 +103,8 @@ export function FlashcardList() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Showing {filteredFlashcards.length} of {flashcards.length}{" "}
-              flashcards
+              Showing {filteredFlashcards.length} of{" "}
+              {activeProject.flashcards.length} flashcards
             </p>
 
             {filteredFlashcards.map((card) => (
