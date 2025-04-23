@@ -1,8 +1,13 @@
 // next.config.ts
 import type { NextConfig } from 'next';
 
+const repoName = '/exam-helper'; // <- Replace this with your repo name
+
 const nextConfig: NextConfig = {
-  output: "export", // <-- THIS LINE ENABLES STATIC EXPORTS
+  output: "export",
+  basePath: repoName, // <- THIS FIXES THE PATHS
+  assetPrefix: repoName, // <- Ensures assets load correctly
+
   eslint: {
     ignoreDuringBuilds: true,
   },
