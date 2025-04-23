@@ -1,19 +1,15 @@
 name: Deploy Next.js site to Pages
 
 on:
-  # Trigger on pushes to the default branch…
   push:
     branches: ["main"]
-  # …and allow manual runs
   workflow_dispatch:
 
-# Grant the minimal permissions required
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Only one deployment can run at once; don’t cancel the one in progress
 concurrency:
   group: "pages"
   cancel-in-progress: false
@@ -21,7 +17,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -32,19 +27,36 @@ jobs:
           node-version: "20"
           cache: pnpm
 
-      - name: Install pnpm
+      - name: Install pnpm (so the CLI exists)
         uses: pnpm/action-setup@v2
         with:
           version: latest
 
-      - name: Install dependencies
-        run: pnpm install
+      - name: Install dependencies (never require a lockfile)
+        run: |
+          if [ -f pnpm-lock.yaml ]; then
+            pnpm install
+          elif [ -f yarn.lock ]; then
+            yarn install
+          elif [ -f package-lock.json ]; then
+            npm ci
+          else
+            # No lockfile? fallback to a plain install:
+            npm install --no-package-lock
+          fi
 
-      - name: Build with Next.js
-        run: pnpm exec next build
-
-      - name: Export static site
-        run: pnpm exec next export
+      - name: Build & export static pages
+        run: |
+          if command -v pnpm >/dev/null; then
+            pnpm exec next build
+            pnpm exec next export
+          elif command -v yarn >/dev/null; then
+            yarn next build
+            yarn next export
+          else
+            npm run build
+            npm run export
+          fi
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
@@ -57,7 +69,6 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-
     steps:
       - name: Deploy to GitHub Pages
         id: deployment
