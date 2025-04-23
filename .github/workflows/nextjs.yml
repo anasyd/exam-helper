@@ -18,45 +18,26 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: "9"
+
+      - uses: actions/setup-node@v4
         with:
           node-version: "20"
+          registry-url: https://registry.npmjs.org
           cache: pnpm
 
-      - name: Install pnpm (so the CLI exists)
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
+      - name: Install Dependencies
+        run: pnpm i --frozen-lockfile
 
-      - name: Install dependencies (never require a lockfile)
-        run: |
-          if [ -f pnpm-lock.yaml ]; then
-            pnpm install
-          elif [ -f yarn.lock ]; then
-            yarn install
-          elif [ -f package-lock.json ]; then
-            npm ci
-          else
-            # No lockfile? fallback to a plain install:
-            npm install --no-package-lock
-          fi
+      - name: Build with Next.js
+        run: pnpm exec next build
 
-      - name: Build & export static pages
-        run: |
-          if command -v pnpm >/dev/null; then
-            pnpm exec next build
-            pnpm exec next export
-          elif command -v yarn >/dev/null; then
-            yarn next build
-            yarn next export
-          else
-            npm run build
-            npm run export
-          fi
+      - name: Export static site
+        run: pnpm exec next export
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
