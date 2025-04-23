@@ -27,3 +27,37 @@ export async function extractTextFromPDF(file: File): Promise<string> {
     throw error;
   }
 }
+
+// New function to extract text from multiple PDF files
+export async function extractTextFromMultiplePDFs(
+  files: File[], 
+  progressCallback?: (progress: number) => void
+): Promise<{ combinedText: string; individualTexts: { name: string, text: string }[] }> {
+  try {
+    const totalFiles = files.length;
+    const individualTexts: { name: string, text: string }[] = [];
+    let combinedText = '';
+    
+    for (let fileIndex = 0; fileIndex < files.length; fileIndex++) {
+      const file = files[fileIndex];
+      const fileText = await extractTextFromPDF(file);
+      
+      // Add file header to distinguish content from different files
+      const fileHeader = `\n--- FILE: ${file.name} ---\n`;
+      
+      combinedText += fileHeader + fileText;
+      individualTexts.push({ name: file.name, text: fileText });
+      
+      // Update progress
+      if (progressCallback) {
+        const progress = Math.round(((fileIndex + 1) / totalFiles) * 100);
+        progressCallback(progress);
+      }
+    }
+    
+    return { combinedText, individualTexts };
+  } catch (error) {
+    console.error('Error extracting text from multiple PDFs:', error);
+    throw error;
+  }
+}
