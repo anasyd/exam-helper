@@ -14,13 +14,9 @@ import {
 import { Brain, BarChart2, RotateCw } from "lucide-react";
 
 export function FlashcardSession() {
-  const {
-    flashcards,
-    getNextCard,
-    resetSession,
-    sessionComplete,
-    skippedCards,
-  } = useFlashcardStore();
+  const { getActiveProject, getNextCard, resetSession } = useFlashcardStore();
+
+  const activeProject = getActiveProject();
   const [currentCard, setCurrentCard] = useState(getNextCard());
   const [sessionStats, setSessionStats] = useState({
     cardsStudied: 0,
@@ -28,14 +24,14 @@ export function FlashcardSession() {
     incorrectAnswers: 0,
   });
 
-  // Update stats when flashcards change
+  // Update stats when project's flashcards change
   useEffect(() => {
-    if (flashcards.length > 0) {
-      const correct = flashcards.reduce(
+    if (activeProject && activeProject.flashcards.length > 0) {
+      const correct = activeProject.flashcards.reduce(
         (sum, card) => sum + card.timesCorrect,
         0
       );
-      const incorrect = flashcards.reduce(
+      const incorrect = activeProject.flashcards.reduce(
         (sum, card) => sum + card.timesIncorrect,
         0
       );
@@ -45,7 +41,7 @@ export function FlashcardSession() {
         incorrectAnswers: incorrect,
       });
     }
-  }, [flashcards]);
+  }, [activeProject]);
 
   const handleNextCard = () => {
     setCurrentCard(getNextCard());
@@ -56,7 +52,7 @@ export function FlashcardSession() {
     setCurrentCard(getNextCard());
   };
 
-  if (flashcards.length === 0) {
+  if (!activeProject || activeProject.flashcards.length === 0) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
@@ -75,7 +71,9 @@ export function FlashcardSession() {
         <Card className="p-3">
           <div className="text-center">
             <h4 className="text-sm font-medium text-muted-foreground">Cards</h4>
-            <p className="text-2xl font-bold">{flashcards.length}</p>
+            <p className="text-2xl font-bold">
+              {activeProject.flashcards.length}
+            </p>
           </div>
         </Card>
         <Card className="p-3">
@@ -94,11 +92,13 @@ export function FlashcardSession() {
         </Card>
       </div>
 
-      {skippedCards.length > 0 && (
+      {activeProject.skippedCards.length > 0 && (
         <Card className="p-3">
           <div className="text-center">
             <h4 className="text-sm font-medium text-amber-600">Skipped</h4>
-            <p className="text-2xl font-bold">{skippedCards.length}</p>
+            <p className="text-2xl font-bold">
+              {activeProject.skippedCards.length}
+            </p>
           </div>
         </Card>
       )}
@@ -114,14 +114,17 @@ export function FlashcardSession() {
             <div className="space-y-2 text-center">
               <h3 className="font-semibold text-xl">All Caught Up!</h3>
               <p className="text-muted-foreground">
-                {sessionComplete && skippedCards.length > 0
-                  ? `You've reviewed all your flashcards, including ${skippedCards.length} skipped cards.`
+                {activeProject.sessionComplete &&
+                activeProject.skippedCards.length > 0
+                  ? `You've reviewed all your flashcards, including ${activeProject.skippedCards.length} skipped cards.`
                   : "You've reviewed all your flashcards for now."}
               </p>
             </div>
             <Button onClick={handleRestartSession} className="mt-4">
               <RotateCw className="mr-2 h-4 w-4" />
-              {sessionComplete ? "Restart Session" : "Review Again"}
+              {activeProject.sessionComplete
+                ? "Restart Session"
+                : "Review Again"}
             </Button>
           </CardContent>
         </Card>
