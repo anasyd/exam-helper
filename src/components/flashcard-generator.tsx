@@ -32,6 +32,7 @@ export function FlashcardGenerator() {
     setGeminiApiKey,
     hasProcessedContent,
     getDuplicateQuestionCount,
+    flashcards, // Get existing flashcards
   } = useFlashcardStore();
 
   // Load API key from store on component mount
@@ -98,11 +99,18 @@ export function FlashcardGenerator() {
         });
       }, 1000);
 
-      // Create Gemini service and generate flashcards
+      // Get existing flashcards to avoid duplicates
+      const existingFlashcards = flashcards.map((card) => ({
+        question: card.question,
+        answer: card.answer,
+      }));
+
+      // Create Gemini service and generate flashcards with existing ones
       const geminiService = createGeminiService(apiKey);
       const generatedFlashcards = await geminiService.generateFlashcards(
         pdfContent,
-        numberOfCards
+        numberOfCards,
+        existingFlashcards // Pass existing flashcards to avoid duplicates
       );
 
       // Set progress to 100%
@@ -170,12 +178,24 @@ export function FlashcardGenerator() {
     }
   };
 
+  // Show a message about existing flashcards if we have some
+  const existingCardCount = flashcards.length;
+
   if (!pdfContent) {
     return null;
   }
 
   return (
     <div className="w-full max-w-md mx-auto space-y-4">
+      {existingCardCount > 0 && (
+        <Alert>
+          <AlertDescription className="text-sm">
+            You have {existingCardCount} existing flashcards. New cards will be
+            generated to avoid duplicating these questions.
+          </AlertDescription>
+        </Alert>
+      )}
+
       <div>
         <label htmlFor="api-key" className="block text-sm font-medium mb-1">
           Gemini API Key
