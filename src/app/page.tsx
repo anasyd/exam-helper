@@ -5,6 +5,7 @@ import { PdfUpload } from "@/components/pdf-upload";
 import { FlashcardGenerator } from "@/components/flashcard-generator";
 import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
+import { FlashcardImportExport } from "@/components/flashcard-import-export";
 import { useFlashcardStore } from "@/lib/store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileUp, BookOpen, Brain, List } from "lucide-react";
@@ -78,7 +79,12 @@ export default function Home() {
 
         {activeTab === "study" && <FlashcardSession />}
 
-        {activeTab === "list" && <FlashcardList />}
+        {activeTab === "list" && (
+          <>
+            <FlashcardList />
+            <FlashcardImportExport />
+          </>
+        )}
       </div>
     </main>
   );
