@@ -200,7 +200,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
             {isFlipped ? "Show Question" : "Show Answer"}
           </Button>
 
-          {isAnswered && (
+          {isAnswered ? (
             <Button
               onClick={handleNext}
               variant="default"
@@ -208,15 +208,15 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
             >
               Next Card
             </Button>
+          ) : (
+            <Button
+              onClick={handleSkip}
+              variant="outline"
+              className="flex-1 border-gray-500"
+            >
+              Skip
+            </Button>
           )}
-
-          <Button
-            onClick={handleSkip}
-            variant="outline"
-            className="flex-1 border-gray-500"
-          >
-            Skip
-          </Button>
         </div>
       </CardFooter>
     </Card>
