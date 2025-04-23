@@ -17,39 +17,25 @@ import { createGeminiService } from "@/lib/ai-service";
 import { toast } from "sonner";
 
 export function FlashcardGenerator() {
-  const [apiKey, setApiKey] = useState<string>("");
   const [numberOfCards, setNumberOfCards] = useState<number>(20);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const [shouldRemember, setShouldRemember] = useState<boolean>(true);
   const [forceRegenerate, setForceRegenerate] = useState<boolean>(false);
   const {
     getActiveProject,
     addFlashcards,
     setIsProcessing,
     geminiApiKey,
-    setGeminiApiKey,
     hasProcessedContent,
     getDuplicateQuestionCount,
   } = useFlashcardStore();
 
   const activeProject = getActiveProject();
 
-  // Load API key from store on component mount
-  useEffect(() => {
-    if (geminiApiKey) {
-      setApiKey(geminiApiKey);
-    }
-  }, [geminiApiKey]);
-
-  const handleApiKeyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setApiKey(e.target.value);
-  };
-
   const handleGenerate = async () => {
-    if (!apiKey) {
-      setError("Please enter your Gemini API key.");
+    if (!geminiApiKey) {
+      setError("Please enter your Gemini API key in settings.");
       return;
     }
 
@@ -72,11 +58,6 @@ export function FlashcardGenerator() {
     }
 
     try {
-      // Save API key to store if remember is checked
-      if (shouldRemember) {
-        setGeminiApiKey(apiKey);
-      }
-
       setError(null);
       setIsGenerating(true);
       setIsProcessing(true);
@@ -107,7 +88,7 @@ export function FlashcardGenerator() {
       }));
 
       // Create Gemini service and generate flashcards with existing ones
-      const geminiService = createGeminiService(apiKey);
+      const geminiService = createGeminiService(geminiApiKey);
       const generatedFlashcards = await geminiService.generateFlashcards(
         activeProject.pdfContent,
         numberOfCards,
@@ -201,57 +182,6 @@ export function FlashcardGenerator() {
       )}
 
       <div>
-        <label htmlFor="api-key" className="block text-sm font-medium mb-1">
-          Gemini API Key
-        </label>
-        <Input
-          id="api-key"
-          type="password"
-          value={apiKey}
-          onChange={handleApiKeyChange}
-          placeholder="Enter your Gemini API key"
-          className="mb-2"
-          disabled={isGenerating}
-        />
-
-        <div className="flex flex-wrap items-center gap-3 mb-4">
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="remember-api-key"
-              checked={shouldRemember}
-              onChange={(e) => setShouldRemember(e.target.checked)}
-              className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              disabled={isGenerating}
-            />
-            <label
-              htmlFor="remember-api-key"
-              className="text-sm text-muted-foreground flex items-center"
-            >
-              <Save className="h-3 w-3 mr-1" />
-              Remember API key
-            </label>
-          </div>
-
-          <div className="flex items-center">
-            <input
-              type="checkbox"
-              id="force-regenerate"
-              checked={forceRegenerate}
-              onChange={(e) => setForceRegenerate(e.target.checked)}
-              className="mr-2 h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-              disabled={isGenerating}
-            />
-            <label
-              htmlFor="force-regenerate"
-              className="text-sm text-muted-foreground flex items-center"
-            >
-              <AlertCircle className="h-3 w-3 mr-1" />
-              Force regenerate
-            </label>
-          </div>
-        </div>
-
         <div className="text-xs text-muted-foreground space-y-2 mb-4 p-3 border rounded-md bg-muted/30">
           <p className="font-medium">How to get your API key:</p>
           <ol className="list-decimal pl-5 space-y-1">
@@ -310,7 +240,7 @@ export function FlashcardGenerator() {
 
       <Button
         onClick={handleGenerate}
-        disabled={isGenerating || !apiKey}
+        disabled={isGenerating || !geminiApiKey}
         className="w-full"
       >
         {isGenerating ? (
