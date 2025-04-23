@@ -2,16 +2,14 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
-  // Skip ESLint during production builds
+  output: "export", // <-- THIS LINE ENABLES STATIC EXPORTS
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // (Optional) Skip TypeScript errors during builds
   typescript: {
     ignoreBuildErrors: true,
   },
   webpack: (config, { isServer }) => {
-    // Client-side only
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
