@@ -62,6 +62,8 @@ interface FlashcardState {
   getNextCard: () => Flashcard | null;
   hasProcessedContent: (content: string) => boolean;
   getDuplicateQuestionCount: (questions: string[]) => number;
+  exportFlashcards: () => string; // Export flashcards to JSON string
+  importFlashcards: (jsonData: string) => { success: boolean; count: number; error?: string }; // Import flashcards from JSON string
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -257,6 +259,38 @@ export const useFlashcardStore = create<FlashcardState>()(
       getDuplicateQuestionCount: (questions) => {
         const existingQuestions = new Set(get().flashcards.map(card => card.question));
         return questions.filter(q => existingQuestions.has(q)).length;
+      },
+
+      exportFlashcards: () => {
+        const { flashcards } = get();
+        return JSON.stringify(flashcards);
+      },
+
+      importFlashcards: (jsonData) => {
+        try {
+          const importedFlashcards: Flashcard[] = JSON.parse(jsonData);
+          if (!Array.isArray(importedFlashcards)) {
+            throw new Error("Invalid data format");
+          }
+
+          const existingQuestions = new Set(get().flashcards.map(card => card.question));
+          const uniqueFlashcards = importedFlashcards.filter(card => !existingQuestions.has(card.question));
+
+          set((state) => ({
+            flashcards: [
+              ...state.flashcards,
+              ...uniqueFlashcards.map((flashcard) => ({
+                ...flashcard,
+                id: crypto.randomUUID(),
+                lastSeen: flashcard.lastSeen ? new Date(flashcard.lastSeen) : null,
+              })),
+            ],
+          }));
+
+          return { success: true, count: uniqueFlashcards.length };
+        } catch (error) {
+          return { success: false, count: 0, error: error instanceof Error ? error.message : 'Unknown error' };
+        }
       },
     }),
     {
