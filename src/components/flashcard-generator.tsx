@@ -57,8 +57,10 @@ export function FlashcardGenerator() {
       setIsGenerating(true);
       setIsProcessing(true);
 
-      // Show toast
-      toast.loading("Analyzing PDF content and generating flashcards...");
+      // Show toast with a specific ID so we can dismiss it later
+      const toastId = toast.loading(
+        "Analyzing PDF content and generating flashcards..."
+      );
 
       // Simulate initial progress
       setGenerationProgress(10);
@@ -88,7 +90,8 @@ export function FlashcardGenerator() {
       // Add generated flashcards to store
       addFlashcards(flashcards);
 
-      // Show success toast
+      // Dismiss the loading toast and show success toast
+      toast.dismiss(toastId);
       toast.success(`Successfully generated ${flashcards.length} flashcards!`, {
         description: "Switch to the Study tab to start learning.",
       });
@@ -111,11 +114,13 @@ export function FlashcardGenerator() {
         }
       }
 
-      setError(errorMessage);
+      // Dismiss any existing loading toasts and show error toast
+      toast.dismiss();
       toast.error("Failed to generate flashcards", {
         description: errorMessage,
       });
 
+      setError(errorMessage);
       setIsGenerating(false);
       setGenerationProgress(0);
       setIsProcessing(false);

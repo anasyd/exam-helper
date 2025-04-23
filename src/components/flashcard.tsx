@@ -95,7 +95,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
   return (
     <Card
       className={cn(
-        "w-full max-w-md mx-auto overflow-hidden transition-all duration-700 border-2 border-gray-200 shadow-md",
+        "w-full max-w-md mx-auto overflow-hidden transition-all duration-700 border-2 border-gray-900 shadow-md",
         isFlipped ? "bg-muted/30" : ""
       )}
     >
@@ -126,7 +126,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
                       : "outline"
                   }
                   className={cn(
-                    "w-full justify-start text-left p-3 h-auto border-2",
+                    "w-full justify-start text-left p-3 h-auto border-gray-500 rounded-md",
                     selectedOptionIndex === null
                       ? ""
                       : index === shuffledCorrectIndex
@@ -183,7 +183,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
           <Button
             onClick={handleFlip}
             variant="outline"
-            className="flex-1 border-2"
+            className="flex-1 border-gray-500"
           >
             <RotateCw className="mr-2 h-4 w-4" />
             {isFlipped ? "Show Question" : "Show Answer"}

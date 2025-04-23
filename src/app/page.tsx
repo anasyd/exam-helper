@@ -4,99 +4,103 @@ import { useState } from "react";
 import { PdfUpload } from "@/components/pdf-upload";
 import { FlashcardGenerator } from "@/components/flashcard-generator";
 import { FlashcardSession } from "@/components/flashcard-session";
+import { FlashcardList } from "@/components/flashcard-list";
 import { useFlashcardStore } from "@/lib/store";
-import { Button } from "@/components/ui/button";
-import { Brain, Loader2, FileText, BookOpen, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { FileUp, BookOpen, Brain, List } from "lucide-react";
 
 export default function Home() {
-  const [activeTab, setActiveTab] = useState<"upload" | "study">("upload");
-  const { flashcards, isProcessing, pdfContent, clearFlashcards } =
-    useFlashcardStore();
+  const [activeTab, setActiveTab] = useState<string>("upload");
+  const { pdfContent } = useFlashcardStore();
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-4 sm:p-8 md:p-12">
-      <div className="w-full max-w-5xl mx-auto space-y-8">
-        <div className="space-y-2 text-center">
-          <div className="inline-block rounded-full bg-primary/10 p-3 mb-2">
-            <Brain className="h-8 w-8 text-primary" />
-          </div>
-          <h1 className="text-3xl font-bold">PDF Flashcard Generator</h1>
-          <p className="text-muted-foreground">
-            Upload a PDF, let AI generate flashcards, and study with spaced
-            repetition
-          </p>
-        </div>
+    <main className="container mx-auto py-8 px-4">
+      <header className="mb-8 text-center">
+        <h1 className="text-3xl font-bold">PDF Flashcard Generator</h1>
+        <p className="text-muted-foreground mt-2">
+          Upload PDF documents and create flashcards with AI
+        </p>
+      </header>
 
-        {isProcessing && (
-          <div className="flex items-center justify-center gap-2 p-4 border rounded-md bg-muted/30">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" />
-            <span>Processing...</span>
+      <div className="mb-8 flex justify-center">
+        <div className="border rounded-lg p-1 flex space-x-1">
+          <TabButton
+            isActive={activeTab === "upload"}
+            onClick={() => setActiveTab("upload")}
+            icon={<FileUp className="h-4 w-4" />}
+            label="Upload & Generate"
+          />
+          <TabButton
+            isActive={activeTab === "study"}
+            onClick={() => setActiveTab("study")}
+            icon={<Brain className="h-4 w-4" />}
+            label="Study Flashcards"
+          />
+          <TabButton
+            isActive={activeTab === "list"}
+            onClick={() => setActiveTab("list")}
+            icon={<List className="h-4 w-4" />}
+            label="View All Cards"
+          />
+        </div>
+      </div>
+
+      <div className="max-w-3xl mx-auto">
+        {activeTab === "upload" && (
+          <div className="space-y-8">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center">
+                  <FileUp className="h-5 w-5 mr-2" />
+                  Upload PDF
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PdfUpload />
+              </CardContent>
+            </Card>
+
+            {pdfContent && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center">
+                    <BookOpen className="h-5 w-5 mr-2" />
+                    Generate Flashcards
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FlashcardGenerator />
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 
-        <div className="flex flex-wrap gap-2 justify-center">
-          <Button
-            variant={activeTab === "upload" ? "default" : "outline"}
-            onClick={() => setActiveTab("upload")}
-            disabled={isProcessing}
-            className="flex-1 sm:flex-none"
-          >
-            <FileText className="mr-2 h-4 w-4" />
-            Upload & Generate
-          </Button>
-          <Button
-            variant={activeTab === "study" ? "default" : "outline"}
-            onClick={() => setActiveTab("study")}
-            disabled={isProcessing || flashcards.length === 0}
-            className="flex-1 sm:flex-none"
-          >
-            <BookOpen className="mr-2 h-4 w-4" />
-            Study Flashcards ({flashcards.length})
-          </Button>
-          {flashcards.length > 0 && (
-            <Button
-              variant="outline"
-              onClick={clearFlashcards}
-              disabled={isProcessing}
-              className="flex-1 sm:flex-none"
-            >
-              <X className="mr-2 h-4 w-4" />
-              Clear All
-            </Button>
-          )}
-        </div>
+        {activeTab === "study" && <FlashcardSession />}
 
-        <div className="w-full">
-          {activeTab === "upload" && (
-            <div className="space-y-8">
-              <section className="space-y-4">
-                <h2 className="text-xl font-semibold text-center">
-                  Step 1: Upload a PDF
-                </h2>
-                <PdfUpload />
-              </section>
-
-              {pdfContent && (
-                <section className="space-y-4">
-                  <h2 className="text-xl font-semibold text-center">
-                    Step 2: Generate Flashcards
-                  </h2>
-                  <FlashcardGenerator />
-                </section>
-              )}
-            </div>
-          )}
-
-          {activeTab === "study" && (
-            <div className="space-y-4">
-              <h2 className="text-xl font-semibold text-center">
-                Study Session
-              </h2>
-              <FlashcardSession />
-            </div>
-          )}
-        </div>
+        {activeTab === "list" && <FlashcardList />}
       </div>
     </main>
+  );
+}
+
+interface TabButtonProps {
+  isActive: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}
+
+function TabButton({ isActive, onClick, icon, label }: TabButtonProps) {
+  return (
+    <button
+      onClick={onClick}
+      className={`px-4 py-2 flex items-center rounded-md transition-all ${
+        isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
+      }`}
+    >
+      {icon}
+      <span className="ml-2">{label}</span>
+    </button>
   );
 }
