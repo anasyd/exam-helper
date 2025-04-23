@@ -61,6 +61,8 @@ export default function Home() {
               </CardContent>
             </Card>
 
+            <FlashcardImportExport />
+
             {pdfContent && (
               <Card>
                 <CardHeader>
@@ -79,12 +81,7 @@ export default function Home() {
 
         {activeTab === "study" && <FlashcardSession />}
 
-        {activeTab === "list" && (
-          <>
-            <FlashcardList />
-            <FlashcardImportExport />
-          </>
-        )}
+        {activeTab === "list" && <FlashcardList />}
       </div>
     </main>
   );

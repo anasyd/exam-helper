@@ -6,12 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-// import { extractTextFromPDF } from "@/lib/pdf-service";
-import { FileUp, Loader2 } from "lucide-react";
+import { FileUp, Loader2, File as FileIcon, X } from "lucide-react";
 import { toast } from "sonner";
 
 export function PdfUpload() {
-  const [file, setFile] = useState<File | null>(null);
+  const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processProgress, setProcessProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
@@ -20,23 +19,36 @@ export function PdfUpload() {
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
-      const selectedFile = e.target.files[0];
+      const selectedFiles = Array.from(e.target.files);
+      const validFiles: File[] = [];
+      const invalidFiles: string[] = [];
 
-      // Validate that it's a PDF
-      if (selectedFile.type !== "application/pdf") {
-        setError("Please select a valid PDF file.");
-        setFile(null);
-        return;
+      // Validate all selected files
+      selectedFiles.forEach((file) => {
+        if (file.type === "application/pdf") {
+          validFiles.push(file);
+        } else {
+          invalidFiles.push(file.name);
+        }
+      });
+
+      if (invalidFiles.length > 0) {
+        setError(`Some files are not valid PDFs: ${invalidFiles.join(", ")}`);
+      } else {
+        setError(null);
       }
 
-      setFile(selectedFile);
-      setError(null);
+      setFiles((prev) => [...prev, ...validFiles]);
     }
   };
 
+  const removeFile = (fileToRemove: File) => {
+    setFiles(files.filter((file) => file !== fileToRemove));
+  };
+
   const handleUpload = async () => {
-    if (!file) {
-      setError("Please select a PDF file first.");
+    if (files.length === 0) {
+      setError("Please select at least one PDF file.");
       return;
     }
 
@@ -46,41 +58,32 @@ export function PdfUpload() {
       setStoreProcessing(true);
 
       // Show loading toast
-      const toastId = toast.loading("Processing PDF file...", {
-        description: "Extracting text content from your PDF",
-      });
+      const toastId = toast.loading(
+        `Processing ${files.length} PDF file(s)...`,
+        {
+          description: "Extracting text content from your PDFs",
+        }
+      );
 
-      // Simulate initial progress
+      // Set initial progress
       setProcessProgress(10);
 
-      // Progress simulation interval
-      const progressInterval = setInterval(() => {
-        setProcessProgress((prev) => {
-          if (prev >= 90) {
-            clearInterval(progressInterval);
-            return 90;
-          }
-          return prev + 10;
-        });
-      }, 300);
-
       // Client-side dynamic import (avoids SSR issues)
-      const { extractTextFromPDF } = await import("@/lib/pdf-service");
+      const { extractTextFromMultiplePDFs } = await import("@/lib/pdf-service");
 
-      // Extract text from PDF
-      const content = await extractTextFromPDF(file);
+      // Extract text from all PDFs
+      const { combinedText } = await extractTextFromMultiplePDFs(
+        files,
+        (progress) => setProcessProgress(progress)
+      );
 
-      // Set progress to 100%
-      clearInterval(progressInterval);
-      setProcessProgress(100);
-
-      // Update store with PDF content
-      setPdfContent(content);
+      // Update store with combined PDF content
+      setPdfContent(combinedText);
 
       // Dismiss loading toast and show success
       toast.dismiss(toastId);
-      toast.success("PDF processed successfully!", {
-        description: `Extracted ${content.length} characters of text.`,
+      toast.success(`${files.length} PDF file(s) processed successfully!`, {
+        description: `Extracted ${combinedText.length} characters of text.`,
       });
 
       // Reset progress after a brief delay to show 100%
@@ -94,12 +97,14 @@ export function PdfUpload() {
 
       // Dismiss loading toast and show error
       toast.dismiss();
-      toast.error("Failed to process PDF", {
+      toast.error("Failed to process PDFs", {
         description:
           error instanceof Error ? error.message : "Unknown error occurred",
       });
 
-      setError("Failed to process the PDF file. Please try another file.");
+      setError(
+        "Failed to process the PDF files. Please try again with different files."
+      );
       setIsProcessing(false);
       setProcessProgress(0);
       setStoreProcessing(false);
@@ -112,11 +117,15 @@ export function PdfUpload() {
         <Input
           type="file"
           accept=".pdf"
+          multiple
           onChange={handleFileChange}
           className="flex-1"
           disabled={isProcessing}
         />
-        <Button onClick={handleUpload} disabled={!file || isProcessing}>
+        <Button
+          onClick={handleUpload}
+          disabled={files.length === 0 || isProcessing}
+        >
           {isProcessing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -125,7 +134,10 @@ export function PdfUpload() {
           ) : (
             <>
               <FileUp className="mr-2 h-4 w-4" />
-              Process PDF
+              Process{" "}
+              {files.length > 0
+                ? `${files.length} PDF${files.length > 1 ? "s" : ""}`
+                : "PDFs"}
             </>
           )}
         </Button>
@@ -141,16 +153,42 @@ export function PdfUpload() {
         <div className="space-y-2">
           <Progress value={processProgress} />
           <p className="text-center text-sm text-muted-foreground">
-            Processing PDF... {processProgress}%
+            Processing PDFs... {processProgress}%
           </p>
         </div>
       )}
 
-      {file && !isProcessing && (
-        <p className="text-sm">
-          Selected file: <span className="font-medium">{file.name}</span> (
-          {(file.size / 1024).toFixed(1)} KB)
-        </p>
+      {files.length > 0 && !isProcessing && (
+        <div className="space-y-2">
+          <p className="text-sm font-medium">
+            Selected files ({files.length}):
+          </p>
+          <div className="max-h-40 overflow-y-auto border rounded-md p-2">
+            {files.map((file, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between py-1 px-2 hover:bg-gray-50 rounded"
+              >
+                <div className="flex items-center gap-2">
+                  <FileIcon className="h-4 w-4 text-blue-500" />
+                  <span className="text-sm truncate">{file.name}</span>
+                  <span className="text-xs text-gray-500">
+                    ({(file.size / 1024).toFixed(1)} KB)
+                  </span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 w-6 p-0"
+                  onClick={() => removeFile(file)}
+                  disabled={isProcessing}
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
     </div>
   );
