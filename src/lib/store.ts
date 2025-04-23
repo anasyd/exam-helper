@@ -1,7 +1,7 @@
 "use client";
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type Flashcard = {
   id: string;
@@ -13,6 +13,12 @@ export type Flashcard = {
   lastSeen: Date | null;
   timesCorrect: number;
   timesIncorrect: number;
+};
+
+// Helper function to ensure lastSeen is a proper Date object
+const ensureDate = (lastSeen: Date | string | null): Date | null => {
+  if (lastSeen === null) return null;
+  return lastSeen instanceof Date ? lastSeen : new Date(lastSeen);
 };
 
 interface FlashcardState {
@@ -135,9 +141,13 @@ export const useFlashcardStore = create<FlashcardState>()(
         // 2. Higher difficulty (more difficult cards)
         // 3. Cards not seen for longer
         const sortedCards = [...flashcards].sort((a, b) => {
+          // Ensure the lastSeen properties are proper Date objects
+          const aLastSeen = ensureDate(a.lastSeen);
+          const bLastSeen = ensureDate(b.lastSeen);
+          
           // Priority for cards never seen before
-          if (a.lastSeen === null && b.lastSeen !== null) return -1;
-          if (a.lastSeen !== null && b.lastSeen === null) return 1;
+          if (aLastSeen === null && bLastSeen !== null) return -1;
+          if (aLastSeen !== null && bLastSeen === null) return 1;
           
           // Then sort by difficulty (higher difficulty first)
           if (a.difficulty !== b.difficulty) {
@@ -145,8 +155,8 @@ export const useFlashcardStore = create<FlashcardState>()(
           }
           
           // If both have been seen before, sort by time (older first)
-          if (a.lastSeen && b.lastSeen) {
-            return a.lastSeen.getTime() - b.lastSeen.getTime();
+          if (aLastSeen && bLastSeen) {
+            return aLastSeen.getTime() - bLastSeen.getTime();
           }
           
           return 0;
@@ -161,6 +171,30 @@ export const useFlashcardStore = create<FlashcardState>()(
         flashcards: state.flashcards,
         geminiApiKey: state.geminiApiKey,
       }),
+      storage: createJSONStorage(() => ({
+        getItem: (name) => {
+          const str = localStorage.getItem(name);
+          if (!str) return null;
+          
+          const parsed = JSON.parse(str);
+          
+          // Convert date strings back to Date objects
+          if (parsed.state && parsed.state.flashcards) {
+            parsed.state.flashcards = parsed.state.flashcards.map((card: any) => ({
+              ...card,
+              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null
+            }));
+          }
+          
+          return parsed;
+        },
+        setItem: (name, value) => {
+          localStorage.setItem(name, JSON.stringify(value));
+        },
+        removeItem: (name) => {
+          localStorage.removeItem(name);
+        }
+      }))
     }
   )
 );

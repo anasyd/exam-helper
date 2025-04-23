@@ -19,27 +19,32 @@ export class GeminiService {
     try {
       const model = this.client.getGenerativeModel({ model: this.modelName });
       
-      // Create a prompt that asks for flashcards with multiple choice options
+      // Enhanced prompt that focuses on substantive content and avoids administrative details
       const prompt = `
-        Based on the following content, generate ${numberOfCards} multiple-choice flashcards in JSON format.
-        Each flashcard should have:
-        1. A clear question
-        2. A detailed answer explanation
-        3. Four multiple choice options (one correct, three incorrect)
-        4. The index of the correct option (0-3)
+        Based on the following academic content, generate ${numberOfCards} substantive multiple-choice flashcards in JSON format.
+
+        IMPORTANT GUIDELINES:
+        1. Focus ONLY on the technical/academic content - concepts, theories, definitions, methods, etc.
+        2. DO NOT create questions about administrative details like study hours, course codes, due dates, etc.
+        3. Each question should test understanding of important concepts from the material
+        4. Create challenging questions that test real understanding, not just memorization
+
+        Each flashcard should include:
+        1. A clear, substantive question about the academic content
+        2. A detailed answer explanation that thoroughly explains the concept
+        3. Four plausible multiple choice options, with only one being correct
+        4. The index (0-3) of the correct option in the options array
         
-        Make sure to cover a variety of important topics from the content and create diverse question types.
-        
-        Content:
+        Content to analyze:
         ${content.slice(0, 30000)} // Limit content length to avoid token limits
         
-        Response format (MUST follow this format exactly):
+        Response format (MUST follow exactly):
         [
           {
-            "question": "Question text here",
-            "answer": "Detailed answer explanation here",
+            "question": "Substantive question about a concept in the material",
+            "answer": "Detailed explanation of the correct answer and why it's correct",
             "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctOptionIndex": 0 // Index (0-3) of the correct option in the options array
+            "correctOptionIndex": 0 // Index of correct option (0-3)
           },
           ...more flashcards
         ]
