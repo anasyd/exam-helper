@@ -11,17 +11,35 @@ import {
   ExternalLink,
   Save,
   AlertCircle,
+  RotateCw,
+  Layers,
 } from "lucide-react";
 import { useFlashcardStore } from "@/lib/store";
 import { createGeminiService } from "@/lib/ai-service";
 import { toast } from "sonner";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export function FlashcardGenerator() {
+  // Basic state
   const [numberOfCards, setNumberOfCards] = useState<number>(20);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [generationProgress, setGenerationProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [forceRegenerate, setForceRegenerate] = useState<boolean>(false);
+
+  // Batch generation state
+  const [totalCards, setTotalCards] = useState<number>(100);
+  const [batchSize, setBatchSize] = useState<number>(20);
+  const [currentBatch, setCurrentBatch] = useState<number>(0);
+  const [totalBatches, setTotalBatches] = useState<number>(0);
+  const [isBatchMode, setIsBatchMode] = useState<boolean>(false);
+
+  // Content splitting state
+  const [splitContent, setSplitContent] = useState<boolean>(false);
+  const [currentSection, setCurrentSection] = useState<number>(0);
+  const [totalSections, setTotalSections] = useState<number>(0);
+
   const {
     getActiveProject,
     addFlashcards,
@@ -33,7 +51,192 @@ export function FlashcardGenerator() {
 
   const activeProject = getActiveProject();
 
+  // Split content into manageable chunks
+  const splitContentIntoChunks = (
+    content: string,
+    chunkSize: number = 25000
+  ): string[] => {
+    if (!content) return [];
+
+    // Simple splitting by approximate character count
+    const chunks: string[] = [];
+    const paragraphs = content.split("\n");
+    let currentChunk = "";
+
+    for (const paragraph of paragraphs) {
+      if (currentChunk.length + paragraph.length > chunkSize) {
+        chunks.push(currentChunk);
+        currentChunk = paragraph;
+      } else {
+        currentChunk += "\n" + paragraph;
+      }
+    }
+
+    if (currentChunk.trim()) {
+      chunks.push(currentChunk);
+    }
+
+    return chunks;
+  };
+
+  const handleBatchedGenerate = async () => {
+    if (!geminiApiKey || !activeProject?.pdfContent) {
+      setError("API key or PDF content missing");
+      return;
+    }
+
+    // Initialize batch generation
+    setIsGenerating(true);
+    setIsProcessing(true);
+    setError(null);
+
+    // Calculate total batches
+    const sections = splitContent
+      ? splitContentIntoChunks(activeProject.pdfContent)
+      : [activeProject.pdfContent];
+    setTotalSections(sections.length);
+
+    const calculatedBatchSize = Math.min(50, batchSize);
+    const batchesPerSection = Math.ceil(totalCards / calculatedBatchSize);
+    const totalBatchesToProcess = sections.length * batchesPerSection;
+
+    setTotalBatches(totalBatchesToProcess);
+    setCurrentBatch(0);
+    setCurrentSection(0);
+
+    // Global tracking
+    let totalCardsGenerated = 0;
+    let totalDuplicates = 0;
+
+    // Show initial toast
+    const toastId = toast.loading(
+      `Starting batch generation of ${totalCards} flashcards...`
+    );
+
+    try {
+      for (
+        let sectionIndex = 0;
+        sectionIndex < sections.length;
+        sectionIndex++
+      ) {
+        setCurrentSection(sectionIndex + 1);
+        const sectionContent = sections[sectionIndex];
+
+        // Get existing flashcards to avoid duplicates
+        const existingFlashcards = activeProject.flashcards.map((card) => ({
+          question: card.question,
+          answer: card.answer,
+        }));
+
+        // Create the service instance
+        const geminiService = createGeminiService(geminiApiKey);
+
+        // Calculate how many cards to generate in each batch for this section
+        const cardsPerBatch = calculatedBatchSize;
+        const batchesNeeded = Math.ceil(
+          totalCards / sections.length / cardsPerBatch
+        );
+
+        for (let batchIndex = 0; batchIndex < batchesNeeded; batchIndex++) {
+          // Update batch counter
+          const currentBatchNumber =
+            sectionIndex * batchesNeeded + batchIndex + 1;
+          setCurrentBatch(currentBatchNumber);
+
+          // Calculate overall progress
+          const overallProgress = Math.round(
+            (currentBatchNumber / totalBatchesToProcess) * 100
+          );
+          setGenerationProgress(overallProgress);
+
+          // Update toast
+          toast.loading(
+            `Processing batch ${currentBatchNumber}/${totalBatchesToProcess}...`,
+            { id: toastId }
+          );
+
+          try {
+            // Generate flashcards for this batch
+            const generatedFlashcards = await geminiService.generateFlashcards(
+              sectionContent,
+              cardsPerBatch,
+              existingFlashcards
+            );
+
+            // Check for duplicates and add to store
+            const duplicateCount = getDuplicateQuestionCount(
+              generatedFlashcards.map((card) => card.question)
+            );
+
+            // Add new cards to the store
+            const addedCount = addFlashcards(
+              generatedFlashcards,
+              forceRegenerate ? null : sectionContent
+            );
+
+            // Update tracking
+            totalCardsGenerated += addedCount;
+            totalDuplicates += duplicateCount;
+
+            // Update existing flashcards to avoid duplicates in subsequent batches
+            existingFlashcards.push(
+              ...generatedFlashcards.map((card) => ({
+                question: card.question,
+                answer: card.answer,
+              }))
+            );
+
+            // Short pause to avoid rate limiting
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+          } catch (batchError) {
+            console.error(`Error in batch ${currentBatchNumber}:`, batchError);
+            // Continue to the next batch even if this one failed
+          }
+        }
+      }
+
+      // All batches completed
+      setGenerationProgress(100);
+
+      // Show completion toast
+      toast.dismiss(toastId);
+      if (totalCardsGenerated > 0) {
+        toast.success(`Generated ${totalCardsGenerated} flashcards!`, {
+          description: `${totalDuplicates} duplicate questions were skipped. Switch to the Study tab to start learning.`,
+        });
+      } else {
+        toast.error("No new flashcards generated", {
+          description:
+            "All generated questions were duplicates of existing flashcards.",
+        });
+      }
+    } catch (error) {
+      console.error("Error in batch generation:", error);
+      toast.dismiss(toastId);
+      toast.error("Failed during batch generation", {
+        description: error instanceof Error ? error.message : "Unknown error",
+      });
+      setError(
+        "Failed during batch generation. Some cards may have been created."
+      );
+    } finally {
+      // Reset state after completion
+      setTimeout(() => {
+        setIsGenerating(false);
+        setGenerationProgress(0);
+        setIsProcessing(false);
+      }, 1000);
+    }
+  };
+
   const handleGenerate = async () => {
+    // If in batch mode, use the batch generation
+    if (isBatchMode) {
+      handleBatchedGenerate();
+      return;
+    }
+
+    // Original generation code for single batch
     if (!geminiApiKey) {
       setError("Please enter your Gemini API key in settings.");
       return;
@@ -163,8 +366,21 @@ export function FlashcardGenerator() {
     }
   };
 
+  // Calculate estimated batches for UI display
+  const calculateEstimatedBatches = () => {
+    if (!splitContent) return Math.ceil(totalCards / batchSize);
+    // Rough estimate assuming 25k chars per section with average PDF size of 200k
+    const estimatedSections = activeProject?.pdfContent
+      ? Math.ceil(activeProject.pdfContent.length / 25000)
+      : 1;
+    return (
+      estimatedSections * Math.ceil(totalCards / batchSize / estimatedSections)
+    );
+  };
+
   // Show a message about existing flashcards if we have some
   const existingCardCount = activeProject?.flashcards.length || 0;
+  const estimatedBatches = calculateEstimatedBatches();
 
   if (!activeProject?.pdfContent) {
     return null;
@@ -207,29 +423,120 @@ export function FlashcardGenerator() {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="num-cards" className="block text-sm font-medium mb-1">
-          Number of Flashcards
-        </label>
-        <Input
-          id="num-cards"
-          type="number"
-          min={5}
-          max={50}
-          value={numberOfCards}
-          onChange={(e) => setNumberOfCards(parseInt(e.target.value) || 20)}
-          className="mb-4"
-          disabled={isGenerating}
-        />
-      </div>
+      <Tabs
+        defaultValue="basic"
+        onValueChange={(val) => setIsBatchMode(val === "advanced")}
+      >
+        <TabsList className="grid grid-cols-2 mb-4">
+          <TabsTrigger value="basic">Basic</TabsTrigger>
+          <TabsTrigger value="advanced">Advanced (Batch)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="basic">
+          <div>
+            <label
+              htmlFor="num-cards"
+              className="block text-sm font-medium mb-1"
+            >
+              Number of Flashcards
+            </label>
+            <Input
+              id="num-cards"
+              type="number"
+              min={5}
+              max={50}
+              value={numberOfCards}
+              onChange={(e) => setNumberOfCards(parseInt(e.target.value) || 20)}
+              className="mb-4"
+              disabled={isGenerating}
+            />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="advanced">
+          <div className="space-y-4">
+            <Alert variant="default" className="bg-blue-50 border-blue-200">
+              <AlertDescription className="text-xs text-blue-700">
+                Batch mode generates large numbers of flashcards in smaller
+                chunks, which helps avoid AI limits and ensures better quality.
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-2">
+              <label
+                htmlFor="total-cards"
+                className="block text-sm font-medium"
+              >
+                Total Flashcards to Generate
+              </label>
+              <Input
+                id="total-cards"
+                type="number"
+                min={10}
+                max={500}
+                value={totalCards}
+                onChange={(e) => setTotalCards(parseInt(e.target.value) || 100)}
+                className="mb-1"
+                disabled={isGenerating}
+              />
+              <p className="text-xs text-muted-foreground">
+                Total number of flashcards you want to create (up to 500)
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="batch-size" className="block text-sm font-medium">
+                Cards per Batch
+              </label>
+              <Input
+                id="batch-size"
+                type="number"
+                min={5}
+                max={50}
+                value={batchSize}
+                onChange={(e) => setBatchSize(parseInt(e.target.value) || 20)}
+                className="mb-1"
+                disabled={isGenerating}
+              />
+              <p className="text-xs text-muted-foreground">
+                How many cards to generate at once (max 50 per batch)
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-2">
+              <Checkbox
+                id="split-content"
+                checked={splitContent}
+                onCheckedChange={(checked) => setSplitContent(checked === true)}
+                disabled={isGenerating}
+              />
+              <label
+                htmlFor="split-content"
+                className="text-sm font-medium flex items-center"
+              >
+                <Layers className="h-4 w-4 mr-1 text-muted-foreground" />
+                Split large PDFs into sections
+              </label>
+            </div>
+
+            <p className="text-xs text-muted-foreground border-t pt-2 mt-2">
+              Estimated batches:{" "}
+              <span className="font-medium">{estimatedBatches}</span>
+              {splitContent &&
+                activeProject?.pdfContent &&
+                ` across ~${Math.ceil(
+                  activeProject.pdfContent.length / 25000
+                )} content sections`}
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
 
       <div className="flex items-center space-x-2 mb-4">
-        <input
-          type="checkbox"
+        <Checkbox
           id="force-regenerate"
           checked={forceRegenerate}
-          onChange={(e) => setForceRegenerate(e.target.checked)}
-          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/20"
+          onCheckedChange={(checked) => setForceRegenerate(checked === true)}
           disabled={isGenerating}
         />
         <label htmlFor="force-regenerate" className="text-sm font-medium">
@@ -247,8 +554,17 @@ export function FlashcardGenerator() {
         <div className="space-y-2">
           <Progress value={generationProgress} />
           <p className="text-center text-sm text-muted-foreground">
-            Generating flashcards... {generationProgress}%
+            {isBatchMode
+              ? `Generating batch ${currentBatch}/${
+                  totalBatches || "?"
+                } - ${generationProgress}%`
+              : `Generating flashcards... ${generationProgress}%`}
           </p>
+          {isBatchMode && splitContent && totalSections > 1 && (
+            <p className="text-center text-xs text-muted-foreground">
+              Processing section {currentSection}/{totalSections}
+            </p>
+          )}
         </div>
       )}
 
@@ -260,12 +576,14 @@ export function FlashcardGenerator() {
         {isGenerating ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-            Generating...
+            {isBatchMode ? `Processing Batches...` : `Generating...`}
           </>
         ) : (
           <>
             <BookOpen className="mr-2 h-4 w-4" />
-            Generate Flashcards
+            {isBatchMode
+              ? `Generate ${totalCards} Flashcards in Batches`
+              : `Generate ${numberOfCards} Flashcards`}
           </>
         )}
       </Button>
