@@ -1,25 +1,76 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
 // These would come from environment variables in production
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true';
+const isBrowser = typeof window !== 'undefined';
 
-// Create a single supabase client for the entire app, but handle static export scenarios
-export const supabase = isStaticExport 
-  ? { 
-      // Provide mock implementations for static export
-      auth: {
-        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-        onAuthStateChange: () => ({ data: null, error: null, subscription: { unsubscribe: () => {} } }),
-        // Add other required auth methods as needed
-      },
-      // Add other required Supabase client methods as needed
-      from: () => ({
-        select: () => ({ data: [], error: null }),
-      }),
+// For client-side only features
+let supabaseInstance: SupabaseClient | null = null;
+
+// Function to get supabase client - ensures we have a client instance when needed
+function getSupabaseClient() {
+  // In the browser, create a real client if we don't have one yet
+  if (isBrowser && !supabaseInstance) {
+    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey);
+  }
+  
+  // If we have a client instance, return it
+  if (supabaseInstance) {
+    return supabaseInstance;
+  }
+  
+  // Otherwise create a new one (this happens in server-side rendering)
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
+
+// This proxy ensures we only call Supabase methods in the browser or in dynamic server context
+export const supabase = new Proxy({} as SupabaseClient, {
+  get: (target, prop) => {
+    // Prevent Supabase API calls during static build
+    if (isStaticExport && !isBrowser) {
+      // Return dummy objects for top-level Supabase methods
+      if (prop === 'auth') {
+        return {
+          getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+          getUser: () => Promise.resolve({ data: { user: null }, error: null }),
+          onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } }, error: null }),
+          signUp: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+          signInWithPassword: () => Promise.resolve({ data: { user: null, session: null }, error: null }),
+          signInWithOAuth: () => Promise.resolve({ data: { provider: null, url: null }, error: null }),
+          signOut: () => Promise.resolve({ error: null }),
+          resetPasswordForEmail: () => Promise.resolve({ data: {}, error: null }),
+          updateUser: () => Promise.resolve({ data: { user: null }, error: null })
+        };
+      }
+      
+      if (prop === 'from') {
+        return () => ({
+          select: () => ({ data: [], error: null }),
+          insert: () => ({ data: [], error: null }),
+          update: () => ({ data: [], error: null }),
+          delete: () => ({ data: [], error: null }),
+          eq: () => ({ data: [], error: null }),
+          match: () => ({ data: [], error: null })
+        });
+      }
+      
+      return () => {};
     }
-  : createClient(supabaseUrl, supabaseAnonKey);
+    
+    // For browser or dynamic server environments, get the actual client
+    const client = getSupabaseClient();
+    const value = client[prop as keyof SupabaseClient];
+    
+    // If the property is a method, bind it to the client
+    if (typeof value === 'function') {
+      return value.bind(client);
+    }
+    
+    return value;
+  }
+});
 
 // Define database types
 export type DbProject = {
