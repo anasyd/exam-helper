@@ -223,6 +223,20 @@ export function FlashcardGenerator() {
         />
       </div>
 
+      <div className="flex items-center space-x-2 mb-4">
+        <input
+          type="checkbox"
+          id="force-regenerate"
+          checked={forceRegenerate}
+          onChange={(e) => setForceRegenerate(e.target.checked)}
+          className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary/20"
+          disabled={isGenerating}
+        />
+        <label htmlFor="force-regenerate" className="text-sm font-medium">
+          Force Regenerate (ignore previous processing)
+        </label>
+      </div>
+
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
