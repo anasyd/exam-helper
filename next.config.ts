@@ -7,6 +7,7 @@ const repoName = '/exam-helper';
 
 // Check if we're in development mode
 const isDev = process.env.NODE_ENV === 'development';
+const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true';
 
 const nextConfig: NextConfig = {
   // Use static export for GitHub Pages
@@ -23,6 +24,10 @@ const nextConfig: NextConfig = {
   },
   typescript: {
     ignoreBuildErrors: true,
+  },
+  // Add environment variables that will be available at build time
+  env: {
+    NEXT_PUBLIC_STATIC_EXPORT: isStaticExport ? 'true' : 'false',
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {

@@ -3,9 +3,23 @@ import { createClient } from '@supabase/supabase-js';
 // These would come from environment variables in production
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const isStaticExport = process.env.NEXT_PUBLIC_STATIC_EXPORT === 'true';
 
-// Create a single supabase client for the entire app
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a single supabase client for the entire app, but handle static export scenarios
+export const supabase = isStaticExport 
+  ? { 
+      // Provide mock implementations for static export
+      auth: {
+        getSession: () => Promise.resolve({ data: { session: null }, error: null }),
+        onAuthStateChange: () => ({ data: null, error: null, subscription: { unsubscribe: () => {} } }),
+        // Add other required auth methods as needed
+      },
+      // Add other required Supabase client methods as needed
+      from: () => ({
+        select: () => ({ data: [], error: null }),
+      }),
+    }
+  : createClient(supabaseUrl, supabaseAnonKey);
 
 // Define database types
 export type DbProject = {
