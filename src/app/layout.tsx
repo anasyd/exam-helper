@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
-
-const inter = Inter({ subsets: ["latin"] });
+import { AuthProvider } from "@/lib/auth-context";
 
 export const metadata: Metadata = {
-  title: "PDF Flashcard Generator",
-  description: "Generate flashcards from PDFs using Gemini AI",
+  title: "Flashcard Generator",
+  description: "Generate flashcards from your PDF documents",
 };
 
 export default function RootLayout({
@@ -17,9 +14,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={inter.className}>
-        <Toaster />
-        {children}
+      <body>
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );
