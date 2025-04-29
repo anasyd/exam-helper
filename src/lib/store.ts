@@ -80,10 +80,14 @@ interface FlashcardState {
   // Import/Export
   exportFlashcards: (projectId?: string) => string;
   importFlashcards: (jsonData: string, projectId?: string) => { success: boolean; count: number; error?: string };
-  exportProject: (projectId: string) => string | null; // Export a single project
-  importProject: (jsonData: string) => { success: boolean; newProjectId?: string; error?: string }; // Import a single project
-  exportAllProjects: () => string; // Export all projects
-  importProjects: (jsonData: string) => { success: boolean; count: number; error?: string }; // Import multiple projects
+  exportProject: (projectId: string) => string | null; 
+  importProject: (jsonData: string) => { success: boolean; newProjectId?: string; error?: string }; 
+  exportAllProjects: () => string; 
+  importProjects: (jsonData: string) => { success: boolean; count: number; error?: string };
+  
+  // Sharing
+  createShareableLink: (projectId: string) => string | null;
+  importFromShareableLink: (shareLink: string) => { success: boolean; newProjectId?: string; error?: string };
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -654,6 +658,96 @@ export const useFlashcardStore = create<FlashcardState>()(
           return { success: false, count: 0, error: error instanceof Error ? error.message : 'Failed to import projects' };
         }
       },
+
+      // Sharing functionality
+      createShareableLink: (projectId) => {
+        const project = get().projects.find(p => p.id === projectId);
+        if (!project) return null;
+
+        // Create shareable project - we'll strip PDF content to reduce URL size
+        // and only include essential data for sharing
+        const shareableProject = {
+          name: project.name,
+          description: project.description,
+          createdAt: project.createdAt.toISOString(),
+          flashcards: project.flashcards.map(card => ({
+            question: card.question,
+            answer: card.answer,
+            options: card.options,
+            correctOptionIndex: card.correctOptionIndex
+          }))
+        };
+
+        // Encode project data
+        try {
+          // Convert to JSON first
+          const jsonData = JSON.stringify(shareableProject);
+          // Use base64 encoding to make it URL-safe
+          const encodedData = btoa(jsonData);
+          // Create shareable link - assumes app is deployed at root
+          const shareLink = `${window.location.origin}/?share=${encodedData}`;
+          return shareLink;
+        } catch (error) {
+          console.error("Error creating shareable link:", error);
+          return null;
+        }
+      },
+
+      importFromShareableLink: (shareLink) => {
+        try {
+          // Extract shared data from URL
+          const url = new URL(shareLink);
+          const encodedData = url.searchParams.get('share');
+          
+          if (!encodedData) {
+            throw new Error("No shared data found in the link");
+          }
+          
+          // Decode the data
+          const jsonData = atob(encodedData);
+          const sharedProject = JSON.parse(jsonData);
+          
+          // Basic validation
+          if (!sharedProject || !sharedProject.name || !Array.isArray(sharedProject.flashcards)) {
+            throw new Error("Invalid shared project data");
+          }
+          
+          // Create a new project from the shared data
+          const newProjectId = crypto.randomUUID();
+          const now = new Date();
+          
+          const newProject: Project = {
+            id: newProjectId,
+            name: `${sharedProject.name} (Shared)`,
+            description: sharedProject.description || "Imported from shared link",
+            createdAt: now,
+            updatedAt: now,
+            flashcards: sharedProject.flashcards.map((card: any) => ({
+              ...card,
+              id: crypto.randomUUID(),
+              difficulty: 3,
+              lastSeen: null,
+              timesCorrect: 0,
+              timesIncorrect: 0
+            })),
+            pdfContent: null,
+            processedHashes: [],
+            skippedCards: [],
+            sessionComplete: false
+          };
+          
+          set((state) => ({
+            projects: [...state.projects, newProject],
+          }));
+          
+          return { success: true, newProjectId };
+        } catch (error) {
+          return { 
+            success: false, 
+            error: error instanceof Error ? error.message : 'Failed to import from shared link' 
+          };
+        }
+      }
     }),
     {
       name: 'flashcards-storage-v2',

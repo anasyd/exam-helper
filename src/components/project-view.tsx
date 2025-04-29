@@ -9,6 +9,7 @@ import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
 import { AppSettings } from "@/components/app-settings";
+import { ShareProjectDialog } from "@/components/share-project-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -81,7 +82,10 @@ export function ProjectView() {
             )}
           </div>
         </div>
-        <AppSettings />
+        <div className="flex items-center space-x-2">
+          <ShareProjectDialog projectId={activeProject.id} />
+          <AppSettings />
+        </div>
       </div>
 
       <div className="mb-8 flex justify-center">
