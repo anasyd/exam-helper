@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { createShareableProject, getSharedProject } from './share-service';
 
 export type Flashcard = {
   id: string;
@@ -84,10 +85,6 @@ interface FlashcardState {
   importProject: (jsonData: string) => { success: boolean; newProjectId?: string; error?: string }; 
   exportAllProjects: () => string; 
   importProjects: (jsonData: string) => { success: boolean; count: number; error?: string };
-  
-  // Sharing
-  createShareableLink: (projectId: string) => string | null;
-  importFromShareableLink: (shareLink: string) => { success: boolean; newProjectId?: string; error?: string };
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -664,8 +661,7 @@ export const useFlashcardStore = create<FlashcardState>()(
         const project = get().projects.find(p => p.id === projectId);
         if (!project) return null;
 
-        // Create shareable project - we'll strip PDF content to reduce URL size
-        // and only include essential data for sharing
+        // Create shareable project with only essential data
         const shareableProject = {
           name: project.name,
           description: project.description,
@@ -678,15 +674,15 @@ export const useFlashcardStore = create<FlashcardState>()(
           }))
         };
 
-        // Encode project data
         try {
-          // Convert to JSON first
-          const jsonData = JSON.stringify(shareableProject);
-          // Use base64 encoding to make it URL-safe
-          const encodedData = btoa(jsonData);
-          // Create shareable link - assumes app is deployed at root
-          const shareLink = `${window.location.origin}/?share=${encodedData}`;
-          return shareLink;
+          // Store the project data and get a short ID
+          const shareId = createShareableProject(shareableProject);
+          if (!shareId) {
+            throw new Error("Failed to create shareable project");
+          }
+          
+          // Create a short shareable link with just the ID
+          return `${window.location.origin}/?share=${shareId}`;
         } catch (error) {
           console.error("Error creating shareable link:", error);
           return null;
@@ -695,20 +691,22 @@ export const useFlashcardStore = create<FlashcardState>()(
 
       importFromShareableLink: (shareLink) => {
         try {
-          // Extract shared data from URL
+          // Extract shared ID from URL
           const url = new URL(shareLink);
-          const encodedData = url.searchParams.get('share');
+          const shareId = url.searchParams.get('share');
           
-          if (!encodedData) {
-            throw new Error("No shared data found in the link");
+          if (!shareId) {
+            throw new Error("No shared ID found in the link");
           }
           
-          // Decode the data
-          const jsonData = atob(encodedData);
-          const sharedProject = JSON.parse(jsonData);
+          // Get shared project data
+          const sharedProject = getSharedProject(shareId);
+          if (!sharedProject) {
+            throw new Error("Shared project not found or has expired");
+          }
           
           // Basic validation
-          if (!sharedProject || !sharedProject.name || !Array.isArray(sharedProject.flashcards)) {
+          if (!sharedProject.name || !Array.isArray(sharedProject.flashcards)) {
             throw new Error("Invalid shared project data");
           }
           
