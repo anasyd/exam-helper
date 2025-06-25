@@ -10,7 +10,7 @@ import { Badge } from "@/components/ui/badge";
 interface TopicQuizViewProps {
   cardsToPractice: Flashcard[];
   quizTitle: string;
-  onQuizComplete: () => void; // Callback to close the quiz view or navigate away
+  onQuizComplete: (passed: boolean) => void; // Updated to indicate if quiz was "passed"
 }
 
 export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: TopicQuizViewProps) {
@@ -27,7 +27,7 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
         </CardHeader>
         <CardContent>
           <p>No questions available for this topic.</p>
-          <Button onClick={onQuizComplete} className="mt-4">Back</Button>
+          <Button onClick={() => onQuizComplete(false)} className="mt-4">Back</Button> {/* Passed false */}
         </CardContent>
       </Card>
     );
@@ -42,7 +42,7 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
     if (currentIndex < totalCards - 1) {
       setCurrentIndex(currentIndex + 1);
     } else {
-      setQuizFinished(true);
+      setQuizFinished(true); // Mark as finished to show completion screen
     }
   };
 
@@ -72,7 +72,7 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
           <p>Great job reviewing the material!</p>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button onClick={onQuizComplete}>Close Quiz</Button>
+          <Button onClick={() => onQuizComplete(true)}>Close Quiz & Mark Complete</Button> {/* Passed true */}
         </CardFooter>
       </Card>
     );
