@@ -308,7 +308,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handlePracticeMCQs(section.title)}
+                        onClick={() => handlePracticeMCQs(section.title, sectionIndex)}
                       >
                         <Brain className="mr-2 h-4 w-4" /> Practice{" "}
                         {getMcqCountForSource(section.title)} MCQs
@@ -472,7 +472,9 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                     onClick={() =>
                                       handlePracticeMCQs(
                                         section.title,
-                                        topic.title
+                                        sectionIndex,
+                                        topic.title,
+                                        topicIndex
                                       )
                                     }
                                   >
