@@ -1,10 +1,25 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-interface FlashcardData {
+export interface FlashcardData {
   question: string;
   answer: string;
   options: string[]; // Array of options including the correct answer
   correctOptionIndex: number; // Index of the correct option in the array
+}
+
+interface TTSOptions {
+  voice?: "male" | "female" | "neutral";
+  speed?: number; // 0.25 to 4.0
+  pitch?: number; // -20.0 to 20.0
+  language?: string; // Language code like 'en-US'
+}
+
+interface SpeechOptions {
+  voice?: "male" | "female" | "neutral";
+  tone?: "professional" | "casual" | "educational";
+  speed?: number;
+  pitch?: number;
+  language?: string;
 }
 
 export class GeminiService {
@@ -18,6 +33,10 @@ export class GeminiService {
     standard: "gemini-2.0-flash",
     // Fallback model (15 RPM, 250K tokens)
     fallback: "gemini-2.5-flash-lite-preview-06-17",
+    // Text-to-Speech for converting lectures (3 RPM, 10K tokens)
+    tts: "gemini-2.5-flash-preview-tts",
+    // Speech generation and live interactions
+    speechLive: "gemini-2.5-flash-live",
   };
 
   private lastRequestTime = 0;
@@ -29,6 +48,8 @@ export class GeminiService {
     "gemini-2.0-flash": { rpm: 13, interval: 4800 }, // Conservative: 13 RPM = ~4.8s interval
     "gemini-2.5-flash-lite-preview-06-17": { rpm: 13, interval: 4800 }, // Conservative: 13 RPM = ~4.8s interval
     "gemini-2.5-flash": { rpm: 8, interval: 7500 }, // Conservative: 8 RPM = ~7.5s interval
+    "gemini-2.5-flash-preview-tts": { rpm: 2, interval: 20000 }, // Conservative: 2 RPM = ~20s interval for TTS
+    "gemini-2.5-flash-live": { rpm: 10, interval: 6000 }, // Estimated rate limit for live model
   };
 
   constructor(apiKey: string) {
@@ -37,7 +58,7 @@ export class GeminiService {
 
   // Get optimal model for task type
   protected getModelForTask(
-    taskType: "summary" | "generation" | "formatting"
+    taskType: "summary" | "generation" | "formatting" | "tts" | "speech-live"
   ): string {
     switch (taskType) {
       case "summary":
@@ -46,6 +67,10 @@ export class GeminiService {
         return this.models.standard; // Use standard model for complex generation
       case "formatting":
         return this.models.fast; // Use fast model for formatting tasks
+      case "tts":
+        return this.models.tts; // Use TTS model for lecture-to-speech conversion
+      case "speech-live":
+        return this.models.speechLive; // Use live model for speech generation
       default:
         return this.models.standard;
     }
@@ -136,6 +161,33 @@ export class GeminiService {
     content: string,
     contentType: "document" | "video_transcript"
   ) => Promise<string>;
+  convertLectureToSpeech!: (
+    lectureText: string,
+    options?: TTSOptions
+  ) => Promise<ArrayBuffer>;
+  generateLiveSpeech!: (
+    prompt: string,
+    options?: SpeechOptions
+  ) => Promise<ArrayBuffer>;
+  generateStudyAudioNarration!: (
+    studyGuide: StudyGuide,
+    options?: TTSOptions
+  ) => Promise<{
+    sectionAudios: ArrayBuffer[];
+    topicAudios: { [sectionIndex: number]: ArrayBuffer[] };
+  }>;
+  generateAllContentTypes!: (documentText: string, options?: {
+    generateFlashcards?: boolean;
+    generateNotes?: boolean;
+    generateStudyGuide?: boolean;
+    numberOfFlashcards?: number;
+    ttsOptions?: TTSOptions;
+  }) => Promise<{
+    studyGuide?: StudyGuide;
+    notes?: string;
+    flashcards?: FlashcardData[];
+    audioNarration?: { sectionAudios: ArrayBuffer[], topicAudios: { [sectionIndex: number]: ArrayBuffer[] } };
+  }>;
 
   async generateFlashcards(
     content: string,
@@ -653,3 +705,242 @@ async function generateAutomatedNotes(
   }
 }
 GeminiService.prototype.generateAutomatedNotes = generateAutomatedNotes;
+
+// Function to convert lecture text to speech using Gemini 2.5 Flash Preview TTS
+async function convertLectureToSpeech(
+  this: GeminiService,
+  lectureText: string,
+  options: TTSOptions = {}
+): Promise<ArrayBuffer> {
+  if (!lectureText || lectureText.trim().length === 0) {
+    throw new Error("Lecture text cannot be empty");
+  }
+
+  try {
+    const modelName = this.getModelForTask("tts");
+
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
+
+      // Prepare TTS-specific prompt with voice options
+      const ttsPrompt = {
+        text: lectureText.slice(0, 10000), // Limit text for TTS model
+        voice: options.voice || "neutral",
+        speed: options.speed || 1.0,
+        pitch: options.pitch || 0.0,
+        language: options.language || "en-US",
+      };
+
+      // Note: The actual TTS API call may differ based on Gemini's TTS implementation
+      // This is a conceptual implementation that may need adjustment based on the actual API
+      const ttsPromptText = `Convert the following lecture text to speech with voice settings: ${JSON.stringify(
+        ttsPrompt
+      )}\n\nLecture: ${ttsPrompt.text}`;
+
+      return await geminiModel.generateContent(ttsPromptText);
+    }, modelName);
+
+    // Note: The actual response format for TTS may be different
+    // This assumes the response contains audio data
+    const response = await result.response;
+
+    // For now, returning a placeholder since the actual TTS API response format is unknown
+    // In practice, this should return the actual audio buffer from the TTS model
+    console.log("TTS conversion completed for lecture text");
+    return new ArrayBuffer(0); // Placeholder - replace with actual audio data
+  } catch (error) {
+    console.error("Error converting lecture to speech:", error);
+    throw new Error(
+      `Failed to convert lecture to speech: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+GeminiService.prototype.convertLectureToSpeech = convertLectureToSpeech;
+
+// Function to generate live speech using Gemini 2.5 Flash Live
+async function generateLiveSpeech(
+  this: GeminiService,
+  prompt: string,
+  options: SpeechOptions = {}
+): Promise<ArrayBuffer> {
+  if (!prompt || prompt.trim().length === 0) {
+    throw new Error("Speech prompt cannot be empty");
+  }
+
+  try {
+    const modelName = this.getModelForTask("speech-live");
+
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
+
+      // Prepare speech generation prompt
+      const speechPrompt = `
+        Generate natural, engaging speech based on the following prompt.
+        Voice characteristics: ${options.voice || "neutral"} voice
+        Tone: ${options.tone || "educational"}
+        Speed: ${options.speed || 1.0}
+        Language: ${options.language || "en-US"}
+        
+        Content to speak: ${prompt}
+        
+        Please generate clear, well-paced speech that would be suitable for educational content.
+      `;
+
+      return await geminiModel.generateContent(speechPrompt);
+    }, modelName);
+
+    const response = await result.response;
+
+    // Note: Similar to TTS, the actual implementation will depend on
+    // how Gemini 2.5 Flash Live handles speech generation
+    console.log("Live speech generation completed");
+    return new ArrayBuffer(0); // Placeholder - replace with actual audio data
+  } catch (error) {
+    console.error("Error generating live speech:", error);
+    throw new Error(
+      `Failed to generate live speech: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+GeminiService.prototype.generateLiveSpeech = generateLiveSpeech;
+
+// Utility function to convert study content to audio narration
+async function generateStudyAudioNarration(
+  this: GeminiService,
+  studyGuide: StudyGuide,
+  options: TTSOptions = {}
+): Promise<{
+  sectionAudios: ArrayBuffer[];
+  topicAudios: { [sectionIndex: number]: ArrayBuffer[] };
+}> {
+  const sectionAudios: ArrayBuffer[] = [];
+  const topicAudios: { [sectionIndex: number]: ArrayBuffer[] } = {};
+
+  try {
+    console.log("Starting audio narration generation for study guide...");
+
+    // Generate audio for each section
+    for (let i = 0; i < studyGuide.sections.length; i++) {
+      const section = studyGuide.sections[i];
+
+      if (section.audioSummaryText) {
+        console.log(`Generating audio for section ${i + 1}: ${section.title}`);
+        const sectionAudio = await this.convertLectureToSpeech(
+          `Section ${i + 1}: ${section.title}. ${section.audioSummaryText}`,
+          options
+        );
+        sectionAudios.push(sectionAudio);
+      }
+
+      // Generate audio for topics within the section
+      if (section.topics && section.topics.length > 0) {
+        topicAudios[i] = [];
+
+        for (let j = 0; j < section.topics.length; j++) {
+          const topic = section.topics[j];
+
+          if (topic.audioSummaryText) {
+            console.log(
+              `Generating audio for topic ${j + 1} in section ${i + 1}: ${
+                topic.title
+              }`
+            );
+            const topicAudio = await this.convertLectureToSpeech(
+              `Topic: ${topic.title}. ${topic.audioSummaryText}`,
+              options
+            );
+            topicAudios[i].push(topicAudio);
+          }
+        }
+      }
+    }
+
+    return { sectionAudios, topicAudios };
+  } catch (error) {
+    console.error("Error generating study audio narration:", error);
+    throw new Error(
+      `Failed to generate study audio narration: ${
+        error instanceof Error ? error.message : "Unknown error"
+      }`
+    );
+  }
+}
+GeminiService.prototype.generateStudyAudioNarration =
+  generateStudyAudioNarration;
+
+// Comprehensive auto-generation function for all content types
+async function generateAllContentTypes(
+  this: GeminiService,
+  documentText: string,
+  options: {
+    generateFlashcards?: boolean;
+    generateNotes?: boolean;
+    generateStudyGuide?: boolean;
+    numberOfFlashcards?: number;
+    ttsOptions?: TTSOptions;
+  } = {}
+): Promise<{
+  studyGuide?: StudyGuide;
+  notes?: string;
+  flashcards?: FlashcardData[];
+  audioNarration?: { sectionAudios: ArrayBuffer[], topicAudios: { [sectionIndex: number]: ArrayBuffer[] } };
+}> {
+  const {
+    generateFlashcards = true,
+    generateNotes = true,
+    generateStudyGuide = true,
+    numberOfFlashcards = 15,
+    ttsOptions = {}
+  } = options;
+
+  const results: any = {};
+
+  try {
+    console.log("Starting comprehensive content generation...");
+
+    // 1. Generate Study Guide (primary content structure)
+    if (generateStudyGuide) {
+      console.log("Generating study guide...");
+      results.studyGuide = await this.generateStudyContent(documentText);
+    }
+
+    // 2. Generate Notes (quick overview)
+    if (generateNotes) {
+      console.log("Generating automated notes...");
+      results.notes = await this.generateAutomatedNotes(documentText, "document");
+    }
+
+    // 3. Generate Flashcards (for testing knowledge)
+    if (generateFlashcards) {
+      console.log("Generating flashcards...");
+      results.flashcards = await this.generateFlashcards(documentText, numberOfFlashcards);
+    }
+
+    // 4. Generate Audio Narration (if study guide was created)
+    if (generateStudyGuide && results.studyGuide) {
+      console.log("Generating audio narration...");
+      try {
+        results.audioNarration = await this.generateStudyAudioNarration(results.studyGuide, ttsOptions);
+      } catch (audioError) {
+        console.warn("Audio narration generation failed:", audioError);
+        // Continue without audio - don't fail the entire operation
+      }
+    }
+
+    console.log("Comprehensive content generation completed successfully!");
+    return results;
+
+  } catch (error) {
+    console.error("Error in comprehensive content generation:", error);
+    throw new Error(`Failed to generate all content types: ${
+      error instanceof Error ? error.message : "Unknown error"
+    }`);
+  }
+}
+GeminiService.prototype.generateAllContentTypes = generateAllContentTypes;

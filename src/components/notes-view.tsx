@@ -2,7 +2,10 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react"; // Added useEffect
+import { useState, useEffect } from "react";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface NotesViewProps {
   documentNotes: string | null | undefined;
@@ -40,12 +43,32 @@ export function NotesView({
     if (!notes) {
       return <p className="text-muted-foreground">No {type} notes generated yet.</p>;
     }
-    // Using <pre> for now as react-markdown installation failed.
-    // Replace with <ReactMarkdown rehypePlugins={[rehypeRaw]} remarkPlugins={[remarkGfm]}>{notes}</ReactMarkdown> if available
+    
+    // Render markdown with proper styling
     return (
-      <pre className="whitespace-pre-wrap bg-muted p-4 rounded-md text-sm font-mono max-h-[70vh] overflow-auto">
-        {notes}
-      </pre>
+      <div className="prose prose-sm max-w-none dark:prose-invert bg-muted p-4 rounded-md max-h-[70vh] overflow-auto">
+        <ReactMarkdown 
+          rehypePlugins={[rehypeRaw]} 
+          remarkPlugins={[remarkGfm]}
+          components={{
+            // Custom styling for markdown elements
+            h1: ({...props}) => <h1 className="text-2xl font-bold mb-4 text-foreground" {...props} />,
+            h2: ({...props}) => <h2 className="text-xl font-semibold mb-3 text-foreground" {...props} />,
+            h3: ({...props}) => <h3 className="text-lg font-medium mb-2 text-foreground" {...props} />,
+            p: ({...props}) => <p className="mb-3 text-foreground leading-relaxed" {...props} />,
+            ul: ({...props}) => <ul className="list-disc list-inside mb-4 text-foreground" {...props} />,
+            ol: ({...props}) => <ol className="list-decimal list-inside mb-4 text-foreground" {...props} />,
+            li: ({...props}) => <li className="mb-1 text-foreground" {...props} />,
+            code: ({...props}) => <code className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono" {...props} />,
+            pre: ({...props}) => <pre className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto mb-4" {...props} />,
+            blockquote: ({...props}) => <blockquote className="border-l-4 border-blue-500 pl-4 italic mb-4 text-foreground" {...props} />,
+            strong: ({...props}) => <strong className="font-semibold text-foreground" {...props} />,
+            em: ({...props}) => <em className="italic text-foreground" {...props} />
+          }}
+        >
+          {notes}
+        </ReactMarkdown>
+      </div>
     );
   };
 
