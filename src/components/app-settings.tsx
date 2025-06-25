@@ -259,7 +259,7 @@ export function AppSettings() {
             >
               Clear API Key
             </Button>
-            <Button onClick={handleSaveApiKey} disabled={!apiKey || isSaved}>
+            <Button onClick={handleSaveSettings} disabled={!apiKey || isSaved}>
               {isSaved ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
