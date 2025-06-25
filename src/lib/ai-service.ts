@@ -9,18 +9,54 @@ interface FlashcardData {
 
 export class GeminiService {
   protected client: GoogleGenerativeAI;
-  protected modelName = "gemini-2.5-flash"; // Updated to the latest model name
+
+  // Model selection based on use case and rate limits
+  protected models = {
+    // High-frequency, lightweight tasks (30 RPM, 1M tokens)
+    fast: "gemini-2.0-flash-lite",
+    // Complex generation tasks (15 RPM, 1M tokens)
+    standard: "gemini-2.0-flash",
+    // Fallback model (15 RPM, 250K tokens)
+    fallback: "gemini-2.5-flash-lite-preview-06-17",
+  };
+
   private lastRequestTime = 0;
-  private readonly minRequestInterval = 6000; // 6 seconds between requests to stay under 10/minute
   private requestCount = 0;
-  private readonly maxRequestsPerMinute = 8; // Conservative limit to stay under 10
+
+  // Rate limits per model (requests per minute)
+  private readonly rateLimits = {
+    "gemini-2.0-flash-lite": { rpm: 28, interval: 2200 }, // Conservative: 28 RPM = ~2.2s interval
+    "gemini-2.0-flash": { rpm: 13, interval: 4800 }, // Conservative: 13 RPM = ~4.8s interval
+    "gemini-2.5-flash-lite-preview-06-17": { rpm: 13, interval: 4800 }, // Conservative: 13 RPM = ~4.8s interval
+    "gemini-2.5-flash": { rpm: 8, interval: 7500 }, // Conservative: 8 RPM = ~7.5s interval
+  };
 
   constructor(apiKey: string) {
     this.client = new GoogleGenerativeAI(apiKey);
   }
 
-  // Rate limiting utility with request counting
-  protected async waitForRateLimit(): Promise<void> {
+  // Get optimal model for task type
+  protected getModelForTask(
+    taskType: "summary" | "generation" | "formatting"
+  ): string {
+    switch (taskType) {
+      case "summary":
+        return this.models.fast; // Use fastest model for summaries
+      case "generation":
+        return this.models.standard; // Use standard model for complex generation
+      case "formatting":
+        return this.models.fast; // Use fast model for formatting tasks
+      default:
+        return this.models.standard;
+    }
+  }
+
+  // Dynamic rate limiting based on model
+  protected async waitForRateLimit(modelName: string): Promise<void> {
+    const rateLimit =
+      this.rateLimits[modelName as keyof typeof this.rateLimits] ||
+      this.rateLimits["gemini-2.5-flash"]; // Default fallback
+
     const now = Date.now();
     const timeSinceLastRequest = now - this.lastRequestTime;
 
@@ -30,19 +66,19 @@ export class GeminiService {
     }
 
     // If we're approaching the limit, wait longer
-    if (this.requestCount >= this.maxRequestsPerMinute) {
+    if (this.requestCount >= rateLimit.rpm) {
       const waitTime = 60000 - timeSinceLastRequest + 1000; // Wait until next minute + buffer
       console.log(
-        `Rate limit reached: waiting ${Math.round(
+        `Rate limit reached for ${modelName}: waiting ${Math.round(
           waitTime / 1000
         )}s before next request`
       );
       await new Promise((resolve) => setTimeout(resolve, waitTime));
       this.requestCount = 0;
-    } else if (timeSinceLastRequest < this.minRequestInterval) {
-      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+    } else if (timeSinceLastRequest < rateLimit.interval) {
+      const waitTime = rateLimit.interval - timeSinceLastRequest;
       console.log(
-        `Rate limiting: waiting ${Math.round(
+        `Rate limiting ${modelName}: waiting ${Math.round(
           waitTime / 1000
         )}s before next request`
       );
@@ -55,12 +91,13 @@ export class GeminiService {
 
   // Retry mechanism for handling rate limit errors
   protected async executeWithRetry<T>(
-    operation: () => Promise<T>,
+    operation: (modelName: string) => Promise<T>,
+    modelName: string,
     maxRetries: number = 3
   ): Promise<T> {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        return await operation();
+        return await operation(modelName);
       } catch (error: any) {
         if (
           error?.message?.includes("429") ||
@@ -68,7 +105,7 @@ export class GeminiService {
         ) {
           const waitTime = Math.min(1000 * Math.pow(2, attempt), 60000); // Exponential backoff, max 1 minute
           console.log(
-            `Rate limit hit, attempt ${attempt}/${maxRetries}. Waiting ${Math.round(
+            `Rate limit hit on ${modelName}, attempt ${attempt}/${maxRetries}. Waiting ${Math.round(
               waitTime / 1000
             )}s before retry...`
           );
@@ -104,10 +141,12 @@ export class GeminiService {
     content: string,
     numberOfCards: number = 15,
     existingFlashcards: { question: string; answer: string }[] = [],
-    topicTitle?: string, // Added: For topic-specific context
-    topicContent?: string // Added: For topic-specific context
+    topicTitle?: string,
+    topicContent?: string
   ): Promise<FlashcardData[]> {
     try {
+      const modelName = this.getModelForTask("generation");
+
       const existingFlashcardsText =
         existingFlashcards.length > 0
           ? `EXISTING FLASHCARD QUESTIONS TO AVOID DUPLICATING (especially for this topic if provided):\n${existingFlashcards
@@ -144,12 +183,12 @@ Topic Content:
 ${topicContent.slice(0, 15000)}
 
 Main Document Content (for broader context, if necessary):
-${content.slice(0, 15000)} // Main content is also sliced
+${content.slice(0, 15000)}
 `;
       } else {
         prompt += `
 Content to analyze:
-${content.slice(0, 30000)} // Limit content length
+${content.slice(0, 30000)}
 `;
       }
 
@@ -160,21 +199,22 @@ Response format (MUST follow exactly, with no additional text or markdown):
             "question": "Substantive question about a concept in the material",
             "answer": "Detailed explanation of the correct answer and why it's correct",
             "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctOptionIndex": 0 // Index of correct option (0-3)
+            "correctOptionIndex": 0
           },
           ...more flashcards
         ]
       `;
 
-      const result = await this.executeWithRetry(async () => {
-        await this.waitForRateLimit();
-        const model = this.client.getGenerativeModel({ model: this.modelName });
-        return await model.generateContent(prompt);
-      });
+      const result = await this.executeWithRetry(async (model) => {
+        await this.waitForRateLimit(model);
+        const geminiModel = this.client.getGenerativeModel({ model });
+        return await geminiModel.generateContent(prompt);
+      }, modelName);
+
       const response = await result.response;
       const text = response.text();
 
-      console.log("Raw AI response:", text.substring(0, 200) + "..."); // Log the beginning of the response for debugging
+      console.log("Raw AI response:", text.substring(0, 200) + "...");
 
       // Try several approaches to extract valid JSON
       let parsedData: FlashcardData[] = [];
@@ -193,7 +233,6 @@ Response format (MUST follow exactly, with no additional text or markdown):
               "Failed to parse flashcard JSON from code block:",
               codeBlockError
             );
-            // Continue to try other patterns
           }
         }
 
@@ -265,13 +304,13 @@ export interface StudySection {
   title: string;
   content: string;
   topics?: StudyTopic[];
-  audioSummaryText?: string; // Added for text-based audio summary
+  audioSummaryText?: string;
 }
 
 export interface StudyTopic {
   title: string;
   content: string;
-  audioSummaryText?: string; // Added for text-based audio summary
+  audioSummaryText?: string;
 }
 
 export interface StudyGuide {
@@ -281,11 +320,12 @@ export interface StudyGuide {
 
 // Add this method to the GeminiService class
 export async function generateStudyContent(
-  this: GeminiService, // Important for 'this' context
+  this: GeminiService,
   content: string
 ): Promise<StudyGuide> {
   try {
-    const model = this.client.getGenerativeModel({ model: this.modelName });
+    const modelName = this.getModelForTask("generation");
+
     const prompt = `
       Based on the following document content, generate a comprehensive study guide.
       The study guide should be structured with a main title, and then broken down into logical sections (e.g., chapters, main parts).
@@ -302,10 +342,7 @@ export async function generateStudyContent(
       7.  Focus on extracting and structuring the core information.
 
       Document Content to Analyze:
-      ${content.slice(
-        0,
-        100000
-      )} // Limiting content to avoid token limits, adjust as needed
+      ${content.slice(0, 100000)}
 
       Response format (MUST follow exactly, with no additional text or markdown):
       {
@@ -335,16 +372,16 @@ export async function generateStudyContent(
               }
             ]
           }
-          // ... more sections
         ]
       }
     `;
 
-    const result = await this.executeWithRetry(async () => {
-      await this.waitForRateLimit();
-      const model = this.client.getGenerativeModel({ model: this.modelName });
-      return await model.generateContent(prompt);
-    });
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
+      return await geminiModel.generateContent(prompt);
+    }, modelName);
+
     const response = await result.response;
     const text = response.text();
 
@@ -367,7 +404,6 @@ export async function generateStudyContent(
             "Failed to parse study content JSON from code block:",
             codeBlockError
           );
-          // Continue to try other patterns
         }
       }
 
@@ -406,7 +442,7 @@ export async function generateStudyContent(
       throw new Error("Generated study content is not in the expected format.");
     }
 
-    // Generate audio summaries for sections and topics
+    // Generate audio summaries for sections and topics sequentially
     for (const section of parsedData.sections) {
       if (
         !section ||
@@ -422,7 +458,7 @@ export async function generateStudyContent(
       section.audioSummaryText = await this.generateTextSummary(
         section.content,
         80
-      ); // Summarize section content
+      );
 
       if (section.topics && Array.isArray(section.topics)) {
         // Process topics sequentially instead of in parallel to avoid rate limits
@@ -435,7 +471,7 @@ export async function generateStudyContent(
             topic.audioSummaryText = await this.generateTextSummary(
               topic.content,
               50
-            ); // Summarize topic content
+            );
           } else {
             console.warn(
               "Skipping invalid topic during summary generation:",
@@ -443,42 +479,6 @@ export async function generateStudyContent(
             );
           }
         }
-      }
-    }
-
-    // Re-validate after adding summaries (optional, but good practice)
-    for (const section of parsedData.sections) {
-      if (
-        section.audioSummaryText &&
-        typeof section.audioSummaryText !== "string"
-      ) {
-        throw new Error("Invalid audio summary format for section.");
-      }
-      if (section.topics) {
-        for (const topic of section.topics) {
-          if (
-            topic.audioSummaryText &&
-            typeof topic.audioSummaryText !== "string"
-          ) {
-            throw new Error("Invalid audio summary format for topic.");
-          }
-          if (
-            !topic ||
-            typeof topic.title !== "string" ||
-            typeof topic.content !== "string"
-          ) {
-            throw new Error(
-              "Invalid topic format in generated study content topic."
-            );
-          }
-        }
-      }
-      if (
-        !section ||
-        typeof section.title !== "string" ||
-        typeof section.content !== "string"
-      ) {
-        throw new Error("Invalid section format in generated study content.");
       }
     }
 
@@ -491,21 +491,22 @@ export async function generateStudyContent(
   }
 }
 
-// Add generateStudyContent to the GeminiService prototype
 GeminiService.prototype.generateStudyContent = generateStudyContent;
 
 async function generateTextSummary(
   this: GeminiService,
   textToSummarize: string,
-  maxLength: number = 100 // Max length in words for the summary
+  maxLength: number = 100
 ): Promise<string> {
   if (!textToSummarize || textToSummarize.trim().length === 0) {
     return "";
   }
   try {
-    const result = await this.executeWithRetry(async () => {
-      await this.waitForRateLimit();
-      const model = this.client.getGenerativeModel({ model: this.modelName }); // Use the same model
+    const modelName = this.getModelForTask("summary");
+
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
       const prompt = `
       Provide a concise audio summary for the following text.
       The summary should be clear, engaging, and suitable for voice narration.
@@ -514,37 +515,25 @@ async function generateTextSummary(
       Do not include any introductory phrases like "This text is about..." or "The summary is...". Just provide the summary directly.
 
       Text to summarize:
-      ${textToSummarize.slice(
-        0,
-        15000
-      )} // Limit input to avoid token issues for summary
+      ${textToSummarize.slice(0, 15000)}
 
       Concise Audio Summary (max ${maxLength} words):
     `;
-      return await model.generateContent(prompt);
-    });
+      return await geminiModel.generateContent(prompt);
+    }, modelName);
+
     const response = await result.response;
     const summary = response.text().trim();
-
-    // Simple word count check (optional, but good for adherence)
-    // const wordCount = summary.split(/\s+/).length;
-    // if (wordCount > maxLength + 20) { // Allow some leeway
-    //   console.warn(`Generated summary exceeded word count: ${wordCount} words. Text: ${summary}`);
-    //   // Potentially truncate or ask for regeneration, but for now, accept it.
-    // }
 
     return summary;
   } catch (error) {
     console.error("Error generating text summary:", error);
-    // Return empty string or a placeholder error message if needed
-    return ""; // Fallback to empty string on error
+    return "";
   }
 }
 
-// Add generateTextSummary to the GeminiService prototype
 GeminiService.prototype.generateTextSummary = generateTextSummary;
 
-// Function to format a raw transcript into Markdown
 async function formatTranscriptToMarkdown(
   this: GeminiService,
   rawTranscript: string
@@ -553,9 +542,12 @@ async function formatTranscriptToMarkdown(
     return "";
   }
   try {
-    await this.waitForRateLimit();
-    const model = this.client.getGenerativeModel({ model: this.modelName });
-    const prompt = `
+    const modelName = this.getModelForTask("formatting");
+
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
+      const prompt = `
       Format the following raw lecture transcript into well-structured Markdown.
       Ensure good readability with clear paragraph breaks.
       If speaker changes are evident (e.g., "Speaker 1:", "Interviewer:"), try to preserve or denote them clearly (e.g., using bold for speaker labels).
@@ -563,21 +555,22 @@ async function formatTranscriptToMarkdown(
       Do not summarize or alter the core meaning. The goal is formatting for readability.
 
       Raw Transcript:
-      ${rawTranscript.slice(0, 150000)} // Process a large chunk
+      ${rawTranscript.slice(0, 150000)}
 
       Formatted Markdown Transcript:
     `;
-    const result = await model.generateContent(prompt);
+      return await geminiModel.generateContent(prompt);
+    }, modelName);
+
     const response = await result.response;
     return response.text().trim();
   } catch (error) {
     console.error("Error formatting transcript to Markdown:", error);
-    return rawTranscript; // Fallback to raw transcript on error
+    return rawTranscript;
   }
 }
 GeminiService.prototype.formatTranscriptToMarkdown = formatTranscriptToMarkdown;
 
-// Function to identify and link concepts in a formatted transcript
 async function linkTranscriptConcepts(
   this: GeminiService,
   formattedTranscript: string
@@ -586,9 +579,12 @@ async function linkTranscriptConcepts(
     return "";
   }
   try {
-    await this.waitForRateLimit();
-    const model = this.client.getGenerativeModel({ model: this.modelName });
-    const prompt = `
+    const modelName = this.getModelForTask("formatting");
+
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
+      const prompt = `
       Analyze the following Markdown-formatted lecture transcript.
       Identify key terms, concepts, people, or technologies mentioned.
       For each identified key item, reformat it as a Markdown link.
@@ -601,29 +597,33 @@ async function linkTranscriptConcepts(
 
       Transcript with Markdown Links:
     `;
-    const result = await model.generateContent(prompt);
+      return await geminiModel.generateContent(prompt);
+    }, modelName);
+
     const response = await result.response;
     return response.text().trim();
   } catch (error) {
     console.error("Error linking transcript concepts:", error);
-    return formattedTranscript; // Fallback to formatted transcript on error
+    return formattedTranscript;
   }
 }
 GeminiService.prototype.linkTranscriptConcepts = linkTranscriptConcepts;
 
-// Function to generate automated notes from content
 async function generateAutomatedNotes(
   this: GeminiService,
   content: string,
-  contentType: "document" | "video_transcript" // To tailor the prompt
+  contentType: "document" | "video_transcript"
 ): Promise<string> {
   if (!content || content.trim().length === 0) {
     return "";
   }
   try {
-    await this.waitForRateLimit();
-    const model = this.client.getGenerativeModel({ model: this.modelName });
-    const prompt = `
+    const modelName = this.getModelForTask("generation");
+
+    const result = await this.executeWithRetry(async (model) => {
+      await this.waitForRateLimit(model);
+      const geminiModel = this.client.getGenerativeModel({ model });
+      const prompt = `
       Generate structured and concise notes from the following ${
         contentType === "document" ? "document" : "lecture transcript"
       } content.
@@ -633,11 +633,13 @@ async function generateAutomatedNotes(
       Aim for clarity and conciseness, capturing the essence of the content.
 
       Content for Note Generation:
-      ${content.slice(0, 150000)} // Process a large chunk
+      ${content.slice(0, 150000)}
 
       Structured Markdown Notes:
     `;
-    const result = await model.generateContent(prompt);
+      return await geminiModel.generateContent(prompt);
+    }, modelName);
+
     const response = await result.response;
     return response.text().trim();
   } catch (error) {
