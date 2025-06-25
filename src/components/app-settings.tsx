@@ -19,22 +19,28 @@ import {
   Check,
   Upload,
   Download,
+  // Gamepad2, // Reverted
 } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
+// import { Switch } from "@/components/ui/switch"; // Reverted
 
 export function AppSettings() {
   const {
     geminiApiKey,
+    geminiApiKey,
     setGeminiApiKey,
-    exportAllProjects, // Added
-    importProjects, // Added
-    projects, // Added to check if export is possible
+    exportAllProjects,
+    importProjects,
+    projects,
+    // gamificationEnabled,     // Reverted
+    // setGamificationEnabled, // Reverted
   } = useFlashcardStore();
   const [apiKey, setApiKey] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  // const [localGamificationEnabled, setLocalGamificationEnabled] = useState(gamificationEnabled); // Reverted
   const [isSaved, setIsSaved] = useState(false);
-  const importFileInputRef = useRef<HTMLInputElement>(null); // Added ref for file input
+  const importFileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (geminiApiKey) {
@@ -42,16 +48,27 @@ export function AppSettings() {
     }
   }, [geminiApiKey]);
 
-  const handleSaveApiKey = () => {
-    setGeminiApiKey(apiKey);
-    setIsSaved(true);
-    toast.success("API key saved successfully", {
-      description: "Your Gemini API key has been saved for future use.",
-    });
+  // Re-sync local state if dialog is reopened and global state changed
+  useEffect(() => {
+    if (isDialogOpen) {
+      // setLocalGamificationEnabled(gamificationEnabled); // Reverted
+    }
+  }, [isDialogOpen /*, gamificationEnabled Reverted */]);
 
-    setTimeout(() => {
-      setIsSaved(false);
-    }, 3000);
+
+  const handleSaveSettings = () => {
+    // Save API Key
+    setGeminiApiKey(apiKey);
+
+    // // Save Gamification Setting - Reverted
+    // if (setGamificationEnabled) { // Check if function exists
+    //   setGamificationEnabled(localGamificationEnabled);
+    // }
+
+    setIsSaved(true);
+    toast.success("Settings saved successfully!");
+    setTimeout(() => setIsSaved(false), 3000);
+    // setIsDialogOpen(false); // Optionally close dialog on save
   };
 
   const handleClearApiKey = () => {
