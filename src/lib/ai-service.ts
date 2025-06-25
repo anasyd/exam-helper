@@ -8,12 +8,25 @@ interface FlashcardData {
 }
 
 export class GeminiService {
-  private client: GoogleGenerativeAI;
-  private modelName = "gemini-2.5-pro"; // Updated to the latest model name
+  protected client: GoogleGenerativeAI;
+  protected modelName = "gemini-2.5-flash"; // Updated to the latest model name
 
   constructor(apiKey: string) {
     this.client = new GoogleGenerativeAI(apiKey);
   }
+
+  // Method declarations for prototype-assigned functions
+  generateStudyContent!: (content: string) => Promise<StudyGuide>;
+  generateTextSummary!: (
+    textToSummarize: string,
+    maxLength?: number
+  ) => Promise<string>;
+  formatTranscriptToMarkdown!: (rawTranscript: string) => Promise<string>;
+  linkTranscriptConcepts!: (formattedTranscript: string) => Promise<string>;
+  generateAutomatedNotes!: (
+    content: string,
+    contentType: "document" | "video_transcript"
+  ) => Promise<string>;
 
   async generateFlashcards(
     content: string,
