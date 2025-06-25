@@ -72,16 +72,23 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
   };
 
   // Helper to check if MCQs are marked as generated in the study guide
-  const areMcqsGeneratedForSource = (sectionIdx: number, topicIdx?: number): boolean => {
+  const areMcqsGeneratedForSource = (
+    sectionIdx: number,
+    topicIdx?: number
+  ): boolean => {
     if (!studyGuide || !studyGuide.sections[sectionIdx]) return false;
     const section = studyGuide.sections[sectionIdx];
-    if (topicIdx === undefined || topicIdx === null) { // Checking for a section
+    if (topicIdx === undefined || topicIdx === null) {
+      // Checking for a section
       return !!section.mcqsGenerated;
     }
     // Checking for a topic
-    return !!(section.topics && section.topics[topicIdx] && section.topics[topicIdx].mcqsGenerated);
+    return !!(
+      section.topics &&
+      section.topics[topicIdx] &&
+      section.topics[topicIdx].mcqsGenerated
+    );
   };
-
 
   const handleGenerateMCQs = async (
     contentToUse: string,
@@ -90,7 +97,18 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     sectionIdx: number,
     topicIdx?: number
   ) => {
+    console.log("MCQ Generation Started:", {
+      title,
+      isSection,
+      contentToUse: contentToUse.slice(0, 100) + "...",
+    });
+
     if (!geminiApiKey || !activeProject || !activeProject.pdfContent) {
+      console.error("MCQ Generation Failed - Missing requirements:", {
+        hasApiKey: !!geminiApiKey,
+        hasProject: !!activeProject,
+        hasPdfContent: !!activeProject?.pdfContent,
+      });
       toast.error("Cannot generate MCQs", {
         description: "API key or project document content is missing.",
       });
@@ -132,26 +150,50 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
       );
 
       if (newMcqs && newMcqs.length > 0) {
+        console.log("MCQ Generation Successful:", {
+          count: newMcqs.length,
+          title,
+          sectionTitle,
+          topicTitle,
+          firstMcq: newMcqs[0]?.question.slice(0, 50) + "...",
+        });
+
         const countAdded = addFlashcards(
           newMcqs,
           null, // No general source content hash for topic MCQs specifically
           sectionTitle,
           topicTitle
         );
-        toast.success(`Generated ${countAdded} new MCQs for "${title}"!`, { id: toastId });
+
+        console.log("MCQs added to store:", { countAdded, title });
+
+        toast.success(`Generated ${countAdded} new MCQs for "${title}"!`, {
+          id: toastId,
+        });
 
         // Update mcqsGenerated flag in the studyGuide
         if (activeProject && activeProject.studyGuide) {
-          const newStudyGuide = JSON.parse(JSON.stringify(activeProject.studyGuide)); // Deep copy
+          const newStudyGuide = JSON.parse(
+            JSON.stringify(activeProject.studyGuide)
+          ); // Deep copy
           const currentSection = newStudyGuide.sections[sectionIdx];
           if (isSection && currentSection) {
             currentSection.mcqsGenerated = true;
-          } else if (!isSection && currentSection && currentSection.topics && topicIdx !== undefined && currentSection.topics[topicIdx]) {
+            console.log("Updated section mcqsGenerated flag:", sectionTitle);
+          } else if (
+            !isSection &&
+            currentSection &&
+            currentSection.topics &&
+            topicIdx !== undefined &&
+            currentSection.topics[topicIdx]
+          ) {
             currentSection.topics[topicIdx].mcqsGenerated = true;
+            console.log("Updated topic mcqsGenerated flag:", topicTitle);
           }
           setStudyGuide(newStudyGuide);
         }
       } else {
+        console.warn("MCQ Generation returned no results:", { title, newMcqs });
         toast.info(
           `No new MCQs generated for "${title}". They might be duplicates or generation failed.`,
           { id: toastId }
@@ -168,7 +210,12 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     }
   };
 
-  const handlePracticeMCQs = (sectionTitle: string, sectionIndex: number, topicTitle?: string, topicIndex?: number) => {
+  const handlePracticeMCQs = (
+    sectionTitle: string,
+    sectionIndex: number,
+    topicTitle?: string,
+    topicIndex?: number
+  ) => {
     if (!activeProject) return;
     const cards = activeProject.flashcards.filter(
       (card) =>
@@ -189,8 +236,12 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
   };
 
   // State to store context for the currently active quiz
-  const [quizContext, setQuizContext] = useState<{sectionTitle: string, sectionIndex: number, topicTitle?: string, topicIndex?: number} | null>(null);
-
+  const [quizContext, setQuizContext] = useState<{
+    sectionTitle: string;
+    sectionIndex: number;
+    topicTitle?: string;
+    topicIndex?: number;
+  } | null>(null);
 
   const handlePlaySummary = (text: string | undefined, id: string) => {
     if (!synth || !text) return;
@@ -226,13 +277,22 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
         onQuizComplete={(passed) => {
           setShowQuizView(false);
           if (passed && quizContext && quizContext.topicIndex !== undefined) {
-            markTopicAsComplete(quizContext.sectionIndex, quizContext.topicIndex);
-          } else if (passed && quizContext && quizContext.topicIndex === undefined) {
+            markTopicAsComplete(
+              quizContext.sectionIndex,
+              quizContext.topicIndex
+            );
+          } else if (
+            passed &&
+            quizContext &&
+            quizContext.topicIndex === undefined
+          ) {
             // This case implies a section-level quiz was passed.
             // If sections can be directly marked complete or if all topics become complete,
             // the markTopicAsComplete logic (which checks section completion) handles it.
             // For now, we only explicitly mark topics. Section completion is implicit.
-            console.log("Section quiz passed, section completion handled by topic completions.");
+            console.log(
+              "Section quiz passed, section completion handled by topic completions."
+            );
           }
           setQuizContext(null); // Clear context
         }}
@@ -271,44 +331,50 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                 className="border rounded-lg"
               >
                 <AccordionTrigger className="p-4 hover:no-underline bg-slate-50 dark:bg-slate-800 rounded-t-lg text-left">
-                  <div className="flex justify-between items-center w-full">
-                    <h3 className="text-lg font-semibold flex-grow mr-2">
-                      {section.title}
-                    </h3>
-                    {section.audioSummaryText && (
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={(e) => {
-                          e.stopPropagation(); // Prevent accordion from toggling
-                          handlePlaySummary(
-                            section.audioSummaryText,
-                            `section-${sectionIndex}`
-                          );
-                        }}
-                        className="ml-2 flex-shrink-0"
-                        aria-label={
-                          currentlyPlaying === `section-${sectionIndex}`
-                            ? "Stop summary"
-                            : "Play summary for section"
-                        }
-                      >
-                        {currentlyPlaying === `section-${sectionIndex}` ? (
-                          <StopCircle className="h-5 w-5" />
-                        ) : (
-                          <Volume2 className="h-5 w-5" />
-                        )}
-                      </Button>
-                    )}
-                  </div>
+                  <h3 className="text-lg font-semibold flex-grow mr-2">
+                    {section.title}
+                  </h3>
                 </AccordionTrigger>
+                {section.audioSummaryText && (
+                  <div className="px-4 pb-2 bg-slate-50 dark:bg-slate-800 border-b flex justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        handlePlaySummary(
+                          section.audioSummaryText,
+                          `section-${sectionIndex}`
+                        )
+                      }
+                      aria-label={
+                        currentlyPlaying === `section-${sectionIndex}`
+                          ? "Stop summary"
+                          : "Play summary for section"
+                      }
+                    >
+                      {currentlyPlaying === `section-${sectionIndex}` ? (
+                        <>
+                          <StopCircle className="h-4 w-4 mr-2" />
+                          Stop Summary
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 className="h-4 w-4 mr-2" />
+                          Play Summary
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
                 <AccordionContent className="p-4 pt-2 border-t">
                   <div className="flex justify-end mb-2">
                     {getMcqCountForSource(section.title) > 0 ? (
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handlePracticeMCQs(section.title, sectionIndex)}
+                        onClick={() =>
+                          handlePracticeMCQs(section.title, sectionIndex)
+                        }
                       >
                         <Brain className="mr-2 h-4 w-4" /> Practice{" "}
                         {getMcqCountForSource(section.title)} MCQs
@@ -427,39 +493,43 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                             className="border rounded-md bg-slate-50/50 dark:bg-slate-900/50"
                           >
                             <AccordionTrigger className="p-3 hover:no-underline text-left">
-                              <div className="flex justify-between items-center w-full">
-                                <h5 className="text-sm font-medium flex-grow mr-2">
-                                  {topic.title}
-                                </h5>
-                                {topic.audioSummaryText && (
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handlePlaySummary(
-                                        topic.audioSummaryText,
-                                        `section-${sectionIndex}-topic-${topicIndex}`
-                                      );
-                                    }}
-                                    className="ml-2 flex-shrink-0 p-1" // Adjusted padding
-                                    aria-label={
-                                      currentlyPlaying ===
-                                      `section-${sectionIndex}-topic-${topicIndex}`
-                                        ? "Stop summary"
-                                        : "Play summary for topic"
-                                    }
-                                  >
-                                    {currentlyPlaying ===
-                                    `section-${sectionIndex}-topic-${topicIndex}` ? (
-                                      <StopCircle className="h-4 w-4" />
-                                    ) : (
-                                      <Volume2 className="h-4 w-4" />
-                                    )}
-                                  </Button>
-                                )}
-                              </div>
+                              <h5 className="text-sm font-medium flex-grow mr-2">
+                                {topic.title}
+                              </h5>
                             </AccordionTrigger>
+                            {topic.audioSummaryText && (
+                              <div className="px-3 pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b flex justify-end">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() =>
+                                    handlePlaySummary(
+                                      topic.audioSummaryText,
+                                      `section-${sectionIndex}-topic-${topicIndex}`
+                                    )
+                                  }
+                                  aria-label={
+                                    currentlyPlaying ===
+                                    `section-${sectionIndex}-topic-${topicIndex}`
+                                      ? "Stop summary"
+                                      : "Play summary for topic"
+                                  }
+                                >
+                                  {currentlyPlaying ===
+                                  `section-${sectionIndex}-topic-${topicIndex}` ? (
+                                    <>
+                                      <StopCircle className="h-3 w-3 mr-2" />
+                                      Stop
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 className="h-3 w-3 mr-2" />
+                                      Play
+                                    </>
+                                  )}
+                                </Button>
+                              </div>
+                            )}
                             <AccordionContent className="p-3 pt-1 border-t">
                               <div className="flex justify-end mb-2">
                                 {getMcqCountForSource(

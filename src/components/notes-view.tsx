@@ -55,77 +55,156 @@ export function NotesView({
       );
     }
 
-    // Render markdown with proper styling
+    // Clean up the content - remove markdown code fences if they exist
+    let cleanedNotes = notes;
+
+    // Remove ```markdown at the start and ``` at the end
+    if (cleanedNotes.startsWith("```markdown\n")) {
+      cleanedNotes = cleanedNotes.substring(12); // Remove '```markdown\n'
+    } else if (cleanedNotes.startsWith("```markdown")) {
+      cleanedNotes = cleanedNotes.substring(11); // Remove '```markdown'
+    }
+
+    if (cleanedNotes.endsWith("\n```")) {
+      cleanedNotes = cleanedNotes.substring(0, cleanedNotes.length - 4); // Remove '\n```'
+    } else if (cleanedNotes.endsWith("```")) {
+      cleanedNotes = cleanedNotes.substring(0, cleanedNotes.length - 3); // Remove '```'
+    }
+
+    // Also handle other common code fence patterns
+    cleanedNotes = cleanedNotes
+      .replace(/^```[a-z]*\n?/i, "")
+      .replace(/\n?```$/i, "");
+
     return (
-      <div className="prose prose-sm max-w-none dark:prose-invert bg-muted p-4 rounded-md max-h-[70vh] overflow-auto">
+      <div className="bg-muted p-4 rounded-md max-h-[70vh] overflow-auto">
         <ReactMarkdown
           rehypePlugins={[rehypeRaw]}
           remarkPlugins={[remarkGfm]}
           components={{
             // Custom styling for markdown elements
-            h1: ({ ...props }) => (
+            h1: ({ children, ...props }) => (
               <h1
-                className="text-2xl font-bold mb-4 text-foreground"
+                className="text-2xl font-bold mb-4 text-foreground border-b border-border pb-2 mt-6 first:mt-0"
                 {...props}
-              />
+              >
+                {children}
+              </h1>
             ),
-            h2: ({ ...props }) => (
+            h2: ({ children, ...props }) => (
               <h2
-                className="text-xl font-semibold mb-3 text-foreground"
+                className="text-xl font-semibold mb-3 text-foreground mt-6 border-b border-border pb-1 first:mt-0"
                 {...props}
-              />
+              >
+                {children}
+              </h2>
             ),
-            h3: ({ ...props }) => (
+            h3: ({ children, ...props }) => (
               <h3
-                className="text-lg font-medium mb-2 text-foreground"
+                className="text-lg font-medium mb-2 text-foreground mt-4 first:mt-0"
                 {...props}
-              />
+              >
+                {children}
+              </h3>
             ),
-            p: ({ ...props }) => (
-              <p className="mb-3 text-foreground leading-relaxed" {...props} />
+            h4: ({ children, ...props }) => (
+              <h4
+                className="text-base font-medium mb-2 text-foreground mt-3 first:mt-0"
+                {...props}
+              >
+                {children}
+              </h4>
             ),
-            ul: ({ ...props }) => (
+            h5: ({ children, ...props }) => (
+              <h5
+                className="text-sm font-medium mb-2 text-foreground mt-3 first:mt-0"
+                {...props}
+              >
+                {children}
+              </h5>
+            ),
+            h6: ({ children, ...props }) => (
+              <h6
+                className="text-sm font-medium mb-2 text-foreground mt-3 first:mt-0"
+                {...props}
+              >
+                {children}
+              </h6>
+            ),
+            p: ({ children, ...props }) => (
+              <p className="mb-3 text-foreground leading-relaxed" {...props}>
+                {children}
+              </p>
+            ),
+            ul: ({ children, ...props }) => (
               <ul
-                className="list-disc list-inside mb-4 text-foreground"
+                className="list-disc list-outside ml-6 mb-4 text-foreground space-y-1"
                 {...props}
-              />
+              >
+                {children}
+              </ul>
             ),
-            ol: ({ ...props }) => (
+            ol: ({ children, ...props }) => (
               <ol
-                className="list-decimal list-inside mb-4 text-foreground"
+                className="list-decimal list-outside ml-6 mb-4 text-foreground space-y-1"
                 {...props}
-              />
+              >
+                {children}
+              </ol>
             ),
-            li: ({ ...props }) => (
-              <li className="mb-1 text-foreground" {...props} />
+            li: ({ children, ...props }) => (
+              <li className="mb-1 text-foreground" {...props}>
+                {children}
+              </li>
             ),
-            code: ({ ...props }) => (
+            code: ({ children, ...props }) => (
               <code
-                className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono"
+                className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-foreground"
                 {...props}
-              />
+              >
+                {children}
+              </code>
             ),
-            pre: ({ ...props }) => (
+            pre: ({ children, ...props }) => (
               <pre
-                className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto mb-4"
+                className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto mb-4 text-foreground"
                 {...props}
-              />
+              >
+                {children}
+              </pre>
             ),
-            blockquote: ({ ...props }) => (
+            blockquote: ({ children, ...props }) => (
               <blockquote
-                className="border-l-4 border-blue-500 pl-4 italic mb-4 text-foreground"
+                className="border-l-4 border-blue-500 pl-4 italic mb-4 text-foreground bg-gray-50 dark:bg-gray-800 py-2 rounded-r"
                 {...props}
-              />
+              >
+                {children}
+              </blockquote>
             ),
-            strong: ({ ...props }) => (
-              <strong className="font-semibold text-foreground" {...props} />
+            strong: ({ children, ...props }) => (
+              <strong className="font-semibold text-foreground" {...props}>
+                {children}
+              </strong>
             ),
-            em: ({ ...props }) => (
-              <em className="italic text-foreground" {...props} />
+            em: ({ children, ...props }) => (
+              <em className="italic text-foreground" {...props}>
+                {children}
+              </em>
+            ),
+            hr: ({ ...props }) => (
+              <hr className="my-6 border-t border-border" {...props} />
+            ),
+            a: ({ children, ...props }) => (
+              <a
+                className="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300"
+                {...props}
+              >
+                {children}
+              </a>
             ),
           }}
         >
-          {notes}
+          {cleanedNotes}
         </ReactMarkdown>
       </div>
     );
@@ -220,7 +299,3 @@ export function NotesView({
     </Card>
   );
 }
-
-// Need to add useEffect to the import
-// import { useEffect, useState } from "react";
-// For now, I will add it manually in the next step if it's not auto-added.
