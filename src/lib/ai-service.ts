@@ -109,30 +109,37 @@ Response format (MUST follow exactly, with no additional text or markdown):
         // First attempt: Direct parsing
         parsedData = JSON.parse(text) as FlashcardData[];
       } catch (parseError) {
-        // Second attempt: Extract JSON array pattern
-        const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
-        if (jsonMatch) {
+        // Second attempt: Extract JSON from code blocks first
+        const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+        if (codeBlockMatch && codeBlockMatch[1]) {
           try {
-            parsedData = JSON.parse(jsonMatch[0]) as FlashcardData[];
-          } catch (matchError) {
-            // Third attempt: Find content between triple backticks if it looks like markdown code blocks
-            const codeBlockMatch = text.match(
-              /```(?:json)?\s*(\[\s*\{[\s\S]*\}\s*\])\s*```/
+            parsedData = JSON.parse(codeBlockMatch[1]) as FlashcardData[];
+          } catch (codeBlockError) {
+            console.error(
+              "Failed to parse flashcard JSON from code block:",
+              codeBlockError
             );
-            if (codeBlockMatch) {
-              try {
-                parsedData = JSON.parse(codeBlockMatch[1]) as FlashcardData[];
-              } catch (codeBlockError) {
-                throw new Error(
-                  "Failed to parse AI response as JSON after multiple attempts"
-                );
-              }
-            } else {
-              throw new Error("Could not locate valid JSON in the AI response");
+            // Continue to try other patterns
+          }
+        }
+
+        // Third attempt: Extract JSON array pattern if code block parsing failed
+        if (!Array.isArray(parsedData) || parsedData.length === 0) {
+          const jsonMatch = text.match(/\[\s*\{[\s\S]*\}\s*\]/);
+          if (jsonMatch) {
+            try {
+              parsedData = JSON.parse(jsonMatch[0]) as FlashcardData[];
+            } catch (matchError) {
+              console.error("Could not parse JSON array pattern:", matchError);
             }
           }
-        } else {
-          throw new Error("No JSON-like structure found in the AI response");
+        }
+
+        // If all parsing attempts failed, throw error
+        if (!Array.isArray(parsedData) || parsedData.length === 0) {
+          console.error("No valid JSON found in the AI response:", parseError);
+          console.log("Full response text:", text.substring(0, 1000));
+          throw new Error("Could not locate valid JSON in the AI response");
         }
       }
 
@@ -268,47 +275,45 @@ export async function generateStudyContent(
       text.substring(0, 500) + "..."
     );
 
-    let parsedData: StudyGuide;
+    let parsedData: StudyGuide | undefined;
     try {
       parsedData = JSON.parse(text) as StudyGuide;
     } catch (parseError) {
-      const jsonMatch = text.match(/\{\s*"title"[\s\S]*\}\s*\}/);
-      if (jsonMatch) {
+      // Try to extract JSON from code blocks first
+      const codeBlockMatch = text.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
+      if (codeBlockMatch && codeBlockMatch[1]) {
         try {
-          parsedData = JSON.parse(jsonMatch[0]) as StudyGuide;
-        } catch (matchError) {
-          const codeBlockMatch = text.match(
-            /```(?:json)?\s*(\{\s*"title"[\s\S]*\}\s*\})\s*```/
+          parsedData = JSON.parse(codeBlockMatch[1]) as StudyGuide;
+        } catch (codeBlockError) {
+          console.error(
+            "Failed to parse study content JSON from code block:",
+            codeBlockError
           );
-          if (codeBlockMatch && codeBlockMatch[1]) {
-            try {
-              parsedData = JSON.parse(codeBlockMatch[1]) as StudyGuide;
-            } catch (codeBlockError) {
-              console.error(
-                "Failed to parse study content JSON from code block:",
-                codeBlockError
-              );
-              throw new Error(
-                "Failed to parse study content JSON after multiple attempts (code block)."
-              );
-            }
-          } else {
-            console.error(
-              "Could not locate valid JSON in the AI response for study content (jsonMatch failed):",
-              matchError
-            );
-            throw new Error(
-              "Could not locate valid JSON in the AI response for study content."
-            );
+          // Continue to try other patterns
+        }
+      }
+
+      // If code block parsing failed, try to find JSON object pattern
+      if (!parsedData) {
+        const jsonMatch = text.match(/\{\s*"title"[\s\S]*\}\s*\}/);
+        if (jsonMatch) {
+          try {
+            parsedData = JSON.parse(jsonMatch[0]) as StudyGuide;
+          } catch (matchError) {
+            console.error("Could not parse JSON object pattern:", matchError);
           }
         }
-      } else {
+      }
+
+      // If all parsing attempts failed, throw error
+      if (!parsedData) {
         console.error(
-          "No JSON-like structure found in the AI response for study content:",
+          "No valid JSON found in the AI response for study content:",
           parseError
         );
+        console.log("Full response text:", text.substring(0, 1000));
         throw new Error(
-          "No JSON-like structure found in the AI response for study content."
+          "No valid JSON found in the AI response for study content."
         );
       }
     }
