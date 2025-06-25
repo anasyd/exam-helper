@@ -26,13 +26,17 @@ export function FlashcardSession() {
 
   // Update stats when project's flashcards change
   useEffect(() => {
-    if (activeProject && activeProject.flashcards.length > 0) {
+    if (
+      activeProject &&
+      activeProject.flashcards &&
+      activeProject.flashcards.length > 0
+    ) {
       const correct = activeProject.flashcards.reduce(
-        (sum, card) => sum + card.timesCorrect,
+        (sum, card) => sum + (card.timesCorrect || 0),
         0
       );
       const incorrect = activeProject.flashcards.reduce(
-        (sum, card) => sum + card.timesIncorrect,
+        (sum, card) => sum + (card.timesIncorrect || 0),
         0
       );
       setSessionStats({
@@ -52,7 +56,11 @@ export function FlashcardSession() {
     setCurrentCard(getNextCard());
   };
 
-  if (!activeProject || activeProject.flashcards.length === 0) {
+  if (
+    !activeProject ||
+    !activeProject.flashcards ||
+    activeProject.flashcards.length === 0
+  ) {
     return (
       <Card className="w-full max-w-md mx-auto">
         <CardHeader>
@@ -72,7 +80,7 @@ export function FlashcardSession() {
           <div className="text-center">
             <h4 className="text-sm font-medium text-muted-foreground">Cards</h4>
             <p className="text-2xl font-bold">
-              {activeProject.flashcards.length}
+              {activeProject.flashcards?.length || 0}
             </p>
           </div>
         </Card>
@@ -92,16 +100,7 @@ export function FlashcardSession() {
         </Card>
       </div>
 
-      {activeProject.skippedCards.length > 0 && (
-        <Card className="p-3">
-          <div className="text-center">
-            <h4 className="text-sm font-medium text-amber-600">Skipped</h4>
-            <p className="text-2xl font-bold">
-              {activeProject.skippedCards.length}
-            </p>
-          </div>
-        </Card>
-      )}
+      {/* Removed skipped cards display since skippedCards property doesn't exist */}
 
       {currentCard ? (
         <Flashcard card={currentCard} onNext={handleNextCard} />
@@ -114,10 +113,7 @@ export function FlashcardSession() {
             <div className="space-y-2 text-center">
               <h3 className="font-semibold text-xl">All Caught Up!</h3>
               <p className="text-muted-foreground">
-                {activeProject.sessionComplete &&
-                activeProject.skippedCards.length > 0
-                  ? `You've reviewed all your flashcards, including ${activeProject.skippedCards.length} skipped cards.`
-                  : "You've reviewed all your flashcards for now."}
+                You've reviewed all your flashcards for now.
               </p>
             </div>
             <Button onClick={handleRestartSession} className="mt-4">
