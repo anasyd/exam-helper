@@ -631,7 +631,20 @@ export function ProjectView() {
       useFlashcardStore.getState().setIsProcessing(false);
       return;
     }
-    useFlashcardStore.getState().setDocumentContent(documentText);
+    // Check if this is additional content or the first content
+    const activeProject = useFlashcardStore.getState().getActiveProject();
+    const hasExistingContent =
+      activeProject?.pdfContent ||
+      activeProject?.documentNotes ||
+      activeProject?.studyGuide;
+
+    if (hasExistingContent) {
+      // Append to existing content
+      useFlashcardStore.getState().appendDocumentContent(documentText);
+    } else {
+      // First time - set content directly
+      useFlashcardStore.getState().setDocumentContent(documentText);
+    }
     setIsGeneratingStudyContent(true);
     useFlashcardStore.getState().setIsProcessing(true);
     const toastId = toast.loading("Generating All Study Content...", {
@@ -649,13 +662,25 @@ export function ProjectView() {
         numberOfFlashcards: 15,
       });
 
-      // Store all generated content
+      // Store all generated content intelligently
       if (allContent.studyGuide) {
-        setStudyGuide(allContent.studyGuide);
+        if (hasExistingContent && activeProject?.studyGuide) {
+          // Merge with existing study guide
+          useFlashcardStore.getState().mergeStudyGuide(allContent.studyGuide);
+        } else {
+          // First study guide - set directly
+          setStudyGuide(allContent.studyGuide);
+        }
       }
 
       if (allContent.notes) {
-        setDocumentNotes(allContent.notes);
+        if (hasExistingContent && activeProject?.documentNotes) {
+          // Append to existing notes
+          useFlashcardStore.getState().appendDocumentNotes(allContent.notes);
+        } else {
+          // First notes - set directly
+          setDocumentNotes(allContent.notes);
+        }
       }
 
       if (allContent.flashcards && allContent.flashcards.length > 0) {
@@ -663,16 +688,25 @@ export function ProjectView() {
         flashcardStore.addFlashcards(allContent.flashcards, documentText);
       }
 
-      toast.success("All Study Content Generated!", {
-        id: toastId,
-        description: `Generated ${
-          allContent.studyGuide ? "study guide, " : ""
-        }${allContent.notes ? "notes, " : ""}${
-          allContent.flashcards?.length || 0
-        } flashcards${
-          allContent.audioNarration ? ", and audio narration" : ""
-        }!`,
-      });
+      toast.success(
+        hasExistingContent
+          ? "Study Content Merged!"
+          : "All Study Content Generated!",
+        {
+          id: toastId,
+          description: hasExistingContent
+            ? `Merged additional ${
+                allContent.studyGuide ? "study guide sections, " : ""
+              }${allContent.notes ? "notes, " : ""}${
+                allContent.flashcards?.length || 0
+              } flashcards with existing content!`
+            : `Generated ${allContent.studyGuide ? "study guide, " : ""}${
+                allContent.notes ? "notes, " : ""
+              }${allContent.flashcards?.length || 0} flashcards${
+                allContent.audioNarration ? ", and audio narration" : ""
+              }!`,
+        }
+      );
       setActiveTab("studyContent");
     } catch (error) {
       console.error("Failed to generate study content:", error);
