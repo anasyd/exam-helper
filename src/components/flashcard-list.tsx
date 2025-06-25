@@ -67,7 +67,7 @@ export function FlashcardList() {
   }
 
   // Filter flashcards based on search term and difficulty filter
-  const filteredFlashcards = activeProject.flashcards.filter((card) => {
+  const filteredFlashcards = (activeProject.flashcards || []).filter((card) => {
     // Text search
     const matchesSearch =
       searchTerm === "" ||
@@ -76,14 +76,14 @@ export function FlashcardList() {
 
     // Difficulty filter
     let matchesDifficulty = true;
-    if (filter === "easy") matchesDifficulty = card.difficulty <= 2;
-    if (filter === "medium") matchesDifficulty = card.difficulty === 3;
-    if (filter === "hard") matchesDifficulty = card.difficulty >= 4;
+    if (filter === "easy") matchesDifficulty = (card.difficulty || 3) <= 2;
+    if (filter === "medium") matchesDifficulty = (card.difficulty || 3) === 3;
+    if (filter === "hard") matchesDifficulty = (card.difficulty || 3) >= 4;
 
     return matchesSearch && matchesDifficulty;
   });
 
-  if (activeProject.flashcards.length === 0) {
+  if (!activeProject.flashcards || activeProject.flashcards.length === 0) {
     return (
       <Card className="w-full mb-6">
         <CardHeader>

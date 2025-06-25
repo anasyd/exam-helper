@@ -559,29 +559,54 @@ export async function generateStudyContent(
               topic
             );
           }
-        }));
+        }
       }
     }
 
     // Re-validate after adding summaries and completion flags
     for (const section of parsedData.sections) {
-      if (!section || typeof section.title !== 'string' || typeof section.content !== 'string' ||
-          typeof section.isCompleted !== 'boolean' || typeof section.mcqsGenerated !== 'boolean' ||
-          (section.xpAwardedOnCompletion !== undefined && typeof section.xpAwardedOnCompletion !== 'number') ) { // Validate XP
-        throw new Error("Invalid section format or missing/invalid completion/XP flags in generated study content.");
+      if (
+        !section ||
+        typeof section.title !== "string" ||
+        typeof section.content !== "string" ||
+        typeof section.isCompleted !== "boolean" ||
+        typeof section.mcqsGenerated !== "boolean" ||
+        (section.xpAwardedOnCompletion !== undefined &&
+          typeof section.xpAwardedOnCompletion !== "number")
+      ) {
+        // Validate XP
+        throw new Error(
+          "Invalid section format or missing/invalid completion/XP flags in generated study content."
+        );
       }
-      if (section.audioSummaryText && typeof section.audioSummaryText !== 'string') {
+      if (
+        section.audioSummaryText &&
+        typeof section.audioSummaryText !== "string"
+      ) {
         throw new Error("Invalid audio summary format for section.");
       }
       if (section.topics) {
-        if (!Array.isArray(section.topics)) throw new Error("Invalid topics format (not an array).");
+        if (!Array.isArray(section.topics))
+          throw new Error("Invalid topics format (not an array).");
         for (const topic of section.topics) {
-          if (!topic || typeof topic.title !== 'string' || typeof topic.content !== 'string' ||
-              typeof topic.isCompleted !== 'boolean' || typeof topic.mcqsGenerated !== 'boolean' ||
-              (topic.xpAwardedOnCompletion !== undefined && typeof topic.xpAwardedOnCompletion !== 'number') ) { // Validate XP
-            throw new Error("Invalid topic format or missing/invalid completion/XP flags in generated study content topic.");
+          if (
+            !topic ||
+            typeof topic.title !== "string" ||
+            typeof topic.content !== "string" ||
+            typeof topic.isCompleted !== "boolean" ||
+            typeof topic.mcqsGenerated !== "boolean" ||
+            (topic.xpAwardedOnCompletion !== undefined &&
+              typeof topic.xpAwardedOnCompletion !== "number")
+          ) {
+            // Validate XP
+            throw new Error(
+              "Invalid topic format or missing/invalid completion/XP flags in generated study content topic."
+            );
           }
-          if (topic.audioSummaryText && typeof topic.audioSummaryText !== 'string') {
+          if (
+            topic.audioSummaryText &&
+            typeof topic.audioSummaryText !== "string"
+          ) {
             throw new Error("Invalid audio summary format for topic.");
           }
         }
