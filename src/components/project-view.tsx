@@ -120,12 +120,36 @@ export function ProjectView() {
     useFlashcardStore.getState().setDocumentContent(documentText);
     setIsGeneratingStudyContent(true);
     useFlashcardStore.getState().setIsProcessing(true);
-    const toastId = toast.loading("Generating Study Content...", { description: "AI is analyzing your document(s)..." });
+    const toastId = toast.loading("Generating All Study Content...", { description: "AI is generating notes, flashcards, study guide, and audio..." });
     try {
       const aiService = createGeminiService(geminiApiKey);
-      const studyGuideData = await aiService.generateStudyContent(documentText);
-      setStudyGuide(studyGuideData);
-      toast.success("Study Content Generated!", { id: toastId, description: "View it in the 'Study Content' tab." });
+      
+      // Generate all content types automatically
+      const allContent = await aiService.generateAllContentTypes(documentText, {
+        generateFlashcards: true,
+        generateNotes: true,
+        generateStudyGuide: true,
+        numberOfFlashcards: 15
+      });
+
+      // Store all generated content
+      if (allContent.studyGuide) {
+        setStudyGuide(allContent.studyGuide);
+      }
+      
+      if (allContent.notes) {
+        setDocumentNotes(allContent.notes);
+      }
+      
+      if (allContent.flashcards && allContent.flashcards.length > 0) {
+        const flashcardStore = useFlashcardStore.getState();
+        flashcardStore.addFlashcards(allContent.flashcards, documentText);
+      }
+
+      toast.success("All Study Content Generated!", { 
+        id: toastId, 
+        description: `Generated ${allContent.studyGuide ? 'study guide, ' : ''}${allContent.notes ? 'notes, ' : ''}${allContent.flashcards?.length || 0} flashcards${allContent.audioNarration ? ', and audio narration' : ''}!` 
+      });
       setActiveTab("studyContent");
     } catch (error) {
       console.error("Failed to generate study content:", error);
