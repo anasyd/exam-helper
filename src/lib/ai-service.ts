@@ -162,16 +162,18 @@ export interface StudySection {
   content: string;
   topics?: StudyTopic[];
   audioSummaryText?: string;
-  isCompleted?: boolean; // Added for roadmap completion
-  mcqsGenerated?: boolean; // Track if MCQs have been generated for this section
+  isCompleted?: boolean;
+  mcqsGenerated?: boolean;
+  xpAwardedOnCompletion?: number; // XP for completing this section
 }
 
 export interface StudyTopic {
   title: string;
   content: string;
   audioSummaryText?: string;
-  isCompleted?: boolean; // Added for roadmap completion
-  mcqsGenerated?: boolean; // Track if MCQs have been generated for this topic
+  isCompleted?: boolean;
+  mcqsGenerated?: boolean;
+  xpAwardedOnCompletion?: number; // XP for completing this topic
   // quizAttempts?: number;
   // quizBestScore?: number;
 }
@@ -213,20 +215,23 @@ export async function generateStudyContent(
           {
             "title": "Section 1: [Section Title]",
             "content": "Detailed summary and explanation of content in section 1...",
-            "isCompleted": false, // Initialize to false
-            "mcqsGenerated": false, // Initialize to false
+            "isCompleted": false,
+            "mcqsGenerated": false,
+            "xpAwardedOnCompletion": 50, // Default XP for section
             "topics": [
               {
                 "title": "Topic 1.1: [Specific Topic Title]",
                 "content": "Detailed explanation of topic 1.1...",
-                "isCompleted": false, // Initialize to false
-                "mcqsGenerated": false // Initialize to false
+                "isCompleted": false,
+                "mcqsGenerated": false,
+                "xpAwardedOnCompletion": 10 // Default XP for topic
               },
               {
                 "title": "Topic 1.2: [Specific Topic Title]",
                 "content": "Detailed explanation of topic 1.2...",
                 "isCompleted": false,
-                "mcqsGenerated": false
+                "mcqsGenerated": false,
+                "xpAwardedOnCompletion": 10
               }
             ]
           },
@@ -235,12 +240,14 @@ export async function generateStudyContent(
             "content": "Detailed summary and explanation of content in section 2...",
             "isCompleted": false,
             "mcqsGenerated": false,
+            "xpAwardedOnCompletion": 50,
             "topics": [
               {
                 "title": "Topic 2.1: [Specific Topic Title]",
                 "content": "Detailed explanation of topic 2.1...",
                 "isCompleted": false,
-                "mcqsGenerated": false
+                "mcqsGenerated": false,
+                "xpAwardedOnCompletion": 10
               }
             ]
           }
@@ -311,8 +318,9 @@ export async function generateStudyContent(
     // Re-validate after adding summaries and completion flags
     for (const section of parsedData.sections) {
       if (!section || typeof section.title !== 'string' || typeof section.content !== 'string' ||
-          typeof section.isCompleted !== 'boolean' || typeof section.mcqsGenerated !== 'boolean' ) {
-        throw new Error("Invalid section format or missing completion flags in generated study content.");
+          typeof section.isCompleted !== 'boolean' || typeof section.mcqsGenerated !== 'boolean' ||
+          (section.xpAwardedOnCompletion !== undefined && typeof section.xpAwardedOnCompletion !== 'number') ) { // Validate XP
+        throw new Error("Invalid section format or missing/invalid completion/XP flags in generated study content.");
       }
       if (section.audioSummaryText && typeof section.audioSummaryText !== 'string') {
         throw new Error("Invalid audio summary format for section.");
@@ -321,8 +329,9 @@ export async function generateStudyContent(
         if (!Array.isArray(section.topics)) throw new Error("Invalid topics format (not an array).");
         for (const topic of section.topics) {
           if (!topic || typeof topic.title !== 'string' || typeof topic.content !== 'string' ||
-              typeof topic.isCompleted !== 'boolean' || typeof topic.mcqsGenerated !== 'boolean') {
-            throw new Error("Invalid topic format or missing completion flags in generated study content topic.");
+              typeof topic.isCompleted !== 'boolean' || typeof topic.mcqsGenerated !== 'boolean' ||
+              (topic.xpAwardedOnCompletion !== undefined && typeof topic.xpAwardedOnCompletion !== 'number') ) { // Validate XP
+            throw new Error("Invalid topic format or missing/invalid completion/XP flags in generated study content topic.");
           }
           if (topic.audioSummaryText && typeof topic.audioSummaryText !== 'string') {
             throw new Error("Invalid audio summary format for topic.");

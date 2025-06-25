@@ -35,6 +35,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     getActiveProject,
     getDuplicateQuestionCount,
     setStudyGuide,
+    markTopicAsComplete, // Added
   } = useFlashcardStore();
   const activeProject = getActiveProject();
 
@@ -144,7 +145,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     }
   };
 
-  const handlePracticeMCQs = (sectionTitle: string, topicTitle?: string) => {
+  const handlePracticeMCQs = (sectionTitle: string, sectionIndex: number, topicTitle?: string, topicIndex?: number) => {
     if (!activeProject) return;
     const cards = activeProject.flashcards.filter(
       (card) =>
@@ -153,12 +154,18 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     );
     if (cards.length > 0) {
       setQuizCards(cards);
+      // Store context for when quiz is complete
+      setQuizContext({ sectionTitle, sectionIndex, topicTitle, topicIndex });
       setQuizTitle(topicTitle || sectionTitle);
       setShowQuizView(true);
     } else {
       toast.info("No MCQs found for this specific topic/section to practice.");
     }
   };
+
+  // State to store context for the currently active quiz
+  const [quizContext, setQuizContext] = useState<{sectionTitle: string, sectionIndex: number, topicTitle?: string, topicIndex?: number} | null>(null);
+
 
   const handlePlaySummary = (text: string | undefined, id: string) => {
     if (!synth || !text) return;
@@ -189,7 +196,19 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
       <TopicQuizView
         cardsToPractice={quizCards}
         quizTitle={quizTitle}
-        onQuizComplete={() => setShowQuizView(false)}
+        onQuizComplete={(passed) => {
+          setShowQuizView(false);
+          if (passed && quizContext && quizContext.topicIndex !== undefined) {
+            markTopicAsComplete(quizContext.sectionIndex, quizContext.topicIndex);
+          } else if (passed && quizContext && quizContext.topicIndex === undefined) {
+            // This case implies a section-level quiz was passed.
+            // If sections can be directly marked complete or if all topics become complete,
+            // the markTopicAsComplete logic (which checks section completion) handles it.
+            // For now, we only explicitly mark topics. Section completion is implicit.
+            console.log("Section quiz passed, section completion handled by topic completions.");
+          }
+          setQuizContext(null); // Clear context
+        }}
       />
     );
   }
@@ -250,7 +269,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                 <AccordionContent className="p-4 pt-2 border-t">
                   <div className="flex justify-end mb-2">
                     {areMcqsGeneratedForSource(sectionIndex) ? (
-                       <Button variant="outline" size="sm" onClick={() => handlePracticeMCQs(section.title)}
+                       <Button variant="outline" size="sm" onClick={() => handlePracticeMCQs(section.title, sectionIndex)}
                         disabled={getMcqCountForSource(section.title) === 0}
                        >
                         <Brain className="mr-2 h-4 w-4" />
@@ -317,7 +336,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                   <Button
                                     variant="outline"
                                     size="xs"
-                                    onClick={() => handlePracticeMCQs(section.title, topic.title)}
+                                    onClick={() => handlePracticeMCQs(section.title, sectionIndex, topic.title, topicIndex)}
                                     disabled={getMcqCountForSource(section.title, topic.title) === 0}
                                   >
                                     <Brain className="mr-1 h-3 w-3" />

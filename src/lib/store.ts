@@ -3,7 +3,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { createShareableProject, getSharedProject } from './share-service';
-import { StudyGuide } from './ai-service'; // Added import
+import { StudyGuide } from './ai-service';
+import { toast } from 'sonner'; // Added for completion toasts
 
 export type Flashcard = {
   id: string;
@@ -36,8 +37,9 @@ export type Project = {
   videoFileName?: string;
   originalTranscript?: string;
   formattedTranscript?: string;
-  documentNotes?: string; // Markdown notes from documents
-  videoNotes?: string;    // Markdown notes from video transcript
+  documentNotes?: string;
+  videoNotes?: string;
+  xp?: number; // Added for project-specific experience points
 }
 
 // Helper function to ensure lastSeen is a proper Date object
@@ -63,7 +65,9 @@ interface FlashcardState {
   isProcessing: boolean; // Global processing flag (e.g., for AI calls)
   currentCardIndex: number | null; // Index for the main flashcard session (might need adjustment for topic quizzes)
   geminiApiKey: string | null;
-  gamificationEnabled: boolean; // Added for gamification toggle
+  gamificationEnabled: boolean;
+  currentStreak: number; // Added for global study streak
+  lastStudiedDate: string | null; // YYYY-MM-DD format. Added for streak calculation
 
   // Project management
   createProject: (name: string, description: string) => string;
@@ -118,7 +122,10 @@ interface FlashcardState {
   importProject: (jsonData: string) => { success: boolean; newProjectId?: string; error?: string }; 
   exportAllProjects: () => string; 
   importProjects: (jsonData: string) => { success: boolean; count: number; error?: string };
-  setGamificationEnabled: (enabled: boolean) => void; // Added setter
+  setGamificationEnabled: (enabled: boolean) => void;
+  markTopicAsComplete: (sectionIndex: number, topicIndex: number) => void;
+  addXPtoProject: (amount: number) => void;
+  updateStreak: () => void; // Added for streak logic
 }
 
 export const useFlashcardStore = create<FlashcardState>()(
@@ -129,7 +136,9 @@ export const useFlashcardStore = create<FlashcardState>()(
       isProcessing: false,
       currentCardIndex: null,
       geminiApiKey: null,
-      gamificationEnabled: true, // Default to true, can be changed
+      gamificationEnabled: true,
+      currentStreak: 0, // Initialize streak
+      lastStudiedDate: null, // Initialize last studied date
 
       createProject: (name, description) => {
         const id = crypto.randomUUID();
@@ -146,9 +155,10 @@ export const useFlashcardStore = create<FlashcardState>()(
               flashcards: [],
               pdfContent: null,
               processedHashes: [],
-              cardsSeenThisSession: [], // Initialize as empty
+              cardsSeenThisSession: [],
               sessionComplete: false,
               studyGuide: null,
+              xp: 0, // Initialize XP
             }
           ],
           activeProjectId: id,
@@ -548,6 +558,98 @@ export const useFlashcardStore = create<FlashcardState>()(
       },
 
       setGamificationEnabled: (enabled) => set({ gamificationEnabled: enabled }),
+
+      addXPtoProject: (amount) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === activeProject.id
+              ? { ...p, xp: (p.xp || 0) + amount, updatedAt: new Date() }
+              : p
+          ),
+        }));
+      },
+
+      markTopicAsComplete: (sectionIndex, topicIndex) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject || !activeProject.studyGuide || !activeProject.studyGuide.sections[sectionIndex]?.topics?.[topicIndex]) {
+          console.warn("Attempted to mark non-existent topic as complete", sectionIndex, topicIndex);
+          return;
+        }
+
+        const topic = activeProject.studyGuide.sections[sectionIndex].topics![topicIndex];
+        if (topic.isCompleted) return; // Already completed
+
+        // Award XP
+        const xpToAward = topic.xpAwardedOnCompletion || 0;
+        if (xpToAward > 0) {
+          get().addXPtoProject(xpToAward);
+        }
+
+        // Create a new studyGuide object with the updated topic
+        const newStudyGuide = JSON.parse(JSON.stringify(activeProject.studyGuide)); // Deep copy
+        newStudyGuide.sections[sectionIndex].topics[topicIndex].isCompleted = true;
+
+        // Check if all topics in the section are now complete
+        const section = newStudyGuide.sections[sectionIndex];
+        const allTopicsInSectionComplete = section.topics?.every(t => t.isCompleted);
+        if (allTopicsInSectionComplete && !section.isCompleted) {
+          section.isCompleted = true;
+          const sectionXp = section.xpAwardedOnCompletion || 0;
+          if (sectionXp > 0) {
+            get().addXPtoProject(sectionXp);
+          }
+           toast.success(`Section "${section.title}" completed! ${sectionXp > 0 ? `+${sectionXp} XP` : ''}`);
+        }
+
+        set((state) => ({
+          projects: state.projects.map((p) =>
+            p.id === activeProject.id
+              ? { ...p, studyGuide: newStudyGuide, updatedAt: new Date() }
+              : p
+          ),
+        }));
+        toast.success(`Topic "${topic.title}" completed! ${xpToAward > 0 ? `+${xpToAward} XP` : ''}`);
+        get().updateStreak(); // Update streak on topic completion
+      },
+      // Placeholder for markSectionAsComplete if direct section completion is needed later
+      // markSectionAsComplete: (sectionIndex) => { ... }
+
+      updateStreak: () => {
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0]; // YYYY-MM-DD
+
+        const lastStudiedStr = get().lastStudiedDate;
+
+        if (lastStudiedStr === todayStr) {
+          return; // Already studied today, streak maintained
+        }
+
+        let newStreak = get().currentStreak;
+
+        if (lastStudiedStr) {
+          const lastStudied = new Date(lastStudiedStr);
+          const yesterday = new Date(today);
+          yesterday.setDate(today.getDate() - 1);
+          const yesterdayStr = yesterday.toISOString().split('T')[0];
+
+          if (lastStudiedStr === yesterdayStr) {
+            newStreak++; // Continued streak
+          } else {
+            newStreak = 1; // Broke streak, restart
+          }
+        } else {
+          newStreak = 1; // First study day
+        }
+
+        set({ currentStreak: newStreak, lastStudiedDate: todayStr });
+        if (newStreak > 1) {
+            toast.success(`Study streak: ${newStreak} days! Keep it up! 🔥`);
+        } else if (newStreak === 1 && lastStudiedStr !== todayStr) { // Avoid toast if it's the very first study ever vs restarting streak
+             toast.info(`New study streak started!`);
+        }
+      },
     }),
     {
       name: 'flashcards-storage-v2',
