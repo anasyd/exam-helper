@@ -9,7 +9,7 @@ interface FlashcardData {
 
 export class GeminiService {
   private client: GoogleGenerativeAI;
-  private modelName = "gemini-1.5-pro"; // Updated to the latest model name
+  private modelName = "gemini-2.5-pro"; // Updated to the latest model name
 
   constructor(apiKey: string) {
     this.client = new GoogleGenerativeAI(apiKey);
@@ -25,9 +25,12 @@ export class GeminiService {
     try {
       const model = this.client.getGenerativeModel({ model: this.modelName });
 
-      const existingFlashcardsText = existingFlashcards.length > 0
-        ? `EXISTING FLASHCARD QUESTIONS TO AVOID DUPLICATING (especially for this topic if provided):\n${existingFlashcards.map((card, i) => `${i + 1}. ${card.question}`).join("\n")}`
-        : "";
+      const existingFlashcardsText =
+        existingFlashcards.length > 0
+          ? `EXISTING FLASHCARD QUESTIONS TO AVOID DUPLICATING (especially for this topic if provided):\n${existingFlashcards
+              .map((card, i) => `${i + 1}. ${card.question}`)
+              .join("\n")}`
+          : "";
 
       let prompt = `Generate ${numberOfCards} substantive multiple-choice flashcards in valid JSON format.
 
@@ -79,16 +82,16 @@ Response format (MUST follow exactly, with no additional text or markdown):
           ...more flashcards
         ]
       `;
-      
+
       const result = await model.generateContent(prompt);
       const response = await result.response;
       const text = response.text();
 
       console.log("Raw AI response:", text.substring(0, 200) + "..."); // Log the beginning of the response for debugging
-      
+
       // Try several approaches to extract valid JSON
       let parsedData: FlashcardData[] = [];
-      
+
       try {
         // First attempt: Direct parsing
         parsedData = JSON.parse(text) as FlashcardData[];
@@ -100,12 +103,16 @@ Response format (MUST follow exactly, with no additional text or markdown):
             parsedData = JSON.parse(jsonMatch[0]) as FlashcardData[];
           } catch (matchError) {
             // Third attempt: Find content between triple backticks if it looks like markdown code blocks
-            const codeBlockMatch = text.match(/```(?:json)?\s*(\[\s*\{[\s\S]*\}\s*\])\s*```/);
+            const codeBlockMatch = text.match(
+              /```(?:json)?\s*(\[\s*\{[\s\S]*\}\s*\])\s*```/
+            );
             if (codeBlockMatch) {
               try {
                 parsedData = JSON.parse(codeBlockMatch[1]) as FlashcardData[];
               } catch (codeBlockError) {
-                throw new Error("Failed to parse AI response as JSON after multiple attempts");
+                throw new Error(
+                  "Failed to parse AI response as JSON after multiple attempts"
+                );
               }
             } else {
               throw new Error("Could not locate valid JSON in the AI response");
@@ -115,38 +122,41 @@ Response format (MUST follow exactly, with no additional text or markdown):
           throw new Error("No JSON-like structure found in the AI response");
         }
       }
-      
+
       if (!Array.isArray(parsedData) || parsedData.length === 0) {
         throw new Error("Parsed data is not a valid array or is empty");
       }
 
       // Validate the data structure
-      const validatedData = parsedData.filter(card => {
+      const validatedData = parsedData.filter((card) => {
         try {
           return (
-            card && 
-            typeof card === 'object' &&
-            typeof card.question === 'string' && 
-            typeof card.answer === 'string' && 
-            Array.isArray(card.options) && 
+            card &&
+            typeof card === "object" &&
+            typeof card.question === "string" &&
+            typeof card.answer === "string" &&
+            Array.isArray(card.options) &&
             card.options.length >= 2 &&
-            typeof card.correctOptionIndex === 'number' &&
-            card.correctOptionIndex >= 0 && 
+            typeof card.correctOptionIndex === "number" &&
+            card.correctOptionIndex >= 0 &&
             card.correctOptionIndex < card.options.length
           );
         } catch (validationError) {
           return false;
         }
       });
-      
+
       if (validatedData.length === 0) {
-        throw new Error("No valid flashcards could be extracted from the response");
+        throw new Error(
+          "No valid flashcards could be extracted from the response"
+        );
       }
-      
+
       return validatedData;
     } catch (error) {
       console.error("Error generating flashcards:", error);
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       throw new Error(`Failed to generate flashcards: ${errorMessage}`);
     }
   }
@@ -198,7 +208,10 @@ export async function generateStudyContent(
       7.  Focus on extracting and structuring the core information.
 
       Document Content to Analyze:
-      ${content.slice(0, 100000)} // Limiting content to avoid token limits, adjust as needed
+      ${content.slice(
+        0,
+        100000
+      )} // Limiting content to avoid token limits, adjust as needed
 
       Response format (MUST follow exactly, with no additional text or markdown):
       {
@@ -237,7 +250,10 @@ export async function generateStudyContent(
     const response = await result.response;
     const text = response.text();
 
-    console.log("Raw AI response for study content:", text.substring(0, 500) + "...");
+    console.log(
+      "Raw AI response for study content:",
+      text.substring(0, 500) + "..."
+    );
 
     let parsedData: StudyGuide;
     try {
@@ -248,75 +264,134 @@ export async function generateStudyContent(
         try {
           parsedData = JSON.parse(jsonMatch[0]) as StudyGuide;
         } catch (matchError) {
-          const codeBlockMatch = text.match(/```(?:json)?\s*(\{\s*"title"[\s\S]*\}\s*\})\s*```/);
+          const codeBlockMatch = text.match(
+            /```(?:json)?\s*(\{\s*"title"[\s\S]*\}\s*\})\s*```/
+          );
           if (codeBlockMatch && codeBlockMatch[1]) {
             try {
               parsedData = JSON.parse(codeBlockMatch[1]) as StudyGuide;
             } catch (codeBlockError) {
-              console.error("Failed to parse study content JSON from code block:", codeBlockError);
-              throw new Error("Failed to parse study content JSON after multiple attempts (code block).");
+              console.error(
+                "Failed to parse study content JSON from code block:",
+                codeBlockError
+              );
+              throw new Error(
+                "Failed to parse study content JSON after multiple attempts (code block)."
+              );
             }
           } else {
-            console.error("Could not locate valid JSON in the AI response for study content (jsonMatch failed):", matchError);
-            throw new Error("Could not locate valid JSON in the AI response for study content.");
+            console.error(
+              "Could not locate valid JSON in the AI response for study content (jsonMatch failed):",
+              matchError
+            );
+            throw new Error(
+              "Could not locate valid JSON in the AI response for study content."
+            );
           }
         }
       } else {
-        console.error("No JSON-like structure found in the AI response for study content:", parseError);
-        throw new Error("No JSON-like structure found in the AI response for study content.");
+        console.error(
+          "No JSON-like structure found in the AI response for study content:",
+          parseError
+        );
+        throw new Error(
+          "No JSON-like structure found in the AI response for study content."
+        );
       }
     }
 
     // Basic validation
-    if (!parsedData || typeof parsedData.title !== 'string' || !Array.isArray(parsedData.sections)) {
+    if (
+      !parsedData ||
+      typeof parsedData.title !== "string" ||
+      !Array.isArray(parsedData.sections)
+    ) {
       console.error("Validation failed for parsed study guide:", parsedData);
       throw new Error("Generated study content is not in the expected format.");
     }
 
     // Generate audio summaries for sections and topics
     for (const section of parsedData.sections) {
-      if (!section || typeof section.title !== 'string' || typeof section.content !== 'string') {
-        console.warn("Skipping invalid section during summary generation:", section);
+      if (
+        !section ||
+        typeof section.title !== "string" ||
+        typeof section.content !== "string"
+      ) {
+        console.warn(
+          "Skipping invalid section during summary generation:",
+          section
+        );
         continue;
       }
-      section.audioSummaryText = await this.generateTextSummary(section.content, 80); // Summarize section content
+      section.audioSummaryText = await this.generateTextSummary(
+        section.content,
+        80
+      ); // Summarize section content
 
       if (section.topics && Array.isArray(section.topics)) {
-        await Promise.all(section.topics.map(async (topic) => {
-          if (topic && typeof topic.title === 'string' && typeof topic.content === 'string') {
-            topic.audioSummaryText = await this.generateTextSummary(topic.content, 50); // Summarize topic content
-          } else {
-            console.warn("Skipping invalid topic during summary generation:", topic);
-          }
-        }));
+        await Promise.all(
+          section.topics.map(async (topic) => {
+            if (
+              topic &&
+              typeof topic.title === "string" &&
+              typeof topic.content === "string"
+            ) {
+              topic.audioSummaryText = await this.generateTextSummary(
+                topic.content,
+                50
+              ); // Summarize topic content
+            } else {
+              console.warn(
+                "Skipping invalid topic during summary generation:",
+                topic
+              );
+            }
+          })
+        );
       }
     }
 
     // Re-validate after adding summaries (optional, but good practice)
     for (const section of parsedData.sections) {
-        if (section.audioSummaryText && typeof section.audioSummaryText !== 'string') {
-            throw new Error("Invalid audio summary format for section.");
+      if (
+        section.audioSummaryText &&
+        typeof section.audioSummaryText !== "string"
+      ) {
+        throw new Error("Invalid audio summary format for section.");
+      }
+      if (section.topics) {
+        for (const topic of section.topics) {
+          if (
+            topic.audioSummaryText &&
+            typeof topic.audioSummaryText !== "string"
+          ) {
+            throw new Error("Invalid audio summary format for topic.");
+          }
+          if (
+            !topic ||
+            typeof topic.title !== "string" ||
+            typeof topic.content !== "string"
+          ) {
+            throw new Error(
+              "Invalid topic format in generated study content topic."
+            );
+          }
         }
-        if (section.topics) {
-            for (const topic of section.topics) {
-                if (topic.audioSummaryText && typeof topic.audioSummaryText !== 'string') {
-                    throw new Error("Invalid audio summary format for topic.");
-                }
-                 if (!topic || typeof topic.title !== 'string' || typeof topic.content !== 'string') {
-                    throw new Error("Invalid topic format in generated study content topic.");
-                }
-            }
-        }
-         if (!section || typeof section.title !== 'string' || typeof section.content !== 'string') {
-            throw new Error("Invalid section format in generated study content.");
-        }
+      }
+      if (
+        !section ||
+        typeof section.title !== "string" ||
+        typeof section.content !== "string"
+      ) {
+        throw new Error("Invalid section format in generated study content.");
+      }
     }
-
 
     return parsedData;
   } catch (error) {
     console.error("Error generating study content or summaries:", error);
-    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error occurred";
     throw new Error(`Failed to generate study content: ${errorMessage}`);
   }
 }
@@ -342,7 +417,10 @@ async function generateTextSummary(
       Do not include any introductory phrases like "This text is about..." or "The summary is...". Just provide the summary directly.
 
       Text to summarize:
-      ${textToSummarize.slice(0, 15000)} // Limit input to avoid token issues for summary
+      ${textToSummarize.slice(
+        0,
+        15000
+      )} // Limit input to avoid token issues for summary
 
       Concise Audio Summary (max ${maxLength} words):
     `;
@@ -446,7 +524,9 @@ async function generateAutomatedNotes(
   try {
     const model = this.client.getGenerativeModel({ model: this.modelName });
     const prompt = `
-      Generate structured and concise notes from the following ${contentType === "document" ? "document" : "lecture transcript"} content.
+      Generate structured and concise notes from the following ${
+        contentType === "document" ? "document" : "lecture transcript"
+      } content.
       The notes should be in Markdown format.
       Identify key information, main points, definitions, and important concepts.
       Structure the notes logically, for example using headings for main sections and bullet points for details or lists.
@@ -461,8 +541,13 @@ async function generateAutomatedNotes(
     const response = await result.response;
     return response.text().trim();
   } catch (error) {
-    console.error(`Error generating automated notes for ${contentType}:`, error);
-    return `Error generating notes: ${error instanceof Error ? error.message : "Unknown error"}`;
+    console.error(
+      `Error generating automated notes for ${contentType}:`,
+      error
+    );
+    return `Error generating notes: ${
+      error instanceof Error ? error.message : "Unknown error"
+    }`;
   }
 }
 GeminiService.prototype.generateAutomatedNotes = generateAutomatedNotes;
