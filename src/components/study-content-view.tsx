@@ -43,7 +43,8 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     addFlashcards,
     getActiveProject,
     getDuplicateQuestionCount,
-    setStudyGuide, // Will be needed if we refresh studyGuide to show MCQ counts
+    setStudyGuide,
+    markTopicAsComplete, // Added
   } = useFlashcardStore();
   const activeProject = getActiveProject();
 
@@ -69,6 +70,18 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
           : !card.sourceTopicTitle) // If no topicTitle, count section-level MCQs
     ).length;
   };
+
+  // Helper to check if MCQs are marked as generated in the study guide
+  const areMcqsGeneratedForSource = (sectionIdx: number, topicIdx?: number): boolean => {
+    if (!studyGuide || !studyGuide.sections[sectionIdx]) return false;
+    const section = studyGuide.sections[sectionIdx];
+    if (topicIdx === undefined || topicIdx === null) { // Checking for a section
+      return !!section.mcqsGenerated;
+    }
+    // Checking for a topic
+    return !!(section.topics && section.topics[topicIdx] && section.topics[topicIdx].mcqsGenerated);
+  };
+
 
   const handleGenerateMCQs = async (
     contentToUse: string,
@@ -125,10 +138,19 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
           sectionTitle,
           topicTitle
         );
-        toast.success(`Generated ${countAdded} new MCQs for "${title}"!`, {
-          id: toastId,
-        });
-        // Optionally, force a re-render or update a local count if displaying MCQ numbers directly
+        toast.success(`Generated ${countAdded} new MCQs for "${title}"!`, { id: toastId });
+
+        // Update mcqsGenerated flag in the studyGuide
+        if (activeProject && activeProject.studyGuide) {
+          const newStudyGuide = JSON.parse(JSON.stringify(activeProject.studyGuide)); // Deep copy
+          const currentSection = newStudyGuide.sections[sectionIdx];
+          if (isSection && currentSection) {
+            currentSection.mcqsGenerated = true;
+          } else if (!isSection && currentSection && currentSection.topics && topicIdx !== undefined && currentSection.topics[topicIdx]) {
+            currentSection.topics[topicIdx].mcqsGenerated = true;
+          }
+          setStudyGuide(newStudyGuide);
+        }
       } else {
         toast.info(
           `No new MCQs generated for "${title}". They might be duplicates or generation failed.`,
@@ -146,7 +168,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     }
   };
 
-  const handlePracticeMCQs = (sectionTitle: string, topicTitle?: string) => {
+  const handlePracticeMCQs = (sectionTitle: string, sectionIndex: number, topicTitle?: string, topicIndex?: number) => {
     if (!activeProject) return;
     const cards = activeProject.flashcards.filter(
       (card) =>
@@ -157,12 +179,18 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     );
     if (cards.length > 0) {
       setQuizCards(cards);
+      // Store context for when quiz is complete
+      setQuizContext({ sectionTitle, sectionIndex, topicTitle, topicIndex });
       setQuizTitle(topicTitle || sectionTitle);
       setShowQuizView(true);
     } else {
       toast.info("No MCQs found for this specific topic/section to practice.");
     }
   };
+
+  // State to store context for the currently active quiz
+  const [quizContext, setQuizContext] = useState<{sectionTitle: string, sectionIndex: number, topicTitle?: string, topicIndex?: number} | null>(null);
+
 
   const handlePlaySummary = (text: string | undefined, id: string) => {
     if (!synth || !text) return;
@@ -195,7 +223,19 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
       <TopicQuizView
         cardsToPractice={quizCards}
         quizTitle={quizTitle}
-        onQuizComplete={() => setShowQuizView(false)}
+        onQuizComplete={(passed) => {
+          setShowQuizView(false);
+          if (passed && quizContext && quizContext.topicIndex !== undefined) {
+            markTopicAsComplete(quizContext.sectionIndex, quizContext.topicIndex);
+          } else if (passed && quizContext && quizContext.topicIndex === undefined) {
+            // This case implies a section-level quiz was passed.
+            // If sections can be directly marked complete or if all topics become complete,
+            // the markTopicAsComplete logic (which checks section completion) handles it.
+            // For now, we only explicitly mark topics. Section completion is implicit.
+            console.log("Section quiz passed, section completion handled by topic completions.");
+          }
+          setQuizContext(null); // Clear context
+        }}
       />
     );
   }
@@ -238,7 +278,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                     {section.audioSummaryText && (
                       <Button
                         variant="ghost"
-                        size="icon" // Use 'icon' size for a compact button
+                        size="icon"
                         onClick={(e) => {
                           e.stopPropagation(); // Prevent accordion from toggling
                           handlePlaySummary(
@@ -394,7 +434,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                 {topic.audioSummaryText && (
                                   <Button
                                     variant="ghost"
-                                    size="icon" // Use 'icon' size
+                                    size="icon"
                                     onClick={(e) => {
                                       e.stopPropagation();
                                       handlePlaySummary(
