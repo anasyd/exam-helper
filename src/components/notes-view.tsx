@@ -58,23 +58,21 @@ export function NotesView({
     // Clean up the content - remove markdown code fences if they exist
     let cleanedNotes = notes;
 
-    // Remove ```markdown at the start and ``` at the end
-    if (cleanedNotes.startsWith("```markdown\n")) {
-      cleanedNotes = cleanedNotes.substring(12); // Remove '```markdown\n'
-    } else if (cleanedNotes.startsWith("```markdown")) {
-      cleanedNotes = cleanedNotes.substring(11); // Remove '```markdown'
-    }
+    // Handle multiple patterns that might occur from appending content:
+    // 1. Remove code fences at the very start and end
+    cleanedNotes = cleanedNotes.replace(/^```markdown\s*\n?/, "");
+    cleanedNotes = cleanedNotes.replace(/\n?```$/, "");
 
-    if (cleanedNotes.endsWith("\n```")) {
-      cleanedNotes = cleanedNotes.substring(0, cleanedNotes.length - 4); // Remove '\n```'
-    } else if (cleanedNotes.endsWith("```")) {
-      cleanedNotes = cleanedNotes.substring(0, cleanedNotes.length - 3); // Remove '```'
-    }
+    // 2. Remove any remaining markdown code fences that might be in the middle from appended content
+    cleanedNotes = cleanedNotes.replace(/```markdown\s*\n?/g, "");
+    cleanedNotes = cleanedNotes.replace(/\n?```/g, "");
 
-    // Also handle other common code fence patterns
-    cleanedNotes = cleanedNotes
-      .replace(/^```[a-z]*\n?/i, "")
-      .replace(/\n?```$/i, "");
+    // 3. Also handle other common code fence patterns (typescript, javascript, etc.)
+    cleanedNotes = cleanedNotes.replace(/^```[a-z]*\s*\n?/gi, "");
+    cleanedNotes = cleanedNotes.replace(/\n?```$/gi, "");
+
+    // 4. Clean up any extra whitespace that might be left
+    cleanedNotes = cleanedNotes.trim();
 
     return (
       <div className="bg-muted p-4 rounded-md max-h-[70vh] overflow-auto">

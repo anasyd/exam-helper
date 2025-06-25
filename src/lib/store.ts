@@ -106,6 +106,10 @@ interface FlashcardState {
   skipCard: (id: string) => void;
   setIsProcessing: (isProcessing: boolean) => void;
   setDocumentContent: (content: string | null) => void; // Renamed from setPdfContent
+  appendDocumentContent: (newContent: string) => void; // Append new document content
+  appendDocumentNotes: (newNotes: string) => void; // Append new notes to existing ones
+  mergeStudyGuide: (newStudyGuide: StudyGuide) => void; // Merge new study guide with existing one
+  cleanupExistingNotes: () => void; // Clean up existing notes to remove code fences
   setGeminiApiKey: (apiKey: string | null) => void;
   clearFlashcards: (
     sourceSectionTitle?: string,
@@ -458,6 +462,101 @@ export const useFlashcardStore = create<FlashcardState>()(
         }));
       },
 
+      appendDocumentContent: (newContent) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  pdfContent: project.pdfContent
+                    ? `${project.pdfContent}\n\n--- NEW DOCUMENT ---\n\n${newContent}`
+                    : newContent,
+                }
+              : project
+          ),
+        }));
+      },
+
+      appendDocumentNotes: (newNotes) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+
+        // Strip markdown code fences if present
+        const cleanNewNotes = newNotes
+          .replace(/^```markdown\s*\n?|\n?```$/g, "")
+          .trim();
+
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  documentNotes: project.documentNotes
+                    ? `${project.documentNotes}\n\n--- ADDITIONAL NOTES ---\n\n${cleanNewNotes}`
+                    : cleanNewNotes,
+                }
+              : project
+          ),
+        }));
+      },
+
+      mergeStudyGuide: (newStudyGuide) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? {
+                  ...project,
+                  updatedAt: new Date(),
+                  studyGuide: project.studyGuide
+                    ? {
+                        ...project.studyGuide,
+                        sections: [
+                          ...project.studyGuide.sections,
+                          ...newStudyGuide.sections.map((section) => ({
+                            ...section,
+                            title: `${section.title} (Additional)`,
+                          })),
+                        ],
+                      }
+                    : newStudyGuide,
+                }
+              : project
+          ),
+        }));
+      },
+
+      cleanupExistingNotes: () => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject || !activeProject.documentNotes) return;
+
+        // Strip markdown code fences from existing notes
+        const cleanedNotes = activeProject.documentNotes
+          .replace(/^```markdown\s*\n?|\n?```$/g, "")
+          .replace(/```markdown\s*\n?/g, "")
+          .replace(/\n?```$/g, "")
+          .trim();
+
+        if (cleanedNotes !== activeProject.documentNotes) {
+          set((state) => ({
+            projects: state.projects.map((project) =>
+              project.id === activeProject.id
+                ? {
+                    ...project,
+                    updatedAt: new Date(),
+                    documentNotes: cleanedNotes,
+                  }
+                : project
+            ),
+          }));
+        }
+      },
+
       setGeminiApiKey: (apiKey) => set({ geminiApiKey: apiKey }),
 
       clearFlashcards: (sourceSectionTitle, sourceTopicTitle) => {
@@ -667,10 +766,16 @@ export const useFlashcardStore = create<FlashcardState>()(
       setDocumentNotes: (notes) => {
         const activeProject = get().getActiveProject();
         if (!activeProject) return;
+
+        // Strip markdown code fences if present
+        const cleanNotes = notes
+          ? notes.replace(/^```markdown\s*\n?|\n?```$/g, "").trim()
+          : notes;
+
         set((state) => ({
           projects: state.projects.map((project) =>
             project.id === activeProject.id
-              ? { ...project, updatedAt: new Date(), documentNotes: notes }
+              ? { ...project, updatedAt: new Date(), documentNotes: cleanNotes }
               : project
           ),
         }));
