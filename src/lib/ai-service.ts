@@ -161,13 +161,19 @@ export interface StudySection {
   title: string;
   content: string;
   topics?: StudyTopic[];
-  audioSummaryText?: string; // Added for text-based audio summary
+  audioSummaryText?: string;
+  isCompleted?: boolean; // Added for roadmap completion
+  mcqsGenerated?: boolean; // Track if MCQs have been generated for this section
 }
 
 export interface StudyTopic {
   title: string;
   content: string;
-  audioSummaryText?: string; // Added for text-based audio summary
+  audioSummaryText?: string;
+  isCompleted?: boolean; // Added for roadmap completion
+  mcqsGenerated?: boolean; // Track if MCQs have been generated for this topic
+  // quizAttempts?: number;
+  // quizBestScore?: number;
 }
 
 export interface StudyGuide {
@@ -207,24 +213,34 @@ export async function generateStudyContent(
           {
             "title": "Section 1: [Section Title]",
             "content": "Detailed summary and explanation of content in section 1...",
+            "isCompleted": false, // Initialize to false
+            "mcqsGenerated": false, // Initialize to false
             "topics": [
               {
                 "title": "Topic 1.1: [Specific Topic Title]",
-                "content": "Detailed explanation of topic 1.1..."
+                "content": "Detailed explanation of topic 1.1...",
+                "isCompleted": false, // Initialize to false
+                "mcqsGenerated": false // Initialize to false
               },
               {
                 "title": "Topic 1.2: [Specific Topic Title]",
-                "content": "Detailed explanation of topic 1.2..."
+                "content": "Detailed explanation of topic 1.2...",
+                "isCompleted": false,
+                "mcqsGenerated": false
               }
             ]
           },
           {
             "title": "Section 2: [Section Title]",
             "content": "Detailed summary and explanation of content in section 2...",
+            "isCompleted": false,
+            "mcqsGenerated": false,
             "topics": [
               {
                 "title": "Topic 2.1: [Specific Topic Title]",
-                "content": "Detailed explanation of topic 2.1..."
+                "content": "Detailed explanation of topic 2.1...",
+                "isCompleted": false,
+                "mcqsGenerated": false
               }
             ]
           }
@@ -292,30 +308,32 @@ export async function generateStudyContent(
       }
     }
 
-    // Re-validate after adding summaries (optional, but good practice)
+    // Re-validate after adding summaries and completion flags
     for (const section of parsedData.sections) {
-        if (section.audioSummaryText && typeof section.audioSummaryText !== 'string') {
-            throw new Error("Invalid audio summary format for section.");
+      if (!section || typeof section.title !== 'string' || typeof section.content !== 'string' ||
+          typeof section.isCompleted !== 'boolean' || typeof section.mcqsGenerated !== 'boolean' ) {
+        throw new Error("Invalid section format or missing completion flags in generated study content.");
+      }
+      if (section.audioSummaryText && typeof section.audioSummaryText !== 'string') {
+        throw new Error("Invalid audio summary format for section.");
+      }
+      if (section.topics) {
+        if (!Array.isArray(section.topics)) throw new Error("Invalid topics format (not an array).");
+        for (const topic of section.topics) {
+          if (!topic || typeof topic.title !== 'string' || typeof topic.content !== 'string' ||
+              typeof topic.isCompleted !== 'boolean' || typeof topic.mcqsGenerated !== 'boolean') {
+            throw new Error("Invalid topic format or missing completion flags in generated study content topic.");
+          }
+          if (topic.audioSummaryText && typeof topic.audioSummaryText !== 'string') {
+            throw new Error("Invalid audio summary format for topic.");
+          }
         }
-        if (section.topics) {
-            for (const topic of section.topics) {
-                if (topic.audioSummaryText && typeof topic.audioSummaryText !== 'string') {
-                    throw new Error("Invalid audio summary format for topic.");
-                }
-                 if (!topic || typeof topic.title !== 'string' || typeof topic.content !== 'string') {
-                    throw new Error("Invalid topic format in generated study content topic.");
-                }
-            }
-        }
-         if (!section || typeof section.title !== 'string' || typeof section.content !== 'string') {
-            throw new Error("Invalid section format in generated study content.");
-        }
+      }
     }
-
 
     return parsedData;
   } catch (error) {
-    console.error("Error generating study content or summaries:", error);
+    console.error("Error generating study content, summaries, or init flags:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
     throw new Error(`Failed to generate study content: ${errorMessage}`);
   }

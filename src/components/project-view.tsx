@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useFlashcardStore } from "@/lib/store";
+import { useFlashcardStore, Project } from "@/lib/store"; // Import Project type
 import { DocumentUpload } from "@/components/document-upload";
 import { FlashcardGenerator } from "@/components/flashcard-generator";
 import { FlashcardSession } from "@/components/flashcard-session";
@@ -18,8 +18,8 @@ import {
   CardTitle,
   CardDescription,
 } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress"; // Added for video processing loader
-import { Loader2 } from "lucide-react"; // Added for video processing loader
+import { Progress } from "@/components/ui/progress";
+import { Loader2, CheckCircle } from "lucide-react"; // Added CheckCircle
 
 import {
   FileUp,
@@ -40,28 +40,90 @@ import { VideoUpload } from "./video-upload";
 import { NotesView } from "./notes-view";
 import { toast } from "sonner";
 
+// GamifiedRoadmapView Implementation
+function GamifiedRoadmapView({ project }: { project: Project | null }) {
+  if (!project || !project.studyGuide) {
+    return (
+      <Card>
+        <CardHeader><CardTitle>Gamified Learning Roadmap</CardTitle></CardHeader>
+        <CardContent><p>No study guide generated yet. Upload documents and generate study content first.</p></CardContent>
+      </Card>
+    );
+  }
 
-// Placeholder for GamifiedRoadmapView
-function GamifiedRoadmapView({ project }: { project: ReturnType<typeof useFlashcardStore_getActiveProject> }) {
-  if (!project) return null;
+  const { studyGuide } = project;
+
+  // TODO: Implement actual logic for locking/unlocking nodes.
+  // For now, all are displayed as "active" or based on their isCompleted flag.
+
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Gamified Learning Roadmap (Under Construction)</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p>This view will display an interactive, game-like interface for your learning journey through the project: {project.name}.</p>
-        <p className="mt-4 p-4 bg-yellow-100 border border-yellow-300 rounded text-yellow-700">
-          Roadmap nodes based on your study guide sections/topics, completion tracking, XP, and streaks will be implemented here.
-        </p>
-      </CardContent>
-    </Card>
+    <div className="space-y-6">
+      <Card className="shadow-lg">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-bold tracking-tight">{studyGuide.title || "Learning Roadmap"}</CardTitle>
+          {/* TODO: Display overall project XP here if implemented */}
+          <CardDescription>Your personalized journey through the material.</CardDescription>
+        </CardHeader>
+      </Card>
+
+      {studyGuide.sections.map((section, sectionIndex) => (
+        <Card
+          key={`section-roadmap-${sectionIndex}`}
+          className={`transition-all duration-300 ease-in-out transform hover:scale-[1.02] ${section.isCompleted ? 'border-green-500 border-2 shadow-green-200 shadow-md' : 'border-slate-200'}`}
+        >
+          <CardHeader className="p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                {section.isCompleted ? <CheckCircle className="h-7 w-7 text-green-500 mr-3 flex-shrink-0" /> : <div className="h-7 w-7 border-2 border-dashed border-slate-400 rounded-full mr-3 flex-shrink-0" />}
+                <CardTitle className="text-xl">{section.title}</CardTitle>
+              </div>
+              {/* Placeholder for section-level actions e.g. "Review Section" or "Take Section Quiz" */}
+            </div>
+            <CardDescription className="pl-10">
+              MCQs {section.mcqsGenerated ? `Generated (${project.flashcards.filter(f => f.sourceSectionTitle === section.title && !f.sourceTopicTitle).length})` : "Not Generated"}
+            </CardDescription>
+          </CardHeader>
+
+          {section.topics && section.topics.length > 0 && (
+            <CardContent className="pl-10 pr-4 pb-4 space-y-3">
+              <div className="relative pl-5">
+                {/* Vertical connector line for topics */}
+                {section.topics.length > 1 && <div className="absolute left-[12px] top-2 bottom-2 w-0.5 bg-slate-300 dark:bg-slate-700 -translate-x-1/2"></div>}
+
+                {section.topics.map((topic, topicIndex) => (
+                  <div key={`topic-roadmap-${sectionIndex}-${topicIndex}`} className="relative mb-3">
+                     {/* Horizontal connector for each topic */}
+                    <div className="absolute left-[-8px] top-1/2 w-3 h-0.5 bg-slate-300 dark:bg-slate-700 -translate-y-1/2"></div>
+                    <Card className={`p-3 transition-colors ${topic.isCompleted ? 'bg-green-50 dark:bg-green-800/30 border-green-300' : 'bg-white dark:bg-slate-800/20'}`}>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                           {topic.isCompleted ? <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" /> : <div className="h-5 w-5 border-2 border-slate-400 rounded-full mr-2 flex-shrink-0" />}
+                          <h5 className="font-semibold">{topic.title}</h5>
+                        </div>
+                        {/* Button to practice MCQs - to be linked with TopicQuizView activation */}
+                        {/* <Button size="xs" variant="outline" disabled={!topic.mcqsGenerated || getMcqCountForSource(section.title, topic.title) === 0}>
+                              Practice MCQs
+                            </Button> */}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1 pl-7">
+                        MCQs {topic.mcqsGenerated ? `Generated (${project.flashcards.filter(f => f.sourceSectionTitle === section.title && f.sourceTopicTitle === topic.title).length})` : "Not Generated"}
+                      </p>
+                    </Card>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          )}
+        </Card>
+      ))}
+       <Card className="mt-6 text-center p-4 bg-muted/50">
+            <p className="text-sm text-muted-foreground">Further gamification elements like XP, streaks, and node unlocking logic will be built upon this structure.</p>
+        </Card>
+    </div>
   );
 }
 
-// Hook alias for better type inference in GamifiedRoadmapView project prop
 const useFlashcardStore_getActiveProject = () => useFlashcardStore(state => state.getActiveProject());
-
 
 export function ProjectView() {
   const router = useRouter();

@@ -34,7 +34,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     addFlashcards,
     getActiveProject,
     getDuplicateQuestionCount,
-    setStudyGuide, // Will be needed if we refresh studyGuide to show MCQ counts
+    setStudyGuide,
   } = useFlashcardStore();
   const activeProject = getActiveProject();
 
@@ -52,9 +52,21 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     return activeProject.flashcards.filter(
       (card) =>
         card.sourceSectionTitle === sectionTitle &&
-        (topicTitle ? card.sourceTopicTitle === topicTitle : !card.sourceTopicTitle) // If no topicTitle, count section-level MCQs
+        (topicTitle ? card.sourceTopicTitle === topicTitle : !card.sourceTopicTitle)
     ).length;
   };
+
+  // Helper to check if MCQs are marked as generated in the study guide
+  const areMcqsGeneratedForSource = (sectionIdx: number, topicIdx?: number): boolean => {
+    if (!studyGuide || !studyGuide.sections[sectionIdx]) return false;
+    const section = studyGuide.sections[sectionIdx];
+    if (topicIdx === undefined || topicIdx === null) { // Checking for a section
+      return !!section.mcqsGenerated;
+    }
+    // Checking for a topic
+    return !!(section.topics && section.topics[topicIdx] && section.topics[topicIdx].mcqsGenerated);
+  };
+
 
   const handleGenerateMCQs = async (
     contentToUse: string,
@@ -105,7 +117,19 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
           topicTitle
         );
         toast.success(`Generated ${countAdded} new MCQs for "${title}"!`, { id: toastId });
-        // Optionally, force a re-render or update a local count if displaying MCQ numbers directly
+
+        // Update mcqsGenerated flag in the studyGuide
+        if (activeProject && activeProject.studyGuide) {
+          const newStudyGuide = JSON.parse(JSON.stringify(activeProject.studyGuide)); // Deep copy
+          const currentSection = newStudyGuide.sections[sectionIdx];
+          if (isSection && currentSection) {
+            currentSection.mcqsGenerated = true;
+          } else if (!isSection && currentSection && currentSection.topics && topicIdx !== undefined && currentSection.topics[topicIdx]) {
+            currentSection.topics[topicIdx].mcqsGenerated = true;
+          }
+          setStudyGuide(newStudyGuide);
+        }
+
       } else {
         toast.info(`No new MCQs generated for "${title}". They might be duplicates or generation failed.`, { id: toastId });
       }
@@ -225,9 +249,12 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                 </AccordionTrigger>
                 <AccordionContent className="p-4 pt-2 border-t">
                   <div className="flex justify-end mb-2">
-                    {getMcqCountForSource(section.title) > 0 ? (
-                       <Button variant="outline" size="sm" onClick={() => handlePracticeMCQs(section.title)}>
-                        <Brain className="mr-2 h-4 w-4" /> Practice {getMcqCountForSource(section.title)} MCQs
+                    {areMcqsGeneratedForSource(sectionIndex) ? (
+                       <Button variant="outline" size="sm" onClick={() => handlePracticeMCQs(section.title)}
+                        disabled={getMcqCountForSource(section.title) === 0}
+                       >
+                        <Brain className="mr-2 h-4 w-4" />
+                        Practice {getMcqCountForSource(section.title) > 0 ? `${getMcqCountForSource(section.title)} MCQs` : "MCQs"}
                       </Button>
                     ) : (
                       <Button
@@ -286,9 +313,15 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                             </AccordionTrigger>
                             <AccordionContent className="p-3 pt-1 border-t">
                                <div className="flex justify-end mb-2">
-                                {getMcqCountForSource(section.title, topic.title) > 0 ? (
-                                  <Button variant="outline" size="xs" onClick={() => handlePracticeMCQs(section.title, topic.title)}>
-                                    <Brain className="mr-1 h-3 w-3" /> Practice {getMcqCountForSource(section.title, topic.title)} MCQs
+                                {areMcqsGeneratedForSource(sectionIndex, topicIndex) ? (
+                                  <Button
+                                    variant="outline"
+                                    size="xs"
+                                    onClick={() => handlePracticeMCQs(section.title, topic.title)}
+                                    disabled={getMcqCountForSource(section.title, topic.title) === 0}
+                                  >
+                                    <Brain className="mr-1 h-3 w-3" />
+                                    Practice {getMcqCountForSource(section.title, topic.title) > 0 ? `${getMcqCountForSource(section.title, topic.title)} MCQs` : "MCQs"}
                                   </Button>
                                 ) : (
                                   <Button
