@@ -5,8 +5,7 @@ import { Flashcard } from "@/lib/store";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, ArrowRight, CheckCircle, XCircle } from "lucide-react";
-// import { Badge } from "@/components/ui/badge"; // Commented out
-
+import { Badge } from "@/components/ui/badge";
 
 interface TopicQuizViewProps {
   cardsToPractice: Flashcard[];
@@ -116,10 +115,7 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
                 onClick={() => !showAnswer && handleOptionSelect(index)} // Allow selection only if answer isn't shown
                 disabled={showAnswer && selectedOption !== null} // Disable options after one is selected and answer shown
               >
-
-                {/* <Badge variant="outline" className="mr-3">{String.fromCharCode(65 + index)}</Badge> */}
-                <span className="mr-3 font-medium">{String.fromCharCode(65 + index)}.</span>
-
+                <Badge variant="outline" className="mr-3">{String.fromCharCode(65 + index)}</Badge>
                 {option}
                 {showAnswer && isCorrect && <CheckCircle className="ml-auto h-5 w-5 text-green-500" />}
                 {showAnswer && isSelected && !isCorrect && <XCircle className="ml-auto h-5 w-5 text-red-500" />}

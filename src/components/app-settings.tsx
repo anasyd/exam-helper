@@ -28,7 +28,6 @@ import { Separator } from "@/components/ui/separator";
 export function AppSettings() {
   const {
     geminiApiKey,
-    geminiApiKey,
     setGeminiApiKey,
     exportAllProjects,
     importProjects,

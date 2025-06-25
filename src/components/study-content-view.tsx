@@ -1,11 +1,11 @@
 "use client";
 
-// import {
-//   Accordion,
-//   AccordionContent,
-//   AccordionItem,
-//   AccordionTrigger,
-// } from "@/components/ui/accordion"; // Commented out due to missing component
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Volume2, StopCircle, Brain, Zap, Loader2 } from "lucide-react";
@@ -193,13 +193,14 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
       </CardHeader>
       <CardContent>
         {studyGuide.sections && studyGuide.sections.length > 0 ? (
-          <div className="w-full space-y-4"> {/* Replaced Accordion */}
+          <Accordion type="multiple" className="w-full space-y-4">
             {studyGuide.sections.map((section, sectionIndex) => (
-              <div
+              <AccordionItem
+                value={`section-${sectionIndex}`}
                 key={sectionIndex}
                 className="border rounded-lg"
               >
-                <div className="p-4 bg-slate-50 dark:bg-slate-800 rounded-t-lg text-left"> {/* Replaced AccordionTrigger */}
+                <AccordionTrigger className="p-4 hover:no-underline bg-slate-50 dark:bg-slate-800 rounded-t-lg text-left">
                   <div className="flex justify-between items-center w-full">
                     <h3 className="text-lg font-semibold flex-grow mr-2">{section.title}</h3>
                     {section.audioSummaryText && (
@@ -207,6 +208,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                         variant="ghost"
                         size="icon"
                         onClick={(e) => {
+                          e.stopPropagation(); // Prevent accordion from toggling
                           handlePlaySummary(section.audioSummaryText, `section-${sectionIndex}`);
                         }}
                         className="ml-2 flex-shrink-0"
@@ -220,8 +222,8 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                       </Button>
                     )}
                   </div>
-                </div>
-                <div className="p-4 pt-2 border-t"> {/* Replaced AccordionContent */}
+                </AccordionTrigger>
+                <AccordionContent className="p-4 pt-2 border-t">
                   <div className="flex justify-end mb-2">
                     {getMcqCountForSource(section.title) > 0 ? (
                        <Button variant="outline" size="sm" onClick={() => handlePracticeMCQs(section.title)}>
@@ -250,13 +252,14 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                   {section.topics && section.topics.length > 0 && (
                     <div className="mt-4 space-y-3">
                       <h4 className="text-md font-semibold mb-2">Key Topics:</h4>
-                      <div className="w-full space-y-2"> {/* Replaced inner Accordion */}
+                      <Accordion type="multiple" className="w-full space-y-2">
                         {section.topics.map((topic, topicIndex) => (
-                          <div
+                          <AccordionItem
+                            value={`section-${sectionIndex}-topic-${topicIndex}`}
                             key={topicIndex}
                             className="border rounded-md bg-slate-50/50 dark:bg-slate-900/50"
                           >
-                            <div className="p-3 text-left"> {/* Replaced inner AccordionTrigger */}
+                            <AccordionTrigger className="p-3 hover:no-underline text-left">
                               <div className="flex justify-between items-center w-full">
                                 <h5 className="text-sm font-medium flex-grow mr-2">
                                   {topic.title}
@@ -266,6 +269,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                     variant="ghost"
                                     size="icon"
                                     onClick={(e) => {
+                                      e.stopPropagation();
                                       handlePlaySummary(topic.audioSummaryText,`section-${sectionIndex}-topic-${topicIndex}`);
                                     }}
                                     className="ml-2 flex-shrink-0 p-1"
@@ -279,8 +283,8 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                   </Button>
                                 )}
                               </div>
-                            </div>
-                            <div className="p-3 pt-1 border-t"> {/* Replaced inner AccordionContent */}
+                            </AccordionTrigger>
+                            <AccordionContent className="p-3 pt-1 border-t">
                                <div className="flex justify-end mb-2">
                                 {getMcqCountForSource(section.title, topic.title) > 0 ? (
                                   <Button variant="outline" size="xs" onClick={() => handlePracticeMCQs(section.title, topic.title)}>
@@ -306,16 +310,16 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                 className="prose prose-sm dark:prose-invert max-w-none"
                                 dangerouslySetInnerHTML={{ __html: topic.content }}
                               />
-                            </div>
-                          </div>
+                            </AccordionContent>
+                          </AccordionItem>
                         ))}
-                      </div>
+                      </Accordion>
                     </div>
                   )}
-                </div>
-              </div>
+                </AccordionContent>
+              </AccordionItem>
             ))}
-          </div>
+          </Accordion>
         ) : (
           <p className="text-muted-foreground">
             The generated study guide has no sections.
