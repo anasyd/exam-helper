@@ -23,7 +23,6 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Separator } from "@/components/ui/separator";
-// import { Switch } from "@/components/ui/switch"; // Reverted
 
 export function AppSettings() {
   const {
@@ -32,8 +31,6 @@ export function AppSettings() {
     exportAllProjects,
     importProjects,
     projects,
-    // gamificationEnabled,     // Reverted
-    // setGamificationEnabled, // Reverted
   } = useFlashcardStore();
   const [apiKey, setApiKey] = useState<string>("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -53,7 +50,6 @@ export function AppSettings() {
       // setLocalGamificationEnabled(gamificationEnabled); // Reverted
     }
   }, [isDialogOpen /*, gamificationEnabled Reverted */]);
-
 
   const handleSaveSettings = () => {
     // Save API Key
@@ -263,7 +259,7 @@ export function AppSettings() {
             >
               Clear API Key
             </Button>
-            <Button onClick={handleSaveApiKey} disabled={!apiKey || isSaved}>
+            <Button onClick={handleSaveSettings} disabled={!apiKey || isSaved}>
               {isSaved ? (
                 <>
                   <Check className="mr-2 h-4 w-4" />
