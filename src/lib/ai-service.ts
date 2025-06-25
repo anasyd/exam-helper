@@ -5,6 +5,7 @@ export interface FlashcardData {
   answer: string;
   options: string[]; // Array of options including the correct answer
   correctOptionIndex: number; // Index of the correct option in the array
+  difficulty: number; // 1-5, where 1 is easy and 5 is hard
 }
 
 interface TTSOptions {
@@ -533,6 +534,12 @@ Each flashcard MUST include:
 2. A detailed answer explanation that thoroughly explains the concept.
 3. Four plausible multiple choice options, with only one being correct.
 4. The index (0-3) of the correct option in the options array.
+5. A difficulty rating (1-5 scale):
+   - 1: Basic recall/definition (easy)
+   - 2: Simple comprehension (easy-medium)
+   - 3: Application of concepts (medium)
+   - 4: Analysis/synthesis (medium-hard)
+   - 5: Complex evaluation/critical thinking (hard)
 `;
 
       if (topicTitle && topicContent) {
@@ -562,7 +569,8 @@ Response format (MUST follow exactly, with no additional text or markdown):
             "question": "Substantive question about a concept in the material",
             "answer": "Detailed explanation of the correct answer and why it's correct",
             "options": ["Option A", "Option B", "Option C", "Option D"],
-            "correctOptionIndex": 0
+            "correctOptionIndex": 0,
+            "difficulty": 3
           },
           ...more flashcards
         ]
