@@ -10,9 +10,81 @@ interface FlashcardData {
 export class GeminiService {
   protected client: GoogleGenerativeAI;
   protected modelName = "gemini-2.5-flash"; // Updated to the latest model name
+  private lastRequestTime = 0;
+  private readonly minRequestInterval = 6000; // 6 seconds between requests to stay under 10/minute
+  private requestCount = 0;
+  private readonly maxRequestsPerMinute = 8; // Conservative limit to stay under 10
 
   constructor(apiKey: string) {
     this.client = new GoogleGenerativeAI(apiKey);
+  }
+
+  // Rate limiting utility with request counting
+  protected async waitForRateLimit(): Promise<void> {
+    const now = Date.now();
+    const timeSinceLastRequest = now - this.lastRequestTime;
+
+    // Reset request count every minute
+    if (timeSinceLastRequest > 60000) {
+      this.requestCount = 0;
+    }
+
+    // If we're approaching the limit, wait longer
+    if (this.requestCount >= this.maxRequestsPerMinute) {
+      const waitTime = 60000 - timeSinceLastRequest + 1000; // Wait until next minute + buffer
+      console.log(
+        `Rate limit reached: waiting ${Math.round(
+          waitTime / 1000
+        )}s before next request`
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+      this.requestCount = 0;
+    } else if (timeSinceLastRequest < this.minRequestInterval) {
+      const waitTime = this.minRequestInterval - timeSinceLastRequest;
+      console.log(
+        `Rate limiting: waiting ${Math.round(
+          waitTime / 1000
+        )}s before next request`
+      );
+      await new Promise((resolve) => setTimeout(resolve, waitTime));
+    }
+
+    this.lastRequestTime = Date.now();
+    this.requestCount++;
+  }
+
+  // Retry mechanism for handling rate limit errors
+  protected async executeWithRetry<T>(
+    operation: () => Promise<T>,
+    maxRetries: number = 3
+  ): Promise<T> {
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await operation();
+      } catch (error: any) {
+        if (
+          error?.message?.includes("429") ||
+          error?.message?.includes("503")
+        ) {
+          const waitTime = Math.min(1000 * Math.pow(2, attempt), 60000); // Exponential backoff, max 1 minute
+          console.log(
+            `Rate limit hit, attempt ${attempt}/${maxRetries}. Waiting ${Math.round(
+              waitTime / 1000
+            )}s before retry...`
+          );
+          await new Promise((resolve) => setTimeout(resolve, waitTime));
+
+          if (attempt === maxRetries) {
+            throw new Error(
+              `Rate limit exceeded after ${maxRetries} attempts. Please try again later.`
+            );
+          }
+        } else {
+          throw error;
+        }
+      }
+    }
+    throw new Error("Unexpected error in retry mechanism");
   }
 
   // Method declarations for prototype-assigned functions
@@ -36,8 +108,6 @@ export class GeminiService {
     topicContent?: string // Added: For topic-specific context
   ): Promise<FlashcardData[]> {
     try {
-      const model = this.client.getGenerativeModel({ model: this.modelName });
-
       const existingFlashcardsText =
         existingFlashcards.length > 0
           ? `EXISTING FLASHCARD QUESTIONS TO AVOID DUPLICATING (especially for this topic if provided):\n${existingFlashcards
@@ -96,7 +166,11 @@ Response format (MUST follow exactly, with no additional text or markdown):
         ]
       `;
 
-      const result = await model.generateContent(prompt);
+      const result = await this.executeWithRetry(async () => {
+        await this.waitForRateLimit();
+        const model = this.client.getGenerativeModel({ model: this.modelName });
+        return await model.generateContent(prompt);
+      });
       const response = await result.response;
       const text = response.text();
 
@@ -266,7 +340,11 @@ export async function generateStudyContent(
       }
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await this.executeWithRetry(async () => {
+      await this.waitForRateLimit();
+      const model = this.client.getGenerativeModel({ model: this.modelName });
+      return await model.generateContent(prompt);
+    });
     const response = await result.response;
     const text = response.text();
 
@@ -347,25 +425,24 @@ export async function generateStudyContent(
       ); // Summarize section content
 
       if (section.topics && Array.isArray(section.topics)) {
-        await Promise.all(
-          section.topics.map(async (topic) => {
-            if (
-              topic &&
-              typeof topic.title === "string" &&
-              typeof topic.content === "string"
-            ) {
-              topic.audioSummaryText = await this.generateTextSummary(
-                topic.content,
-                50
-              ); // Summarize topic content
-            } else {
-              console.warn(
-                "Skipping invalid topic during summary generation:",
-                topic
-              );
-            }
-          })
-        );
+        // Process topics sequentially instead of in parallel to avoid rate limits
+        for (const topic of section.topics) {
+          if (
+            topic &&
+            typeof topic.title === "string" &&
+            typeof topic.content === "string"
+          ) {
+            topic.audioSummaryText = await this.generateTextSummary(
+              topic.content,
+              50
+            ); // Summarize topic content
+          } else {
+            console.warn(
+              "Skipping invalid topic during summary generation:",
+              topic
+            );
+          }
+        }
       }
     }
 
@@ -426,8 +503,10 @@ async function generateTextSummary(
     return "";
   }
   try {
-    const model = this.client.getGenerativeModel({ model: this.modelName }); // Use the same model
-    const prompt = `
+    const result = await this.executeWithRetry(async () => {
+      await this.waitForRateLimit();
+      const model = this.client.getGenerativeModel({ model: this.modelName }); // Use the same model
+      const prompt = `
       Provide a concise audio summary for the following text.
       The summary should be clear, engaging, and suitable for voice narration.
       It should capture the absolute key points of the text.
@@ -442,8 +521,8 @@ async function generateTextSummary(
 
       Concise Audio Summary (max ${maxLength} words):
     `;
-
-    const result = await model.generateContent(prompt);
+      return await model.generateContent(prompt);
+    });
     const response = await result.response;
     const summary = response.text().trim();
 
@@ -474,6 +553,7 @@ async function formatTranscriptToMarkdown(
     return "";
   }
   try {
+    await this.waitForRateLimit();
     const model = this.client.getGenerativeModel({ model: this.modelName });
     const prompt = `
       Format the following raw lecture transcript into well-structured Markdown.
@@ -506,6 +586,7 @@ async function linkTranscriptConcepts(
     return "";
   }
   try {
+    await this.waitForRateLimit();
     const model = this.client.getGenerativeModel({ model: this.modelName });
     const prompt = `
       Analyze the following Markdown-formatted lecture transcript.
@@ -540,6 +621,7 @@ async function generateAutomatedNotes(
     return "";
   }
   try {
+    await this.waitForRateLimit();
     const model = this.client.getGenerativeModel({ model: this.modelName });
     const prompt = `
       Generate structured and concise notes from the following ${
