@@ -10,9 +10,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Volume2, StopCircle, Brain, Zap, Loader2 } from "lucide-react"; // Added Brain, Zap, Loader2
 import { StudyGuide, StudySection, StudyTopic, createGeminiService, FlashcardData } from "@/lib/ai-service";
-import { useFlashcardStore } from "@/lib/store"; // Added
+import { useFlashcardStore, Flashcard } from "@/lib/store"; // Added
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface StudyContentViewProps {
   studyGuide: StudyGuide | null | undefined;
@@ -245,10 +248,28 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                       </Button>
                     )}
                   </div>
-                  <div
-                    className="prose dark:prose-invert max-w-none"
-                    dangerouslySetInnerHTML={{ __html: section.content }} // Assuming content might be HTML, sanitize if needed
-                  />
+                  <div className="prose dark:prose-invert max-w-none">
+                    <ReactMarkdown 
+                      rehypePlugins={[rehypeRaw]} 
+                      remarkPlugins={[remarkGfm]}
+                      components={{
+                        h1: ({...props}) => <h1 className="text-lg font-bold mb-3 text-foreground" {...props} />,
+                        h2: ({...props}) => <h2 className="text-md font-semibold mb-2 text-foreground" {...props} />,
+                        h3: ({...props}) => <h3 className="text-sm font-medium mb-2 text-foreground" {...props} />,
+                        p: ({...props}) => <p className="mb-2 text-foreground leading-relaxed" {...props} />,
+                        ul: ({...props}) => <ul className="list-disc list-inside mb-3 text-foreground" {...props} />,
+                        ol: ({...props}) => <ol className="list-decimal list-inside mb-3 text-foreground" {...props} />,
+                        li: ({...props}) => <li className="mb-1 text-foreground" {...props} />,
+                        code: ({...props}) => <code className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-xs font-mono" {...props} />,
+                        pre: ({...props}) => <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md overflow-x-auto mb-3" {...props} />,
+                        blockquote: ({...props}) => <blockquote className="border-l-4 border-blue-500 pl-3 italic mb-3 text-foreground" {...props} />,
+                        strong: ({...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                        em: ({...props}) => <em className="italic text-foreground" {...props} />
+                      }}
+                    >
+                      {section.content}
+                    </ReactMarkdown>
+                  </div>
                   {section.topics && section.topics.length > 0 && (
                     <div className="mt-4 space-y-3">
                       <h4 className="text-md font-semibold mb-2">Key Topics:</h4>
@@ -287,13 +308,13 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                             <AccordionContent className="p-3 pt-1 border-t">
                                <div className="flex justify-end mb-2">
                                 {getMcqCountForSource(section.title, topic.title) > 0 ? (
-                                  <Button variant="outline" size="xs" onClick={() => handlePracticeMCQs(section.title, topic.title)}>
+                                  <Button variant="outline" size="sm" onClick={() => handlePracticeMCQs(section.title, topic.title)}>
                                     <Brain className="mr-1 h-3 w-3" /> Practice {getMcqCountForSource(section.title, topic.title)} MCQs
                                   </Button>
                                 ) : (
                                   <Button
                                     variant="outline"
-                                    size="xs"
+                                    size="sm"
                                     onClick={() => handleGenerateMCQs(topic.content, topic.title, false, sectionIndex, topicIndex)}
                                     disabled={generatingMcqId === `topic-mcq-${sectionIndex}-${topicIndex}`}
                                   >
@@ -306,10 +327,28 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                   </Button>
                                 )}
                               </div>
-                              <div
-                                className="prose prose-sm dark:prose-invert max-w-none"
-                                dangerouslySetInnerHTML={{ __html: topic.content }} // Assuming content might be HTML
-                              />
+                              <div className="prose prose-sm dark:prose-invert max-w-none">
+                                <ReactMarkdown 
+                                  rehypePlugins={[rehypeRaw]} 
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    h1: ({...props}) => <h1 className="text-md font-bold mb-2 text-foreground" {...props} />,
+                                    h2: ({...props}) => <h2 className="text-sm font-semibold mb-2 text-foreground" {...props} />,
+                                    h3: ({...props}) => <h3 className="text-sm font-medium mb-1 text-foreground" {...props} />,
+                                    p: ({...props}) => <p className="mb-2 text-foreground leading-relaxed text-sm" {...props} />,
+                                    ul: ({...props}) => <ul className="list-disc list-inside mb-2 text-foreground" {...props} />,
+                                    ol: ({...props}) => <ol className="list-decimal list-inside mb-2 text-foreground" {...props} />,
+                                    li: ({...props}) => <li className="mb-1 text-foreground text-sm" {...props} />,
+                                    code: ({...props}) => <code className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-xs font-mono" {...props} />,
+                                    pre: ({...props}) => <pre className="bg-gray-100 dark:bg-gray-800 p-2 rounded-md overflow-x-auto mb-2" {...props} />,
+                                    blockquote: ({...props}) => <blockquote className="border-l-4 border-blue-500 pl-2 italic mb-2 text-foreground" {...props} />,
+                                    strong: ({...props}) => <strong className="font-semibold text-foreground" {...props} />,
+                                    em: ({...props}) => <em className="italic text-foreground" {...props} />
+                                  }}
+                                >
+                                  {topic.content}
+                                </ReactMarkdown>
+                              </div>
                             </AccordionContent>
                           </AccordionItem>
                         ))}
