@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFlashcardStore, Project as ProjectType } from "@/lib/store"; // Import Project type
 import { DocumentUpload } from "@/components/document-upload";
@@ -73,6 +73,13 @@ function GamifiedRoadmapView({
     topicIndex: number;
   } | null>(null);
   const [generatingMcqId, setGeneratingMcqId] = useState<string | null>(null);
+  const [hasScrolledToCurrentItem, setHasScrolledToCurrentItem] =
+    useState(false);
+
+  // Reset scroll flag when component unmounts or project changes
+  useEffect(() => {
+    setHasScrolledToCurrentItem(false);
+  }, [project?.id]);
 
   if (!project || !project.studyGuide) {
     return (
@@ -91,6 +98,116 @@ function GamifiedRoadmapView({
   }
 
   const { studyGuide, flashcards, xp } = project;
+
+  // Auto-scroll to current item logic
+  useEffect(() => {
+    if (!hasScrolledToCurrentItem && studyGuide && studyGuide.sections) {
+      // Find the current item to scroll to
+      let targetElementId: string | null = null;
+      let overallPreviousCompleted = true;
+
+      // Look for first incomplete section or topic that needs attention
+      for (
+        let sectionIndex = 0;
+        sectionIndex < studyGuide.sections.length;
+        sectionIndex++
+      ) {
+        const section = studyGuide.sections[sectionIndex];
+        const isSectionLocked = !overallPreviousCompleted;
+
+        if (isSectionLocked) break;
+
+        // Check if this section is incomplete
+        if (!section.isCompleted) {
+          if (!section.topics || section.topics.length === 0) {
+            // Section without topics - scroll to it
+            targetElementId = `section-${sectionIndex}`;
+            break;
+          }
+
+          // Check topics within this section
+          let previousTopicCompleted = true;
+          for (
+            let topicIndex = 0;
+            topicIndex < section.topics.length;
+            topicIndex++
+          ) {
+            const topic = section.topics[topicIndex];
+            const isTopicLocked = !previousTopicCompleted;
+
+            if (isTopicLocked) break;
+
+            if (!topic.isCompleted) {
+              // Found an incomplete topic
+              const topicMcqs = project.flashcards.filter(
+                (f) =>
+                  f.sourceSectionTitle === section.title &&
+                  f.sourceTopicTitle === topic.title
+              );
+              const hasTopicMcqs = topicMcqs.length > 0;
+
+              if (hasTopicMcqs) {
+                // This topic can be attempted - scroll to it
+                targetElementId = `topic-${sectionIndex}-${topicIndex}`;
+                break;
+              } else {
+                // This topic needs MCQs generated - scroll to it
+                targetElementId = `topic-${sectionIndex}-${topicIndex}`;
+                break;
+              }
+            }
+
+            previousTopicCompleted = !!topic.isCompleted;
+          }
+
+          if (targetElementId) break;
+
+          // If all topics are complete, but section isn't marked complete
+          if (
+            section.topics.every((t) => t.isCompleted) &&
+            !section.isCompleted
+          ) {
+            targetElementId = `section-${sectionIndex}`;
+            break;
+          }
+        }
+
+        // Update overall completion status
+        overallPreviousCompleted =
+          !!section.isCompleted ||
+          (section.topics && section.topics.length > 0
+            ? section.topics.every((t) => !!t.isCompleted)
+            : true);
+      }
+
+      // Scroll to the target element
+      if (targetElementId) {
+        setTimeout(() => {
+          const element = document.getElementById(targetElementId!);
+          if (element) {
+            element.scrollIntoView({
+              behavior: "smooth",
+              block: "center",
+              inline: "nearest",
+            });
+
+            // Add a subtle visual indicator
+            element.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.3)";
+            setTimeout(() => {
+              element.style.boxShadow = "";
+            }, 2000);
+
+            // Show a helpful toast
+            toast.info("📍 Scrolled to your current progress", {
+              duration: 2000,
+            });
+          }
+        }, 500); // Small delay to ensure DOM is fully rendered
+      }
+
+      setHasScrolledToCurrentItem(true);
+    }
+  }, [hasScrolledToCurrentItem, studyGuide, project.flashcards]);
 
   const handleTopicClick = (
     sectionIndex: number,
@@ -616,6 +733,7 @@ function GamifiedRoadmapView({
                       const topicNode = (
                         <div
                           key={`topic-roadmap-${sectionIndex}-${topicIndex}`}
+                          id={`topic-${sectionIndex}-${topicIndex}`}
                           className="relative mb-3"
                         >
                           <div className="absolute left-[calc(-8px - 0.125rem)] top-1/2 w-2.5 h-2.5 bg-slate-300 dark:bg-slate-700 rounded-full -translate-y-1/2 border-2 border-background"></div>
@@ -772,6 +890,7 @@ function GamifiedRoadmapView({
         return (
           <Card
             key={`section-roadmap-${sectionIndex}`}
+            id={`section-${sectionIndex}`}
             className={`transition-all duration-300 ease-in-out transform hover:scale-[1.02]
                         ${
                           isCurrentSectionLocked
@@ -1112,7 +1231,10 @@ export function ProjectView() {
         </div>
       </div>
       {gamificationEnabled && activeProject.studyGuide ? (
-        <GamifiedRoadmapView project={activeProject} />
+        <GamifiedRoadmapView
+          project={activeProject}
+          key={`roadmap-${gamificationEnabled}`} // Force re-mount when switching to roadmap
+        />
       ) : (
         <>
           {" "}
