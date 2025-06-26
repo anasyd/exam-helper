@@ -561,12 +561,12 @@ function GamifiedRoadmapView({
 
   return (
     <div className="space-y-6 pb-12">
-      <Card className="shadow-lg sticky top-4 z-10 backdrop-blur-md bg-background/80">
+      <Card className="shadow-xl sticky top-4 z-10 backdrop-blur-xl bg-background/20 border-white/20 shadow-black/10">
         <CardHeader className="text-center pb-2">
-          <CardTitle className="text-3xl font-bold tracking-tight">
+          <CardTitle className="text-3xl font-bold tracking-tight text-foreground/90">
             {studyGuide.title || "Learning Roadmap"}
           </CardTitle>
-          <CardDescription>
+          <CardDescription className="text-muted-foreground/80">
             Your personalized journey through the material. Complete topics to
             earn XP and maintain your streak!
           </CardDescription>
