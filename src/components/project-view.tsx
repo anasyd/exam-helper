@@ -49,9 +49,22 @@ import { TopicQuizView } from "@/components/topic-quiz-view";
 import { Flashcard } from "@/lib/store";
 
 // GamifiedRoadmapView Implementation
-function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
-  const { markTopicAsComplete, addFlashcards, setStudyGuide, geminiApiKey } =
-    useFlashcardStore();
+function GamifiedRoadmapView({
+  project: initialProject,
+}: {
+  project: ProjectType | null;
+}) {
+  // Use reactive store to get the most up-to-date project data
+  const {
+    markTopicAsComplete,
+    addFlashcards,
+    setStudyGuide,
+    geminiApiKey,
+    getActiveProject,
+  } = useFlashcardStore();
+
+  // Get the most current project state from the store instead of relying on props
+  const project = getActiveProject() || initialProject;
   const [showQuizView, setShowQuizView] = useState(false);
   const [quizCards, setQuizCards] = useState<Flashcard[]>([]);
   const [quizTitle, setQuizTitle] = useState("");
@@ -142,9 +155,7 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
     }
 
     // Check if user has API key set
-    const currentApiKey = useFlashcardStore.getState().geminiApiKey;
-
-    if (!currentApiKey) {
+    if (!geminiApiKey) {
       toast.error("Cannot generate MCQs", {
         description: "Please set your Gemini API key in Settings first.",
       });
@@ -155,10 +166,124 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
       ? `section-mcq-${sectionIdx}`
       : `topic-mcq-${sectionIdx}-${topicIdx}`;
     setGeneratingMcqId(id);
+
+    // Handle section-level generation (generate for all subtopics)
+    if (isSection) {
+      const section = studyGuide.sections[sectionIdx];
+      if (!section || !section.topics || section.topics.length === 0) {
+        toast.error("No subtopics found in this section to generate MCQs for.");
+        setGeneratingMcqId(null);
+        return;
+      }
+
+      const toastId = toast.loading(
+        `Generating MCQs for all ${section.topics.length} subtopics in "${title}"...`
+      );
+      let totalGenerated = 0;
+      let failures = 0;
+
+      try {
+        // Generate MCQs for each subtopic
+        for (
+          let topicIndex = 0;
+          topicIndex < section.topics.length;
+          topicIndex++
+        ) {
+          const topic = section.topics[topicIndex];
+
+          try {
+            console.log(`Generating MCQs for subtopic: ${topic.title}`);
+
+            const sectionTitle = title; // Section title
+            const topicTitle = topic.title;
+
+            // Get existing questions for this specific topic to avoid duplicates
+            const existingTopicFlashcards = project.flashcards
+              .filter(
+                (card: Flashcard) =>
+                  card.sourceSectionTitle === sectionTitle &&
+                  card.sourceTopicTitle === topicTitle
+              )
+              .map((card: Flashcard) => ({
+                question: card.question,
+                answer: card.answer,
+              }));
+
+            const aiService = createGeminiService(geminiApiKey);
+            const numCardsToGenerate = 5;
+
+            const newMcqs = await aiService.generateFlashcards(
+              project.pdfContent, // Main document content for context
+              numCardsToGenerate,
+              existingTopicFlashcards,
+              topicTitle, // This is the specific topic title for the prompt context
+              topic.content // This is the specific topic content
+            );
+
+            if (newMcqs && newMcqs.length > 0) {
+              const countAdded = addFlashcards(
+                newMcqs,
+                null, // No general source content hash for topic MCQs specifically
+                sectionTitle,
+                topicTitle
+              );
+              totalGenerated += countAdded;
+              console.log(`Generated ${countAdded} MCQs for "${topicTitle}"`);
+            }
+
+            // Small delay between generations to avoid rate limits
+            if (topicIndex < section.topics.length - 1) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          } catch (error) {
+            console.error(
+              `Failed to generate MCQs for topic "${topic.title}":`,
+              error
+            );
+            failures++;
+          }
+        }
+
+        // Update the study guide to mark all topics as having MCQs generated
+        if (project && project.studyGuide) {
+          const newStudyGuide = JSON.parse(JSON.stringify(project.studyGuide));
+          const currentSection = newStudyGuide.sections[sectionIdx];
+          if (currentSection && currentSection.topics) {
+            currentSection.topics.forEach((topic: any) => {
+              topic.mcqsGenerated = true;
+            });
+            currentSection.mcqsGenerated = true; // Mark section as completed too
+          }
+          setStudyGuide(newStudyGuide);
+        }
+
+        // Show final result
+        toast.success(
+          `Generated MCQs for ${section.topics.length - failures} subtopics!`,
+          {
+            id: toastId,
+            description: `Total: ${totalGenerated} MCQs generated. ${
+              failures > 0 ? `${failures} subtopics failed.` : ""
+            }`,
+          }
+        );
+      } catch (error) {
+        console.error("Error in bulk MCQ generation:", error);
+        toast.error(`Failed to generate MCQs for subtopics`, {
+          id: toastId,
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      } finally {
+        setGeneratingMcqId(null);
+      }
+      return;
+    }
+
+    // Handle individual topic generation
     const toastId = toast.loading(`Generating MCQs for "${title}"...`);
 
     try {
-      const aiService = createGeminiService(currentApiKey);
+      const aiService = createGeminiService(geminiApiKey);
       const sectionTitle = isSection
         ? title
         : studyGuide.sections[sectionIdx]?.title || "Unknown Section";
@@ -197,6 +322,13 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
           firstMcq: newMcqs[0]?.question.slice(0, 50) + "...",
         });
 
+        console.log("Adding MCQs with parameters:", {
+          sectionTitle,
+          topicTitle,
+          isSection,
+          mcqsLength: newMcqs.length,
+        });
+
         const countAdded = addFlashcards(
           newMcqs,
           null, // No general source content hash for topic MCQs specifically
@@ -205,6 +337,26 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
         );
 
         console.log("MCQs added to store:", { countAdded, title });
+
+        // Debug: Check what was actually added
+        const activeProject = useFlashcardStore.getState().getActiveProject();
+        if (activeProject) {
+          const addedMcqs = activeProject.flashcards.filter(
+            (f) =>
+              f.sourceSectionTitle === sectionTitle &&
+              f.sourceTopicTitle === topicTitle
+          );
+          console.log("Verification - MCQs in store with matching titles:", {
+            count: addedMcqs.length,
+            sectionTitle,
+            topicTitle,
+            sample: addedMcqs.slice(0, 2).map((f) => ({
+              question: f.question.slice(0, 30),
+              sourceSectionTitle: f.sourceSectionTitle,
+              sourceTopicTitle: f.sourceTopicTitle,
+            })),
+          });
+        }
 
         toast.success(`Generated ${countAdded} new MCQs for "${title}"!`, {
           id: toastId,
@@ -247,6 +399,28 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
     }
   };
 
+  const handlePracticeSectionMCQs = (
+    sectionTitle: string,
+    sectionIndex: number
+  ) => {
+    if (!project) return;
+
+    // Get all MCQs from all subtopics in this section
+    const allTopicMcqs = project.flashcards.filter(
+      (card) =>
+        card.sourceSectionTitle === sectionTitle && card.sourceTopicTitle // Only topic-level MCQs
+    );
+
+    if (allTopicMcqs.length > 0) {
+      setQuizCards(allTopicMcqs);
+      setQuizTitle(`${sectionTitle} (All Subtopics)`);
+      setCurrentQuizContext({ sectionIndex, topicIndex: -1 }); // -1 indicates section-level
+      setShowQuizView(true);
+    } else {
+      toast.info("No MCQs available for this section to practice.");
+    }
+  };
+
   if (showQuizView && currentQuizContext) {
     return (
       <TopicQuizView
@@ -272,24 +446,9 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
     <div className="space-y-6 pb-12">
       <Card className="shadow-lg sticky top-4 z-10 backdrop-blur-md bg-background/80">
         <CardHeader className="text-center pb-2">
-          <div className="flex justify-between items-center px-4">
-            <CardTitle className="text-3xl font-bold tracking-tight">
-              {studyGuide.title || "Learning Roadmap"}
-            </CardTitle>
-            <div className="flex items-center space-x-4">
-              {useFlashcardStore.getState().currentStreak > 0 && ( // Access streak from store directly for header
-                <div className="flex items-center text-orange-500">
-                  <Flame className="h-7 w-7 mr-1" />
-                  <span className="text-2xl font-bold">
-                    {useFlashcardStore.getState().currentStreak}
-                  </span>
-                </div>
-              )}
-              <div className="text-2xl font-bold text-amber-500 animate-pulse">
-                {xp || 0} XP
-              </div>
-            </div>
-          </div>
+          <CardTitle className="text-3xl font-bold tracking-tight">
+            {studyGuide.title || "Learning Roadmap"}
+          </CardTitle>
           <CardDescription>
             Your personalized journey through the material. Complete topics to
             earn XP and maintain your streak!
@@ -320,28 +479,66 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
                       isCurrentSectionLocked ? "text-slate-500" : ""
                     }`}
                   >
-                    {section.title}
+                    {(() => {
+                      // Check for MCQs across all subtopics instead of section-level MCQs
+                      const allTopicMcqs = project.flashcards.filter(
+                        (f) =>
+                          f.sourceSectionTitle === section.title &&
+                          f.sourceTopicTitle // Only topic-level MCQs
+                      );
+                      const hasMcqs = allTopicMcqs.length > 0;
+
+                      return hasMcqs && !isCurrentSectionLocked ? (
+                        <button
+                          onClick={() =>
+                            handlePracticeSectionMCQs(
+                              section.title,
+                              sectionIndex
+                            )
+                          }
+                          className="text-left hover:text-blue-600 transition-colors cursor-pointer underline decoration-dotted"
+                          title={`Practice ${allTopicMcqs.length} MCQs from all subtopics in this section`}
+                        >
+                          {section.title}
+                        </button>
+                      ) : (
+                        section.title
+                      );
+                    })()}
                   </CardTitle>
                 </div>
               </div>
               {!isCurrentSectionLocked && (
                 <div className="pl-10 flex items-center justify-between">
                   <CardDescription>
-                    {section.mcqsGenerated ? (
-                      <>
-                        MCQs (
-                        {
-                          project.flashcards.filter(
+                    {(() => {
+                      // Count MCQs across all subtopics in this section
+                      const allTopicMcqs = project.flashcards.filter(
+                        (f) =>
+                          f.sourceSectionTitle === section.title &&
+                          f.sourceTopicTitle // Only topic-level MCQs
+                      );
+
+                      const totalMcqCount = allTopicMcqs.length;
+                      const subtopicsWithMcqs =
+                        section.topics?.filter((topic) => {
+                          const topicMcqs = project.flashcards.filter(
                             (f) =>
                               f.sourceSectionTitle === section.title &&
-                              !f.sourceTopicTitle
-                          ).length
-                        }{" "}
-                        available)
-                      </>
-                    ) : (
-                      <>MCQs not generated yet</>
-                    )}
+                              f.sourceTopicTitle === topic.title
+                          );
+                          return topicMcqs.length > 0;
+                        }).length || 0;
+
+                      return totalMcqCount > 0 ? (
+                        <>
+                          MCQs ({totalMcqCount} total across {subtopicsWithMcqs}{" "}
+                          subtopic{subtopicsWithMcqs !== 1 ? "s" : ""})
+                        </>
+                      ) : (
+                        <>MCQs not generated yet</>
+                      );
+                    })()}
                     {section.xpAwardedOnCompletion &&
                       !currentSectionDisplayCompleted && (
                         <span className="ml-2 text-xs text-amber-600">
@@ -355,31 +552,47 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
                         </span>
                       )}
                   </CardDescription>
-                  {!section.mcqsGenerated && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        handleGenerateMCQs(
-                          section.content,
-                          section.title,
-                          true,
-                          sectionIndex
-                        )
-                      }
-                      disabled={
-                        generatingMcqId === `section-mcq-${sectionIndex}`
-                      }
-                      className="ml-4"
-                    >
-                      {generatingMcqId === `section-mcq-${sectionIndex}` ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      ) : (
-                        <Zap className="mr-2 h-4 w-4" />
-                      )}
-                      Generate MCQs
-                    </Button>
-                  )}
+                  {(() => {
+                    // Check if any subtopic has MCQs generated
+                    const hasAnySubtopicMcqs =
+                      section.topics?.some((topic) => {
+                        const topicMcqs = project.flashcards.filter(
+                          (f) =>
+                            f.sourceSectionTitle === section.title &&
+                            f.sourceTopicTitle === topic.title
+                        );
+                        return topicMcqs.length > 0;
+                      }) || false;
+
+                    // Only show generate button if no subtopic has MCQs
+                    return !hasAnySubtopicMcqs &&
+                      section.topics &&
+                      section.topics.length > 0 ? (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          handleGenerateMCQs(
+                            section.content,
+                            section.title,
+                            true,
+                            sectionIndex
+                          )
+                        }
+                        disabled={
+                          generatingMcqId === `section-mcq-${sectionIndex}`
+                        }
+                        className="ml-4"
+                      >
+                        {generatingMcqId === `section-mcq-${sectionIndex}` ? (
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        ) : (
+                          <Zap className="mr-2 h-4 w-4" />
+                        )}
+                        Generate MCQs for All Subtopics
+                      </Button>
+                    ) : null;
+                  })()}
                 </div>
               )}
             </CardHeader>
@@ -463,22 +676,21 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
                               <div className="pl-7 space-y-1">
                                 <div className="flex items-center justify-between">
                                   <p className="text-xs text-muted-foreground">
-                                    {topic.mcqsGenerated ? (
-                                      <>
-                                        MCQs (
-                                        {
-                                          project.flashcards.filter(
-                                            (f) =>
-                                              f.sourceSectionTitle ===
-                                                section.title &&
-                                              f.sourceTopicTitle === topic.title
-                                          ).length
-                                        }{" "}
-                                        available)
-                                      </>
-                                    ) : (
-                                      <>MCQs not generated yet</>
-                                    )}
+                                    {(() => {
+                                      const topicMcqs =
+                                        project.flashcards.filter(
+                                          (f) =>
+                                            f.sourceSectionTitle ===
+                                              section.title &&
+                                            f.sourceTopicTitle === topic.title
+                                        );
+                                      const hasMcqs = topicMcqs.length > 0;
+                                      return hasMcqs ? (
+                                        <>MCQs ({topicMcqs.length} available)</>
+                                      ) : (
+                                        <>MCQs not generated yet</>
+                                      );
+                                    })()}
                                     {topic.xpAwardedOnCompletion &&
                                       !topic.isCompleted && (
                                         <span className="ml-2 text-xs text-amber-600">
@@ -493,35 +705,46 @@ function GamifiedRoadmapView({ project }: { project: ProjectType | null }) {
                                         </span>
                                       )}
                                   </p>
-                                  {!topic.mcqsGenerated && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={(e) => {
-                                        e.stopPropagation(); // Prevent card click
-                                        handleGenerateMCQs(
-                                          topic.content,
-                                          topic.title,
-                                          false,
-                                          sectionIndex,
-                                          topicIndex
-                                        );
-                                      }}
-                                      disabled={
-                                        generatingMcqId ===
-                                        `topic-mcq-${sectionIndex}-${topicIndex}`
-                                      }
-                                      className="ml-2 h-6 text-xs px-2"
-                                    >
-                                      {generatingMcqId ===
-                                      `topic-mcq-${sectionIndex}-${topicIndex}` ? (
-                                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                      ) : (
-                                        <Zap className="mr-1 h-3 w-3" />
-                                      )}
-                                      Generate
-                                    </Button>
-                                  )}
+                                  {(() => {
+                                    const topicMcqs = project.flashcards.filter(
+                                      (f) =>
+                                        f.sourceSectionTitle ===
+                                          section.title &&
+                                        f.sourceTopicTitle === topic.title
+                                    );
+                                    const hasMcqs = topicMcqs.length > 0;
+
+                                    // Only show generate button if no MCQs exist in store
+                                    return !hasMcqs ? (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={(e) => {
+                                          e.stopPropagation(); // Prevent card click
+                                          handleGenerateMCQs(
+                                            topic.content,
+                                            topic.title,
+                                            false,
+                                            sectionIndex,
+                                            topicIndex
+                                          );
+                                        }}
+                                        disabled={
+                                          generatingMcqId ===
+                                          `topic-mcq-${sectionIndex}-${topicIndex}`
+                                        }
+                                        className="ml-2 h-6 text-xs px-2"
+                                      >
+                                        {generatingMcqId ===
+                                        `topic-mcq-${sectionIndex}-${topicIndex}` ? (
+                                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <Zap className="mr-1 h-3 w-3" />
+                                        )}
+                                        Generate
+                                      </Button>
+                                    ) : null;
+                                  })()}
                                 </div>
                               </div>
                             )}
@@ -853,7 +1076,19 @@ export function ProjectView() {
             )}
           </div>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-4">
+          {/* XP and Streak Display */}
+          <div className="flex items-center space-x-3">
+            {currentStreak > 0 && (
+              <div className="flex items-center text-orange-500">
+                <Flame className="h-5 w-5 mr-1" />
+                <span className="text-lg font-bold">{currentStreak}</span>
+              </div>
+            )}
+            <div className="text-lg font-bold text-amber-500">
+              {activeProject.xp || 0} XP
+            </div>
+          </div>
           {activeProject.studyGuide && (
             <Button
               variant="outline"
