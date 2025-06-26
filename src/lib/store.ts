@@ -925,6 +925,9 @@ export const useFlashcardStore = create<FlashcardState>()(
         })),
         activeProjectId: state.activeProjectId,
         geminiApiKey: state.geminiApiKey,
+        currentStreak: state.currentStreak,
+        lastStudiedDate: state.lastStudiedDate,
+        gamificationEnabled: state.gamificationEnabled,
       }),
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
