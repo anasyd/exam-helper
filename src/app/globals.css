@@ -173,3 +173,35 @@
 .prose strong {
   @apply font-semibold;
 }
+
+/* ----- Landing page palette + typography scope ----- */
+.landing-surface {
+  --canvas: #fafaf7;
+  --ink: #111111;
+  --muted: #55534e;
+  --rule: #e8e3d8;
+  --accent: #b8854a;
+
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-body), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  min-height: 100vh;
+}
+
+.landing-surface .display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+.landing-surface .label {
+  font-family: var(--font-body), sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.landing-surface .subtle-rule {
+  border-top: 1px solid var(--rule);
+}
