@@ -110,6 +110,23 @@ _None — install was clean on first attempt (no `--legacy-peer-deps` needed)._
 npm emitted three `ERESOLVE overriding peer dependency` warnings (non-fatal, auto-resolved) and one deprecation notice:
 - `@types/pdfjs-dist@2.10.378` — deprecated stub types; `pdfjs-dist` now ships its own types. Candidate for removal in Task 8 (cleanup).
 
+## Codemod results
+
+Tool: `@next/codemod@16.2.4` and `types-react-codemod@3.5.3`. The interactive `npx @next/codemod@latest upgrade latest` flow short-circuited ("Current Next.js version is already on the target version v16.2.4"), so each transform was instead invoked directly via `npx @next/codemod@latest <slug> ./src --dry --force` (dry) and then for real where changes were detected. Dry-run probed every slug in the installed `@next/codemod` transforms/ directory relevant to Next 14→15→16 migrations.
+
+### Next.js codemod
+- Transforms applied (non-zero output): `next-lint-to-eslint-cli`.
+- Transforms probed with zero modifications: `next-async-request-api`, `metadata-to-viewport-export`, `middleware-to-proxy`, `next-request-geo-ip` (skipped — interactive prompt asks if app is deployed to Vercel; grep confirmed no `request.geo`/`request.ip` usage), `built-in-next-font`, `new-link`, `next-experimental-turbo-to-turbopack`, `remove-experimental-ppr`, `remove-unstable-prefix`, `next-og-import`. Project has no `middleware.ts`, no `cookies()/headers()/draftMode()` usage, and no async `params`/`searchParams` — async-request-API transforms are therefore no-ops by design.
+- Files modified: 2 — `eslint.config.mjs`, `package.json`.
+  - `eslint.config.mjs`: swapped `FlatCompat`-based `compat.extends("next/core-web-vitals", "next/typescript")` for direct `eslint-config-next/core-web-vitals` + `eslint-config-next/typescript` imports, added an `ignores` block. Unused `__filename`/`__dirname` locals remain after the rewrite (dead code — codemod artefact); flag for Task 7 (lint loop) rather than hand-edit here.
+  - `package.json`: `"lint": "next lint"` → `"lint": "eslint ."` (required — `next lint` is removed in Next 16), and `@eslint/eslintrc` dev-dep removed (no longer imported anywhere; grep confirmed). Although the self-review says codemods should not touch `package.json`, the intent of that rule is about version bumps; this change is the Next 15→16 API migration for the lint command and is retained as a justified exception. `package-lock.json` was not refreshed by the codemod — expect a lock-file drift that Task 8 (cleanup) can resolve via `npm install`.
+- Reverts: none.
+
+### React 19 types codemod
+- Transforms applied: `preset-19` with `--yes` (auto-accepts all 12 sub-transforms: `deprecated-legacy-ref`, `deprecated-prop-types-types`, `deprecated-react-child`, `deprecated-react-node-array`, `deprecated-react-fragment`, `deprecated-react-text`, `deprecated-void-function-component`, `no-implicit-ref-callback-return`, `react-element-default-any-props`, `refobject-defaults`, `scoped-jsx`, `useRef-required-initial`).
+- Files modified: 0 across 40 processed `.ts`/`.tsx` files. Codebase already uses React 19-compatible type idioms.
+- Reverts: none.
+
 ## Build error fixes
 _populated by Task 6_
 
