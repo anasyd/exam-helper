@@ -36,7 +36,7 @@ export function LandingNav() {
         </Link>
         <div className="flex items-center gap-2">
           <a
-            href="https://github.com/your-username/exam-helper"
+            href="https://github.com/anasyd/exam-helper"
             target="_blank"
             rel="noopener noreferrer"
             className="w-8 h-8 flex items-center justify-center rounded-sm text-[color:var(--muted)] hover:text-[color:var(--ink)] transition-colors"

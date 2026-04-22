@@ -69,7 +69,7 @@ In your DNS provider:
 ### 4b. Create a new resource in Coolify
 
 1. In Coolify → **New Resource → Docker Compose**
-2. Connect your forked repo (or use the upstream `your-username/exam-helper`)
+2. Connect your forked repo (or use the upstream `anasyd/exam-helper`)
 3. Set **Compose file path** to `docker-compose.coolify.yml`
 
 ### 4c. Configure domains in Coolify
@@ -119,12 +119,12 @@ services:
   server:
     build:
       context: ./server
-    # image: ghcr.io/your-username/exam-helper-server:latest  ← remove this
+    # image: ghcr.io/anasyd/exam-helper-server:latest  ← remove this
 
   web:
     build:
       context: ./web
-    # image: ghcr.io/your-username/exam-helper-web:latest  ← remove this
+    # image: ghcr.io/anasyd/exam-helper-web:latest  ← remove this
 ```
 
 ---

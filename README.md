@@ -2,15 +2,15 @@
 
 AI-powered flashcard and study tool — upload your documents, generate flashcards, notes, and study guides using the AI model of your choice.
 
-[![Server image](https://ghcr-badge.egpl.dev/your-username/exam-helper-server/latest_tag?label=server)](https://github.com/your-username/exam-helper/pkgs/container/exam-helper-server)
-[![Web image](https://ghcr-badge.egpl.dev/your-username/exam-helper-web/latest_tag?label=web)](https://github.com/your-username/exam-helper/pkgs/container/exam-helper-web)
+[![Server image](https://ghcr-badge.egpl.dev/anasyd/exam-helper-server/latest_tag?label=server)](https://github.com/anasyd/exam-helper/pkgs/container/exam-helper-server)
+[![Web image](https://ghcr-badge.egpl.dev/anasyd/exam-helper-web/latest_tag?label=web)](https://github.com/anasyd/exam-helper/pkgs/container/exam-helper-web)
 
 ## Structure
 
 ```
 exam-helper/
-├── web/      # Next.js frontend  — ghcr.io/your-username/exam-helper-web
-└── server/   # Express backend   — ghcr.io/your-username/exam-helper-server
+├── web/      # Next.js frontend  — ghcr.io/anasyd/exam-helper-web
+└── server/   # Express backend   — ghcr.io/anasyd/exam-helper-server
 ```
 
 ## Self-hosting
