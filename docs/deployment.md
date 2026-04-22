@@ -95,14 +95,26 @@ If you see an error instead, check **Logs** in Coolify — the most common cause
 
 ## 5. Vercel — Update the frontend
 
-1. Go to [vercel.com](https://vercel.com) → your `exam-helper` project → **Settings** → **Environment Variables**
+### 5a. Set the Root Directory
+
+The Next.js app now lives in `web/`. Vercel needs to know this:
+
+1. Go to [vercel.com](https://vercel.com) → your `exam-helper` project → **Settings** → **General**
+2. Under **Root Directory**, click **Edit** and set it to `web`
+3. Save
+
+### 5b. Set environment variables
+
+1. Go to **Settings** → **Environment Variables**
 2. Add:
 
 | Variable | Value | Environments |
 |---|---|---|
 | `NEXT_PUBLIC_AUTH_URL` | `https://api.yourdomain.com` | Production, Preview |
 
-3. Go to **Deployments** → click the `...` on the latest deployment → **Redeploy**
+### 5c. Redeploy
+
+Go to **Deployments** → click `...` on the latest deployment → **Redeploy**.
 
 ---
 
