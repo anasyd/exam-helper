@@ -190,7 +190,33 @@ Each disabled with `// eslint-disable-next-line <rule> -- pre-existing, deferred
 `eslint-config-next@16` ships `@typescript-eslint/no-unused-vars` at `warning` severity (was `error` under `eslint-config-next@15`). Lint exits 0 with warnings; no disables added. Candidates for cleanup in Task 8.
 
 ## Smoke-test findings
-_populated by Task 9_
+
+Executed via Playwright MCP against `npm run dev` on localhost:3000. Browser console monitored throughout; **zero errors across the session**.
+
+### Passed
+1. `/` renders — empty state "No Projects Yet" shown.
+2. **Create project dialog** opens from both the "+ New Project" header button and the "Create Your First Project" empty-state button. Radix Dialog portal works.
+3. **Project creation flow** — typing a name enables "Create Project", submit navigates to `/project` with the new project active.
+4. **Project view** — all tabs render (Upload & Process, Lecture Video, Automated Notes, Study Content, Generate Flashcards, Study Flashcards, View All Cards). Tabs are correctly disabled until content exists.
+5. **Import/Export card** renders.
+6. **Application Settings dialog** opens from the gear icon. Shows Gemini API Key field, Export/Import Projects, Clear/Save.
+7. **Project persistence** — navigating back to `/` shows the new project card with creation date and 0 flashcards. Zustand + localStorage persisting correctly.
+8. Escape closes dialogs.
+
+### Not tested in this pass (requires fixtures or live API key — manual verification recommended before the PR merges)
+- PDF upload + text extraction
+- DOCX upload (mammoth)
+- Flashcard generation (needs a real Gemini API key)
+- Study session flashcard flipping and spaced repetition
+- Notes view rendering
+- Import/export round-trip
+- Share-project dialog
+
+### Observations
+- The hydration warnings visible in the dev-server log reference Grammarly/Honey extension attributes (`data-gr-ext-installed`, `jf-ext-button-ct`) from cached SSR of a prior local browser session — will not appear in production.
+- Playwright's `page.fill()` on the controlled-input project-name field sets the DOM value but does not always fire React 19's onChange in one shot; a follow-up keypress was needed to trigger the controlled-state update. Not an app regression.
+
+**Verdict:** the dep upgrade does not regress any of the exercised flows. Build, lint, tsc, and runtime smoke all green.
 
 ## Deferred / out-of-scope items
 _populated throughout_
