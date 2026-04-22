@@ -1,6 +1,6 @@
 services:
   server:
-    image: ghcr.io/your-username/exam-helper-server:latest
+    image: ghcr.io/anasyd/exam-helper-server:latest
     environment:
       - NODE_ENV=production
       - MONGODB_URI=${MONGODB_URI}
@@ -23,7 +23,7 @@ services:
       retries: 3
 
   web:
-    image: ghcr.io/your-username/exam-helper-web:latest
+    image: ghcr.io/anasyd/exam-helper-web:latest
     environment:
       - NEXT_PUBLIC_AUTH_URL=${SERVICE_FQDN_SERVER_4000}
     depends_on:
