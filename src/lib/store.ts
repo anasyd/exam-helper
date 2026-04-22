@@ -82,6 +82,9 @@ interface FlashcardState {
   gamificationEnabled: boolean;
   currentStreak: number; // Added for global study streak
   lastStudiedDate: string | null; // YYYY-MM-DD format. Added for streak calculation
+  demoSeedAttempted: boolean; // Have we already attempted to seed the built-in demo project?
+
+  setDemoSeedAttempted: (value: boolean) => void;
 
   // Project management
   createProject: (name: string, description: string) => string;
@@ -207,6 +210,9 @@ export const useFlashcardStore = create<FlashcardState>()(
       gamificationEnabled: true,
       currentStreak: 0, // Initialize streak
       lastStudiedDate: null, // Initialize last studied date
+      demoSeedAttempted: false,
+
+      setDemoSeedAttempted: (value) => set({ demoSeedAttempted: value }),
 
       createProject: (name, description) => {
         const id = crypto.randomUUID();
@@ -995,6 +1001,7 @@ export const useFlashcardStore = create<FlashcardState>()(
         currentStreak: state.currentStreak,
         lastStudiedDate: state.lastStudiedDate,
         gamificationEnabled: state.gamificationEnabled,
+        demoSeedAttempted: state.demoSeedAttempted,
       }),
       storage: createJSONStorage(() => localStorage),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand persist callbacks hand back untyped data
