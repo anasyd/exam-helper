@@ -9,7 +9,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Volume2, StopCircle, Brain, Zap, Loader2 } from "lucide-react"; // Added Brain, Zap, Loader2
-import { StudyGuide, StudySection, StudyTopic, FlashcardData } from "@/lib/ai-service";
+import type { StudyGuide } from "@/lib/ai/types";
 import { generateFlashcards } from "@/lib/ai/features/flashcards";
 import type { RouterDependencies } from "@/lib/ai/router";
 import { useFlashcardStore, Flashcard } from "@/lib/store"; // Added
@@ -378,7 +378,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                         size="sm"
                         onClick={() =>
                           handleGenerateMCQs(
-                            section.content,
+                            section.content ?? "",
                             section.title,
                             true,
                             sectionIndex
@@ -554,7 +554,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                     size="sm"
                                     onClick={() =>
                                       handleGenerateMCQs(
-                                        topic.content,
+                                        topic.content ?? "",
                                         topic.title,
                                         false,
                                         sectionIndex,

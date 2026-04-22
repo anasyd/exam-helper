@@ -37,7 +37,6 @@ import {
   Zap, // For generate MCQs button
 } from "lucide-react";
 import { StudyContentView } from "./study-content-view";
-import { StudyGuide, FlashcardData } from "@/lib/ai-service";
 import { generateFlashcards } from "@/lib/ai/features/flashcards";
 import { generateAutomatedNotes } from "@/lib/ai/features/notes";
 import {
@@ -679,7 +678,7 @@ function GamifiedRoadmapView({
                         size="sm"
                         onClick={() =>
                           handleGenerateMCQs(
-                            section.content,
+                            section.content ?? "",
                             section.title,
                             true,
                             sectionIndex
@@ -829,7 +828,7 @@ function GamifiedRoadmapView({
                                         onClick={(e) => {
                                           e.stopPropagation(); // Prevent card click
                                           handleGenerateMCQs(
-                                            topic.content,
+                                            topic.content ?? "",
                                             topic.title,
                                             false,
                                             sectionIndex,
@@ -1010,16 +1009,14 @@ export function ProjectView() {
 
       // Store all generated content intelligently
       if (allContent.studyGuide) {
-        // The feature-module StudyGuide and the legacy store StudyGuide share
-        // enough runtime fields that the store code works on either shape; the
-        // structural TS mismatch will be resolved when legacy types are removed.
-        const guide = allContent.studyGuide as unknown as StudyGuide;
         if (hasExistingContent && activeProject?.studyGuide) {
           // Merge with existing study guide
-          useFlashcardStore.getState().mergeStudyGuide(guide);
+          useFlashcardStore
+            .getState()
+            .mergeStudyGuide(allContent.studyGuide);
         } else {
           // First study guide - set directly
-          setStudyGuide(guide);
+          setStudyGuide(allContent.studyGuide);
         }
       }
 

@@ -59,7 +59,11 @@ export interface FlashcardData {
 export interface StudyTopic {
   title: string;
   summary: string;
+  // Legacy/UI fields retained so callers written against the pre-refactor shape keep working.
+  content?: string;
   isCompleted?: boolean;
+  mcqsGenerated?: boolean;
+  xpAwardedOnCompletion?: number;
   audioSummaryText?: string;
   expandedSummary?: string;
 }
@@ -67,7 +71,12 @@ export interface StudyTopic {
 export interface StudySection {
   title: string;
   summary: string;
-  topics: StudyTopic[];
+  topics?: StudyTopic[];
+  // Legacy/UI fields retained for backward-compatibility with existing components.
+  content?: string;
+  isCompleted?: boolean;
+  mcqsGenerated?: boolean;
+  xpAwardedOnCompletion?: number;
   audioSummaryText?: string;
 }
 

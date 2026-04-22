@@ -3,13 +3,13 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { createShareableProject, getSharedProject } from "./share-service";
-import { StudyGuide } from "./ai-service";
 import { toast } from "sonner"; // Added for completion toasts
 import type {
   FeatureId,
   ModelMeta,
   ModelSelection,
   ProviderId,
+  StudyGuide,
 } from "./ai/types";
 import { setOpenRouterCatalog } from "./ai/catalog";
 import { fetchOpenRouterCatalog } from "./ai/providers/openrouter";
@@ -72,7 +72,6 @@ interface FlashcardState {
   activeProjectId: string | null;
   isProcessing: boolean; // Global processing flag (e.g., for AI calls)
   currentCardIndex: number | null; // Index for the main flashcard session (might need adjustment for topic quizzes)
-  geminiApiKey: string | null;
   // Multi-provider AI config (sub-project #2)
   providers: Record<ProviderId, { apiKey: string | null; lastValidatedAt?: number }>;
   modelRouting: {
@@ -125,7 +124,6 @@ interface FlashcardState {
   appendDocumentNotes: (newNotes: string) => void; // Append new notes to existing ones
   mergeStudyGuide: (newStudyGuide: StudyGuide) => void; // Merge new study guide with existing one
   cleanupExistingNotes: () => void; // Clean up existing notes to remove code fences
-  setGeminiApiKey: (apiKey: string | null) => void;
 
   setProviderKey: (id: ProviderId, key: string | null) => void;
   setProviderValidated: (id: ProviderId, at: number) => void;
@@ -196,7 +194,6 @@ export const useFlashcardStore = create<FlashcardState>()(
       activeProjectId: null,
       isProcessing: false,
       currentCardIndex: null,
-      geminiApiKey: null,
       providers: {
         gemini: { apiKey: null },
         openai: { apiKey: null },
@@ -595,16 +592,12 @@ export const useFlashcardStore = create<FlashcardState>()(
         }
       },
 
-      setGeminiApiKey: (apiKey) => set({ geminiApiKey: apiKey }),
-
       setProviderKey: (id, key) =>
         set((state) => ({
           providers: {
             ...state.providers,
             [id]: { ...state.providers[id], apiKey: key },
           },
-          // Keep transitional geminiApiKey mirror in sync for any stragglers.
-          ...(id === "gemini" ? { geminiApiKey: key } : {}),
         })),
       setProviderValidated: (id, at) =>
         set((state) => ({
@@ -996,7 +989,6 @@ export const useFlashcardStore = create<FlashcardState>()(
           })),
         })),
         activeProjectId: state.activeProjectId,
-        geminiApiKey: state.geminiApiKey,
         providers: state.providers,
         modelRouting: state.modelRouting,
         openRouterCatalog: state.openRouterCatalog,
@@ -1009,9 +1001,11 @@ export const useFlashcardStore = create<FlashcardState>()(
       migrate: (persisted: any, version: number) => {
         if (version < 3) {
           const oldKey: string | null = persisted?.geminiApiKey ?? null;
+          // Drop the legacy geminiApiKey field; its value is folded into providers.gemini.apiKey.
+          const { geminiApiKey: _discarded, ...rest } = persisted ?? {};
+          void _discarded;
           return {
-            ...persisted,
-            geminiApiKey: oldKey,
+            ...rest,
             providers: {
               gemini: { apiKey: oldKey },
               openai: { apiKey: null },

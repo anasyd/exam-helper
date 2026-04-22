@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -15,7 +15,8 @@ import {
   Layers,
 } from "lucide-react";
 import { useFlashcardStore } from "@/lib/store";
-import { createGeminiService } from "@/lib/ai-service";
+import { generateFlashcards } from "@/lib/ai/features/flashcards";
+import type { RouterDependencies } from "@/lib/ai/router";
 import { toast } from "sonner";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,10 +45,21 @@ export function FlashcardGenerator() {
     getActiveProject,
     addFlashcards,
     setIsProcessing,
-    geminiApiKey,
     hasProcessedContent,
     getDuplicateQuestionCount,
   } = useFlashcardStore();
+  const providers = useFlashcardStore((s) => s.providers);
+  const modelRouting = useFlashcardStore((s) => s.modelRouting);
+  const routerDeps: RouterDependencies = useMemo(
+    () => ({
+      getSelection: (feature) =>
+        modelRouting.overrides[feature] ?? modelRouting.default,
+      getApiKey: (providerId) => providers[providerId].apiKey,
+    }),
+    [providers, modelRouting]
+  );
+  const defaultProviderId = modelRouting.default.providerId;
+  const hasDefaultApiKey = !!providers[defaultProviderId].apiKey;
 
   const activeProject = getActiveProject();
 
@@ -80,7 +92,7 @@ export function FlashcardGenerator() {
   };
 
   const handleBatchedGenerate = async () => {
-    if (!geminiApiKey || !activeProject?.pdfContent) {
+    if (!hasDefaultApiKey || !activeProject?.pdfContent) {
       setError("API key or PDF content missing");
       return;
     }
@@ -122,15 +134,6 @@ export function FlashcardGenerator() {
         setCurrentSection(sectionIndex + 1);
         const sectionContent = sections[sectionIndex];
 
-        // Get existing flashcards to avoid duplicates
-        const existingFlashcards = activeProject.flashcards.map((card) => ({
-          question: card.question,
-          answer: card.answer,
-        }));
-
-        // Create the service instance
-        const geminiService = createGeminiService(geminiApiKey);
-
         // Calculate how many cards to generate in each batch for this section
         const cardsPerBatch = calculatedBatchSize;
         const batchesNeeded = Math.ceil(
@@ -157,10 +160,10 @@ export function FlashcardGenerator() {
 
           try {
             // Generate flashcards for this batch
-            const generatedFlashcards = await geminiService.generateFlashcards(
-              sectionContent,
+            const generatedFlashcards = await generateFlashcards(
+              { kind: "text", text: sectionContent },
               cardsPerBatch,
-              existingFlashcards
+              routerDeps
             );
 
             // Check for duplicates and add to store
@@ -177,14 +180,6 @@ export function FlashcardGenerator() {
             // Update tracking
             totalCardsGenerated += addedCount;
             totalDuplicates += duplicateCount;
-
-            // Update existing flashcards to avoid duplicates in subsequent batches
-            existingFlashcards.push(
-              ...generatedFlashcards.map((card) => ({
-                question: card.question,
-                answer: card.answer,
-              }))
-            );
 
             // Short pause to avoid rate limiting
             await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -237,8 +232,8 @@ export function FlashcardGenerator() {
     }
 
     // Original generation code for single batch
-    if (!geminiApiKey) {
-      setError("Please enter your Gemini API key in settings.");
+    if (!hasDefaultApiKey) {
+      setError(`Please configure a ${defaultProviderId} API key in Settings.`);
       return;
     }
 
@@ -284,18 +279,11 @@ export function FlashcardGenerator() {
         });
       }, 1000);
 
-      // Get existing flashcards to avoid duplicates
-      const existingFlashcards = activeProject.flashcards.map((card) => ({
-        question: card.question,
-        answer: card.answer,
-      }));
-
-      // Create Gemini service and generate flashcards with existing ones
-      const geminiService = createGeminiService(geminiApiKey);
-      const generatedFlashcards = await geminiService.generateFlashcards(
-        activeProject.pdfContent,
+      // Generate flashcards via the routed feature module
+      const generatedFlashcards = await generateFlashcards(
+        { kind: "text", text: activeProject.pdfContent },
         numberOfCards,
-        existingFlashcards // Pass existing flashcards to avoid duplicates
+        routerDeps
       );
 
       // Set progress to 100%
@@ -570,7 +558,7 @@ export function FlashcardGenerator() {
 
       <Button
         onClick={handleGenerate}
-        disabled={isGenerating || !geminiApiKey}
+        disabled={isGenerating || !hasDefaultApiKey}
         className="w-full"
       >
         {isGenerating ? (
