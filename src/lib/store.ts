@@ -82,6 +82,9 @@ interface FlashcardState {
   gamificationEnabled: boolean;
   currentStreak: number; // Added for global study streak
   lastStudiedDate: string | null; // YYYY-MM-DD format. Added for streak calculation
+  demoSeedAttempted: boolean; // Have we already attempted to seed the built-in demo project?
+
+  setDemoSeedAttempted: (value: boolean) => void;
 
   // Project management
   createProject: (name: string, description: string) => string;
@@ -207,6 +210,9 @@ export const useFlashcardStore = create<FlashcardState>()(
       gamificationEnabled: true,
       currentStreak: 0, // Initialize streak
       lastStudiedDate: null, // Initialize last studied date
+      demoSeedAttempted: false,
+
+      setDemoSeedAttempted: (value) => set({ demoSeedAttempted: value }),
 
       createProject: (name, description) => {
         const id = crypto.randomUUID();
@@ -995,27 +1001,11 @@ export const useFlashcardStore = create<FlashcardState>()(
         currentStreak: state.currentStreak,
         lastStudiedDate: state.lastStudiedDate,
         gamificationEnabled: state.gamificationEnabled,
+        demoSeedAttempted: state.demoSeedAttempted,
       }),
       storage: createJSONStorage(() => localStorage),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand migrate gives untyped persisted state
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand persist callbacks hand back untyped data
       migrate: (persisted: any, version: number) => {
-        // Normalize date strings → Date instances for every persisted project.
-        // Runs on EVERY load (not only on version bumps) so rehydrated state is
-        // consistent before React reads it — mutations inside onRehydrateStorage
-        // don't reliably trigger a re-render under React 19 + zustand v5.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted project shape is untyped
-        const rehydrateProjects = (projects: any[] | undefined) =>
-          projects?.map((project) => ({
-            ...project,
-            createdAt: new Date(project.createdAt),
-            updatedAt: new Date(project.updatedAt),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted flashcard shape is untyped
-            flashcards: project.flashcards?.map((card: any) => ({
-              ...card,
-              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
-            })),
-          }));
-
         if (version < 3) {
           const oldKey: string | null = persisted?.geminiApiKey ?? null;
           // Drop the legacy geminiApiKey field; its value is folded into providers.gemini.apiKey.
@@ -1023,7 +1013,6 @@ export const useFlashcardStore = create<FlashcardState>()(
           void _discarded;
           return {
             ...rest,
-            projects: rehydrateProjects(rest.projects),
             providers: {
               gemini: { apiKey: oldKey },
               openai: { apiKey: null },
@@ -1036,9 +1025,31 @@ export const useFlashcardStore = create<FlashcardState>()(
             },
           };
         }
+        return persisted;
+      },
+      // Runs on EVERY rehydration (regardless of version). Converts persisted
+      // ISO date strings back to Date instances before React reads the state —
+      // zustand skips `migrate` once versions match, and mutating state inside
+      // onRehydrateStorage doesn't reliably propagate under React 19 + zustand 5.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand persist callbacks hand back untyped data
+      merge: (persisted: any, current) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted project/flashcard shapes are untyped
+        const rehydrateProjects = (projects: any[] | undefined) =>
+          projects?.map((project) => ({
+            ...project,
+            createdAt: new Date(project.createdAt),
+            updatedAt: new Date(project.updatedAt),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted flashcard shape is untyped
+            flashcards: project.flashcards?.map((card: any) => ({
+              ...card,
+              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
+            })),
+          }));
+
         return {
+          ...current,
           ...persisted,
-          projects: rehydrateProjects(persisted?.projects),
+          projects: rehydrateProjects(persisted?.projects) ?? current.projects,
         };
       },
       onRehydrateStorage: () => (state) => {

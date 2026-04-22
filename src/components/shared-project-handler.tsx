@@ -80,7 +80,7 @@ export function SharedProjectHandler() {
       setActiveProject(importResult.newProjectId);
 
       // Navigate to the project page
-      router.push("/project");
+      router.push("/app/project");
 
       // Show success toast
       toast.success("Project imported successfully!");
