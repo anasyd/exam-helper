@@ -170,9 +170,7 @@ Each disabled with `// eslint-disable-next-line <rule> -- pre-existing, deferred
 - src/components/flashcard-list.tsx:117 — @typescript-eslint/no-explicit-any — pre-existing, deferred
 - src/components/flashcard-list.tsx:244,245 — react/no-unescaped-entities (×2) — pre-existing, deferred
 - src/components/flashcard-session.tsx:116 — react/no-unescaped-entities — pre-existing, deferred
-- src/components/project-view.tsx:103 — react-hooks/rules-of-hooks — pre-existing, deferred
 - src/components/project-view.tsx:369 — @typescript-eslint/no-explicit-any — pre-existing, deferred
-- src/components/project-view.tsx:1145,1151 — prefer-const (×2) — pre-existing, deferred
 - src/components/share-project-dialog.tsx:122 — react/no-unescaped-entities — pre-existing, deferred
 - src/components/shared-project-handler.tsx:126 — react/no-unescaped-entities — pre-existing, deferred
 - src/components/topic-quiz-view.tsx:83 — react/no-unescaped-entities (×2 on same line, one disable silences both) — pre-existing, deferred
@@ -180,6 +178,12 @@ Each disabled with `// eslint-disable-next-line <rule> -- pre-existing, deferred
 - src/lib/ai-service.ts:454 — @typescript-eslint/no-explicit-any — pre-existing, deferred
 - src/lib/document-service.ts:23 — @typescript-eslint/no-explicit-any — pre-existing, deferred
 - src/types/pdf-parse.d.ts:5,6,14 — @typescript-eslint/no-explicit-any (×3) — pre-existing, deferred
+
+### Post-review fixes promoted from disables to real fixes
+
+- src/components/project-view.tsx — `react-hooks/rules-of-hooks` disable promoted to a real fix: hoisted the auto-scroll `useEffect` above the `if (!project || !project.studyGuide) return ...` early return (with an internal guard inside the effect body) so the hook call is now unconditional. Removes a latent "Rendered more hooks than during the previous render" bug that would fire when `project.studyGuide` transitions undefined → defined after generation.
+- src/components/project-view.tsx — two `prefer-const` disables (`formattedTranscript`, `linkedTranscript`) replaced with actual `const` declarations; both are assigned once via `await` and never reassigned.
+- Final disable count decreased from 30 to 27.
 
 ### Warnings left untouched (38, all pre-existing `no-unused-vars`)
 

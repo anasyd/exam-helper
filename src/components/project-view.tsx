@@ -82,27 +82,11 @@ function GamifiedRoadmapView({
     setHasScrolledToCurrentItem(false);
   }, [project?.id]);
 
-  if (!project || !project.studyGuide) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Gamified Learning Roadmap</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>
-            No study guide generated yet. Upload documents and generate study
-            content first.
-          </p>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const { studyGuide, flashcards, xp } = project;
-
   // Auto-scroll to current item logic
-  // eslint-disable-next-line react-hooks/rules-of-hooks -- pre-existing, deferred
   useEffect(() => {
+    if (!project || !project.studyGuide) return;
+    const studyGuide = project.studyGuide;
+
     if (!hasScrolledToCurrentItem && studyGuide && studyGuide.sections) {
       // Find the current item to scroll to
       let targetElementId: string | null = null;
@@ -210,7 +194,25 @@ function GamifiedRoadmapView({
       // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
       setHasScrolledToCurrentItem(true);
     }
-  }, [hasScrolledToCurrentItem, studyGuide, project.flashcards]);
+  }, [hasScrolledToCurrentItem, project]);
+
+  if (!project || !project.studyGuide) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Gamified Learning Roadmap</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p>
+            No study guide generated yet. Upload documents and generate study
+            content first.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const { studyGuide, flashcards, xp } = project;
 
   const handleTopicClick = (
     sectionIndex: number,
@@ -1148,15 +1150,13 @@ export function ProjectView() {
         { id: toastId }
       );
       const aiService = createGeminiService(geminiApiKey);
-      // eslint-disable-next-line prefer-const -- pre-existing, deferred
-      let formattedTranscript = await aiService.formatTranscriptToMarkdown(
+      const formattedTranscript = await aiService.formatTranscriptToMarkdown(
         simulatedRawTranscript
       );
       toast.info("Formatting complete. Linking concepts in transcript...", {
         id: toastId,
       });
-      // eslint-disable-next-line prefer-const -- pre-existing, deferred
-      let linkedTranscript = await aiService.linkTranscriptConcepts(
+      const linkedTranscript = await aiService.linkTranscriptConcepts(
         formattedTranscript
       );
       setVideoProcessingResult(
