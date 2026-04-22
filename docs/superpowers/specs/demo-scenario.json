@@ -1,0 +1,23 @@
+{
+  "name": "exam-helper-demo",
+  "description": "~22s silent loop: open seeded QC project, switch to classic view, flashcards tab, settings → models, notes.",
+  "url": "http://localhost:3000/app",
+  "viewport": { "width": 1280, "height": 720 },
+  "steps": [
+    { "action": "wait", "ms": 800 },
+    { "action": "click", "selector": "button:has-text('Open Project')" },
+    { "action": "wait", "ms": 1600 },
+    { "action": "click", "selector": "button:has-text('Classic View')" },
+    { "action": "wait", "ms": 1000 },
+    { "action": "click", "selector": "button:has-text('Generate Flashcards')" },
+    { "action": "wait", "ms": 2500 },
+    { "action": "click", "selector": "button[aria-label='Settings']" },
+    { "action": "wait", "ms": 900 },
+    { "action": "click", "selector": "button[role='tab']:has-text('Models')" },
+    { "action": "wait", "ms": 2000 },
+    { "action": "click", "selector": "button:has-text('Close')" },
+    { "action": "wait", "ms": 1200 },
+    { "action": "click", "selector": "button:has-text('Automated Notes')" },
+    { "action": "wait", "ms": 2500 }
+  ]
+}
