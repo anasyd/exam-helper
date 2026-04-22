@@ -3,7 +3,7 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+RUN npm ci --include=dev
 COPY tsconfig.json ./
 COPY src ./src
 RUN npm run build
