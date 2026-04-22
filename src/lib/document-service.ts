@@ -20,6 +20,7 @@ async function extractTextFromPDF(file: File): Promise<string> {
     for (let i = 1; i <= pdf.numPages; i++) {
       const page = await pdf.getPage(i);
       const textContent = await page.getTextContent();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pre-existing, deferred
       const textItems = textContent.items.map((item: any) => item.str || "");
       fullText += textItems.join(" ") + "\n";
     }

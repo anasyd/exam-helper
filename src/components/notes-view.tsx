@@ -40,6 +40,7 @@ export function NotesView({
 
   // Determine which notes to show initially
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
     if (documentNotes) setActiveNoteType("document");
     else if (videoNotes) setActiveNoteType("video");
     else setActiveNoteType(null);

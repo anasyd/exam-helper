@@ -37,6 +37,7 @@ export function ShareProjectDialog({ projectId }: ShareProjectDialogProps) {
   useEffect(() => {
     if (isOpen && !shareLink) {
       const link = createShareableLink(projectId);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
       setShareLink(link);
     }
   }, [isOpen, projectId, createShareableLink, shareLink]);
@@ -44,6 +45,7 @@ export function ShareProjectDialog({ projectId }: ShareProjectDialogProps) {
   // Reset copied state when dialog closes
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
       setCopied(false);
     }
   }, [isOpen]);
@@ -119,6 +121,7 @@ export function ShareProjectDialog({ projectId }: ShareProjectDialogProps) {
             <ol className="list-decimal ml-5 mt-2 space-y-1">
               <li>Share the link with others</li>
               <li>
+                {/* eslint-disable-next-line react/no-unescaped-entities -- pre-existing, deferred */}
                 When they open the link, they'll be able to import your
                 flashcards
               </li>

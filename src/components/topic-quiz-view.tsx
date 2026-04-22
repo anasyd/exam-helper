@@ -80,6 +80,7 @@ export function TopicQuizView({
         <CardHeader>
           <CardTitle>Quiz Complete!</CardTitle>
           <CardDescription>
+            {/* eslint-disable-next-line react/no-unescaped-entities -- pre-existing, deferred */}
             You have finished the quiz for "{quizTitle}".
           </CardDescription>
         </CardHeader>
