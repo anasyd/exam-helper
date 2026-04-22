@@ -45,3 +45,10 @@ smoke-*.png
 next-env.d.ts
 .superpowers/
 outputs/
+
+# server
+server/node_modules/
+server/dist/
+server/.env
+server/.env.local
+!server/.env.example
