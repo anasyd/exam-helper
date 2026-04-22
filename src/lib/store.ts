@@ -3,8 +3,16 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { createShareableProject, getSharedProject } from "./share-service";
-import { StudyGuide } from "./ai-service";
 import { toast } from "sonner"; // Added for completion toasts
+import type {
+  FeatureId,
+  ModelMeta,
+  ModelSelection,
+  ProviderId,
+  StudyGuide,
+} from "./ai/types";
+import { setOpenRouterCatalog } from "./ai/catalog";
+import { fetchOpenRouterCatalog } from "./ai/providers/openrouter";
 
 export type Flashcard = {
   id: string;
@@ -64,7 +72,13 @@ interface FlashcardState {
   activeProjectId: string | null;
   isProcessing: boolean; // Global processing flag (e.g., for AI calls)
   currentCardIndex: number | null; // Index for the main flashcard session (might need adjustment for topic quizzes)
-  geminiApiKey: string | null;
+  // Multi-provider AI config (sub-project #2)
+  providers: Record<ProviderId, { apiKey: string | null; lastValidatedAt?: number }>;
+  modelRouting: {
+    default: ModelSelection;
+    overrides: Partial<Record<FeatureId, ModelSelection>>;
+  };
+  openRouterCatalog?: { fetchedAt: number; models: ModelMeta[] };
   gamificationEnabled: boolean;
   currentStreak: number; // Added for global study streak
   lastStudiedDate: string | null; // YYYY-MM-DD format. Added for streak calculation
@@ -110,7 +124,13 @@ interface FlashcardState {
   appendDocumentNotes: (newNotes: string) => void; // Append new notes to existing ones
   mergeStudyGuide: (newStudyGuide: StudyGuide) => void; // Merge new study guide with existing one
   cleanupExistingNotes: () => void; // Clean up existing notes to remove code fences
-  setGeminiApiKey: (apiKey: string | null) => void;
+
+  setProviderKey: (id: ProviderId, key: string | null) => void;
+  setProviderValidated: (id: ProviderId, at: number) => void;
+  setDefaultModel: (sel: ModelSelection) => void;
+  setFeatureOverride: (feature: FeatureId, sel: ModelSelection | null) => void;
+  refreshOpenRouterCatalog: () => Promise<void>;
+
   clearFlashcards: (
     sourceSectionTitle?: string,
     sourceTopicTitle?: string
@@ -174,7 +194,16 @@ export const useFlashcardStore = create<FlashcardState>()(
       activeProjectId: null,
       isProcessing: false,
       currentCardIndex: null,
-      geminiApiKey: null,
+      providers: {
+        gemini: { apiKey: null },
+        openai: { apiKey: null },
+        anthropic: { apiKey: null },
+        openrouter: { apiKey: null },
+      },
+      modelRouting: {
+        default: { providerId: "gemini", modelId: "gemini-2.5-flash" },
+        overrides: {},
+      },
       gamificationEnabled: true,
       currentStreak: 0, // Initialize streak
       lastStudiedDate: null, // Initialize last studied date
@@ -563,7 +592,36 @@ export const useFlashcardStore = create<FlashcardState>()(
         }
       },
 
-      setGeminiApiKey: (apiKey) => set({ geminiApiKey: apiKey }),
+      setProviderKey: (id, key) =>
+        set((state) => ({
+          providers: {
+            ...state.providers,
+            [id]: { ...state.providers[id], apiKey: key },
+          },
+        })),
+      setProviderValidated: (id, at) =>
+        set((state) => ({
+          providers: {
+            ...state.providers,
+            [id]: { ...state.providers[id], lastValidatedAt: at },
+          },
+        })),
+      setDefaultModel: (sel) =>
+        set((state) => ({
+          modelRouting: { ...state.modelRouting, default: sel },
+        })),
+      setFeatureOverride: (feature, sel) =>
+        set((state) => {
+          const overrides = { ...state.modelRouting.overrides };
+          if (sel === null) delete overrides[feature];
+          else overrides[feature] = sel;
+          return { modelRouting: { ...state.modelRouting, overrides } };
+        }),
+      refreshOpenRouterCatalog: async () => {
+        const models = await fetchOpenRouterCatalog();
+        setOpenRouterCatalog(models);
+        set({ openRouterCatalog: { fetchedAt: Date.now(), models } });
+      },
 
       clearFlashcards: (sourceSectionTitle, sourceTopicTitle) => {
         const activeProject = get().getActiveProject();
@@ -919,6 +977,7 @@ export const useFlashcardStore = create<FlashcardState>()(
     }),
     {
       name: "flashcards-storage-v2",
+      version: 3,
       partialize: (state) => ({
         projects: state.projects.map((project) => ({
           ...project,
@@ -930,23 +989,61 @@ export const useFlashcardStore = create<FlashcardState>()(
           })),
         })),
         activeProjectId: state.activeProjectId,
-        geminiApiKey: state.geminiApiKey,
+        providers: state.providers,
+        modelRouting: state.modelRouting,
+        openRouterCatalog: state.openRouterCatalog,
         currentStreak: state.currentStreak,
         lastStudiedDate: state.lastStudiedDate,
         gamificationEnabled: state.gamificationEnabled,
       }),
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
-        if (state && state.projects) {
-          state.projects = state.projects.map((project) => ({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand migrate gives untyped persisted state
+      migrate: (persisted: any, version: number) => {
+        // Normalize date strings → Date instances for every persisted project.
+        // Runs on EVERY load (not only on version bumps) so rehydrated state is
+        // consistent before React reads it — mutations inside onRehydrateStorage
+        // don't reliably trigger a re-render under React 19 + zustand v5.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted project shape is untyped
+        const rehydrateProjects = (projects: any[] | undefined) =>
+          projects?.map((project) => ({
             ...project,
             createdAt: new Date(project.createdAt),
             updatedAt: new Date(project.updatedAt),
-            flashcards: project.flashcards.map((card) => ({
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted flashcard shape is untyped
+            flashcards: project.flashcards?.map((card: any) => ({
               ...card,
               lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
             })),
           }));
+
+        if (version < 3) {
+          const oldKey: string | null = persisted?.geminiApiKey ?? null;
+          // Drop the legacy geminiApiKey field; its value is folded into providers.gemini.apiKey.
+          const { geminiApiKey: _discarded, ...rest } = persisted ?? {};
+          void _discarded;
+          return {
+            ...rest,
+            projects: rehydrateProjects(rest.projects),
+            providers: {
+              gemini: { apiKey: oldKey },
+              openai: { apiKey: null },
+              anthropic: { apiKey: null },
+              openrouter: { apiKey: null },
+            },
+            modelRouting: {
+              default: { providerId: "gemini", modelId: "gemini-2.5-flash" },
+              overrides: {},
+            },
+          };
+        }
+        return {
+          ...persisted,
+          projects: rehydrateProjects(persisted?.projects),
+        };
+      },
+      onRehydrateStorage: () => (state) => {
+        if (state?.openRouterCatalog?.models) {
+          setOpenRouterCatalog(state.openRouterCatalog.models);
         }
       },
     }
