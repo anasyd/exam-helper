@@ -1,0 +1,142 @@
+{
+  "project": {
+    "id": "demo-intro-to-qc",
+    "name": "Introduction to Quantum Computing",
+    "description": "Lecture notes — MIT 8.370x week 1",
+    "pdfContent": "Quantum computing uses qubits, which can exist in superpositions of 0 and 1. Unlike classical bits that are deterministically 0 or 1, qubits leverage quantum mechanical phenomena like superposition and entanglement. The Bloch sphere is a geometric representation of a qubit's state. Quantum gates such as Hadamard, CNOT, and Pauli gates manipulate qubit states to perform computations. Shor's algorithm demonstrates exponential speedup over classical factoring algorithms, threatening RSA cryptography. Grover's algorithm provides quadratic speedup for unstructured search problems. Quantum entanglement allows correlated measurements across separated qubits, forming the basis of quantum teleportation and quantum key distribution.",
+    "processedHashes": [],
+    "cardsSeenThisSession": [],
+    "sessionComplete": false,
+    "xp": 0,
+    "flashcards": [
+      {
+        "id": "demo-card-1",
+        "question": "What is a qubit?",
+        "answer": "A quantum bit that can exist in a superposition of 0 and 1 simultaneously.",
+        "options": [
+          "A classical bit flipped quickly",
+          "A quantum bit in superposition of 0 and 1",
+          "A type of quantum gate",
+          "A measurement error"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 1,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-2",
+        "question": "What does the Hadamard gate do?",
+        "answer": "Creates an equal superposition of |0⟩ and |1⟩ from a basis state.",
+        "options": [
+          "Entangles two qubits",
+          "Measures the qubit state",
+          "Creates superposition from a basis state",
+          "Corrects quantum errors"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-3",
+        "question": "Which algorithm threatens RSA cryptography?",
+        "answer": "Shor's algorithm — efficient integer factoring on a quantum computer.",
+        "options": [
+          "Grover's algorithm",
+          "Shor's algorithm",
+          "The quantum Fourier transform alone",
+          "Deutsch-Jozsa algorithm"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-4",
+        "question": "What is quantum entanglement?",
+        "answer": "A correlation between qubits such that measuring one instantly determines the state of the other.",
+        "options": [
+          "Two qubits held in separate registers",
+          "A form of decoherence",
+          "A correlation that links measurement outcomes across qubits",
+          "The act of copying a qubit state"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-5",
+        "question": "What speedup does Grover's algorithm provide?",
+        "answer": "Quadratic speedup over classical unstructured search.",
+        "options": [
+          "Exponential over any classical algorithm",
+          "Quadratic speedup over classical search",
+          "Linear speedup in all cases",
+          "No speedup — only a theoretical construct"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      }
+    ],
+    "documentNotes": "# Introduction to Quantum Computing\n\n## Qubits\n- Basic unit; superposition of |0⟩ and |1⟩.\n- Measured probabilistically (Born rule).\n\n## Gates\n- **Hadamard** — creates superposition from basis states.\n- **CNOT** — two-qubit gate for entanglement.\n- **Pauli X, Y, Z** — single-qubit rotations.\n\n## Key algorithms\n- **Shor's** — factoring; exponential speedup; breaks RSA.\n- **Grover's** — unstructured search; quadratic speedup.\n\n## Entanglement\n- Bell states: maximally entangled pairs.\n- Enables teleportation and QKD.",
+    "studyGuide": {
+      "title": "Introduction to Quantum Computing",
+      "sections": [
+        {
+          "title": "Qubits and Superposition",
+          "summary": "The fundamental units of quantum information and how they differ from classical bits.",
+          "topics": [
+            {
+              "title": "Bit vs qubit",
+              "summary": "A qubit can represent |0⟩, |1⟩, or any superposition of the two."
+            },
+            {
+              "title": "The Bloch sphere",
+              "summary": "A geometric representation of a single qubit state."
+            }
+          ]
+        },
+        {
+          "title": "Quantum Gates",
+          "summary": "Unitary operations that manipulate qubit states.",
+          "topics": [
+            {
+              "title": "Single-qubit gates",
+              "summary": "Hadamard, Pauli X/Y/Z, phase gates."
+            },
+            {
+              "title": "Two-qubit gates",
+              "summary": "CNOT as the canonical entangling gate."
+            }
+          ]
+        },
+        {
+          "title": "Landmark Algorithms",
+          "summary": "Two algorithms that demonstrate quantum speedup.",
+          "topics": [
+            {
+              "title": "Shor's algorithm",
+              "summary": "Polynomial-time integer factoring on a quantum computer."
+            },
+            {
+              "title": "Grover's algorithm",
+              "summary": "Quadratic speedup for unstructured search."
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
