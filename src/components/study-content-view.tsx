@@ -9,15 +9,11 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Volume2, StopCircle, Brain, Zap, Loader2 } from "lucide-react"; // Added Brain, Zap, Loader2
-import {
-  StudyGuide,
-  StudySection,
-  StudyTopic,
-  createGeminiService,
-  FlashcardData,
-} from "@/lib/ai-service";
+import { StudyGuide, StudySection, StudyTopic, FlashcardData } from "@/lib/ai-service";
+import { generateFlashcards } from "@/lib/ai/features/flashcards";
+import type { RouterDependencies } from "@/lib/ai/router";
 import { useFlashcardStore, Flashcard } from "@/lib/store"; // Added
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -39,13 +35,22 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
   const synth = typeof window !== "undefined" ? window.speechSynthesis : null;
 
   const {
-    geminiApiKey,
     addFlashcards,
     getActiveProject,
     getDuplicateQuestionCount,
     setStudyGuide,
     markTopicAsComplete, // Added
   } = useFlashcardStore();
+  const providers = useFlashcardStore((s) => s.providers);
+  const modelRouting = useFlashcardStore((s) => s.modelRouting);
+  const routerDeps: RouterDependencies = useMemo(
+    () => ({
+      getSelection: (feature) =>
+        modelRouting.overrides[feature] ?? modelRouting.default,
+      getApiKey: (providerId) => providers[providerId].apiKey,
+    }),
+    [providers, modelRouting]
+  );
   const activeProject = getActiveProject();
 
   useEffect(() => {
@@ -103,14 +108,16 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
       contentToUse: contentToUse.slice(0, 100) + "...",
     });
 
-    if (!geminiApiKey || !activeProject || !activeProject.pdfContent) {
+    const defaultProviderId = modelRouting.default.providerId;
+    const hasApiKey = !!providers[defaultProviderId].apiKey;
+    if (!hasApiKey || !activeProject || !activeProject.pdfContent) {
       console.error("MCQ Generation Failed - Missing requirements:", {
-        hasApiKey: !!geminiApiKey,
+        hasApiKey,
         hasProject: !!activeProject,
         hasPdfContent: !!activeProject?.pdfContent,
       });
       toast.error("Cannot generate MCQs", {
-        description: "API key or project document content is missing.",
+        description: `Configure a ${defaultProviderId} API key in Settings, or add project document content.`,
       });
       return;
     }
@@ -122,31 +129,17 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
     const toastId = toast.loading(`Generating MCQs for "${title}"...`);
 
     try {
-      const aiService = createGeminiService(geminiApiKey);
       const sectionTitle = isSection
         ? title
         : studyGuide?.sections[sectionIdx]?.title || "Unknown Section";
       const topicTitle = isSection ? undefined : title;
 
-      // Get existing questions for this specific topic/section to avoid duplicates
-      const existingTopicFlashcards = activeProject.flashcards
-        .filter(
-          (card) =>
-            card.sourceSectionTitle === sectionTitle &&
-            (isSection
-              ? !card.sourceTopicTitle
-              : card.sourceTopicTitle === topicTitle)
-        )
-        .map((card) => ({ question: card.question, answer: card.answer }));
-
       const numCardsToGenerate = 5; // Or make this configurable
 
-      const newMcqs = await aiService.generateFlashcards(
-        activeProject.pdfContent, // Main document content for context
+      const newMcqs = await generateFlashcards(
+        { kind: "text", text: contentToUse || activeProject.pdfContent },
         numCardsToGenerate,
-        existingTopicFlashcards,
-        title, // This is the specific title for the prompt context (section or topic)
-        contentToUse // This is the specific content for the prompt context
+        routerDeps
       );
 
       if (newMcqs && newMcqs.length > 0) {
