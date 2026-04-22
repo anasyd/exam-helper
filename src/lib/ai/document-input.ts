@@ -1,16 +1,20 @@
-import * as pdfjs from "pdfjs-dist";
 import type {
   DocumentGenerationInput,
   ModelMeta,
   ProjectSource,
 } from "./types";
 
-// Client-side worker setup. Mirrors src/lib/document-service.ts.
-if (typeof window !== "undefined") {
-  pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-    "pdfjs-dist/build/pdf.worker.mjs",
-    import.meta.url
-  ).toString();
+// Load pdfjs lazily to avoid pulling its browser-only globals (DOMMatrix etc.)
+// into the SSR bundle for routes that transitively import the feature modules.
+async function loadPdfjs() {
+  const pdfjs = await import("pdfjs-dist");
+  if (typeof window !== "undefined" && !pdfjs.GlobalWorkerOptions.workerSrc) {
+    pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+      "pdfjs-dist/build/pdf.worker.mjs",
+      import.meta.url
+    ).toString();
+  }
+  return pdfjs;
 }
 
 // Providers that don't accept PDFs directly — we rasterize for them.
@@ -24,6 +28,7 @@ export async function rasterizePdfPages(
   opts: { maxPages?: number } = {}
 ): Promise<{ mimeType: "image/png"; data: Uint8Array }[]> {
   const maxPages = opts.maxPages ?? DEFAULT_MAX_PAGES;
+  const pdfjs = await loadPdfjs();
   const pdf = await pdfjs.getDocument(bytes).promise;
   const pageCount = Math.min(pdf.numPages, maxPages);
   const images: { mimeType: "image/png"; data: Uint8Array }[] = [];
@@ -50,6 +55,7 @@ export async function rasterizePdfPages(
 
 // Text extraction fallback (same impl as src/lib/document-service.ts, duplicated to avoid cycle).
 async function extractPdfText(bytes: Uint8Array): Promise<string> {
+  const pdfjs = await loadPdfjs();
   const pdf = await pdfjs.getDocument(bytes).promise;
   let full = "";
   for (let i = 1; i <= pdf.numPages; i++) {

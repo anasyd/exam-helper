@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFlashcardStore, Project as ProjectType } from "@/lib/store"; // Import Project type
 import { DocumentUpload } from "@/components/document-upload";
@@ -37,11 +37,15 @@ import {
   Zap, // For generate MCQs button
 } from "lucide-react";
 import { StudyContentView } from "./study-content-view";
+import { StudyGuide, FlashcardData } from "@/lib/ai-service";
+import { generateFlashcards } from "@/lib/ai/features/flashcards";
+import { generateAutomatedNotes } from "@/lib/ai/features/notes";
 import {
-  createGeminiService,
-  StudyGuide,
-  FlashcardData,
-} from "@/lib/ai-service";
+  formatTranscriptToMarkdown,
+  linkTranscriptConcepts,
+} from "@/lib/ai/features/transcript";
+import { generateAllContentTypes } from "@/lib/ai/features/generate-all";
+import type { RouterDependencies } from "@/lib/ai/router";
 import { VideoUpload } from "./video-upload";
 import { NotesView } from "./notes-view";
 import { toast } from "sonner";
@@ -59,9 +63,19 @@ function GamifiedRoadmapView({
     markTopicAsComplete,
     addFlashcards,
     setStudyGuide,
-    geminiApiKey,
     getActiveProject,
   } = useFlashcardStore();
+  const providers = useFlashcardStore((s) => s.providers);
+  const modelRouting = useFlashcardStore((s) => s.modelRouting);
+
+  const routerDeps: RouterDependencies = useMemo(
+    () => ({
+      getSelection: (feature) =>
+        modelRouting.overrides[feature] ?? modelRouting.default,
+      getApiKey: (providerId) => providers[providerId].apiKey,
+    }),
+    [providers, modelRouting]
+  );
 
   // Get the most current project state from the store instead of relying on props
   const project = getActiveProject() || initialProject;
@@ -276,10 +290,11 @@ function GamifiedRoadmapView({
       return;
     }
 
-    // Check if user has API key set
-    if (!geminiApiKey) {
+    // Check if user has API key set for the default provider
+    const defaultProviderId = modelRouting.default.providerId;
+    if (!providers[defaultProviderId].apiKey) {
       toast.error("Cannot generate MCQs", {
-        description: "Please set your Gemini API key in Settings first.",
+        description: `Configure a ${defaultProviderId} API key in Settings.`,
       });
       return;
     }
@@ -319,27 +334,12 @@ function GamifiedRoadmapView({
             const sectionTitle = title; // Section title
             const topicTitle = topic.title;
 
-            // Get existing questions for this specific topic to avoid duplicates
-            const existingTopicFlashcards = project.flashcards
-              .filter(
-                (card: Flashcard) =>
-                  card.sourceSectionTitle === sectionTitle &&
-                  card.sourceTopicTitle === topicTitle
-              )
-              .map((card: Flashcard) => ({
-                question: card.question,
-                answer: card.answer,
-              }));
-
-            const aiService = createGeminiService(geminiApiKey);
             const numCardsToGenerate = 5;
 
-            const newMcqs = await aiService.generateFlashcards(
-              project.pdfContent, // Main document content for context
+            const newMcqs = await generateFlashcards(
+              { kind: "text", text: topic.content || project.pdfContent },
               numCardsToGenerate,
-              existingTopicFlashcards,
-              topicTitle, // This is the specific topic title for the prompt context
-              topic.content // This is the specific topic content
+              routerDeps
             );
 
             if (newMcqs && newMcqs.length > 0) {
@@ -406,34 +406,17 @@ function GamifiedRoadmapView({
     const toastId = toast.loading(`Generating MCQs for "${title}"...`);
 
     try {
-      const aiService = createGeminiService(geminiApiKey);
       const sectionTitle = isSection
         ? title
         : studyGuide.sections[sectionIdx]?.title || "Unknown Section";
       const topicTitle = isSection ? undefined : title;
 
-      // Get existing questions for this specific topic/section to avoid duplicates
-      const existingTopicFlashcards = project.flashcards
-        .filter(
-          (card: Flashcard) =>
-            card.sourceSectionTitle === sectionTitle &&
-            (isSection
-              ? !card.sourceTopicTitle
-              : card.sourceTopicTitle === topicTitle)
-        )
-        .map((card: Flashcard) => ({
-          question: card.question,
-          answer: card.answer,
-        }));
-
       const numCardsToGenerate = 5; // Or make this configurable
 
-      const newMcqs = await aiService.generateFlashcards(
-        project.pdfContent, // Main document content for context
+      const newMcqs = await generateFlashcards(
+        { kind: "text", text: contentToUse || project.pdfContent },
         numCardsToGenerate,
-        existingTopicFlashcards,
-        title, // This is the specific title for the prompt context (section or topic)
-        contentToUse // This is the specific content for the prompt context
+        routerDeps
       );
 
       if (newMcqs && newMcqs.length > 0) {
@@ -927,7 +910,6 @@ export function ProjectView() {
     getActiveProject,
     setActiveProject,
     setStudyGuide,
-    geminiApiKey,
     setVideoProcessingResult,
     clearVideoProcessingResult,
     setDocumentNotes,
@@ -936,6 +918,17 @@ export function ProjectView() {
     setGamificationEnabled,
     currentStreak, // Added for display
   } = useFlashcardStore();
+  const providers = useFlashcardStore((s) => s.providers);
+  const modelRouting = useFlashcardStore((s) => s.modelRouting);
+
+  const routerDeps: RouterDependencies = useMemo(
+    () => ({
+      getSelection: (feature) =>
+        modelRouting.overrides[feature] ?? modelRouting.default,
+      getApiKey: (providerId) => providers[providerId].apiKey,
+    }),
+    [providers, modelRouting]
+  );
   const [activeTab, setActiveTab] = useState<string>("upload");
   const [mounted, setMounted] = useState(false);
   const [isGeneratingStudyContent, setIsGeneratingStudyContent] =
@@ -967,9 +960,10 @@ export function ProjectView() {
   };
 
   const handleDocumentProcessingComplete = async (documentText: string) => {
-    if (!geminiApiKey) {
-      toast.error("Missing Gemini API Key", {
-        description: "Please set your Gemini API key in App Settings.",
+    const defaultProviderId = modelRouting.default.providerId;
+    if (!providers[defaultProviderId].apiKey) {
+      toast.error("Missing API Key", {
+        description: `Configure a ${defaultProviderId} API key in Settings.`,
       });
       setIsGeneratingStudyContent(false);
       useFlashcardStore.getState().setIsProcessing(false);
@@ -1002,24 +996,30 @@ export function ProjectView() {
         "AI is generating notes, flashcards, study guide, and audio...",
     });
     try {
-      const aiService = createGeminiService(geminiApiKey);
-
       // Generate all content types automatically
-      const allContent = await aiService.generateAllContentTypes(documentText, {
-        generateFlashcards: true,
-        generateNotes: true,
-        generateStudyGuide: true,
-        numberOfFlashcards: 15,
-      });
+      const allContent = await generateAllContentTypes(
+        { kind: "text", text: documentText },
+        {
+          generateFlashcards: true,
+          generateNotes: true,
+          generateStudyGuide: true,
+          flashcardCount: 15,
+        },
+        routerDeps
+      );
 
       // Store all generated content intelligently
       if (allContent.studyGuide) {
+        // The feature-module StudyGuide and the legacy store StudyGuide share
+        // enough runtime fields that the store code works on either shape; the
+        // structural TS mismatch will be resolved when legacy types are removed.
+        const guide = allContent.studyGuide as unknown as StudyGuide;
         if (hasExistingContent && activeProject?.studyGuide) {
           // Merge with existing study guide
-          useFlashcardStore.getState().mergeStudyGuide(allContent.studyGuide);
+          useFlashcardStore.getState().mergeStudyGuide(guide);
         } else {
           // First study guide - set directly
-          setStudyGuide(allContent.studyGuide);
+          setStudyGuide(guide);
         }
       }
 
@@ -1052,9 +1052,7 @@ export function ProjectView() {
               } flashcards with existing content!`
             : `Generated ${allContent.studyGuide ? "study guide, " : ""}${
                 allContent.notes ? "notes, " : ""
-              }${allContent.flashcards?.length || 0} flashcards${
-                allContent.audioNarration ? ", and audio narration" : ""
-              }!`,
+              }${allContent.flashcards?.length || 0} flashcards!`,
         }
       );
       setActiveTab("studyContent");
@@ -1071,7 +1069,12 @@ export function ProjectView() {
   };
 
   const handleGenerateDocumentNotes = async () => {
-    if (!geminiApiKey || !activeProject || !activeProject.pdfContent) {
+    const defaultProviderId = modelRouting.default.providerId;
+    if (
+      !providers[defaultProviderId].apiKey ||
+      !activeProject ||
+      !activeProject.pdfContent
+    ) {
       toast.error("Cannot generate document notes", {
         description: "API key or document content is missing.",
       });
@@ -1080,10 +1083,9 @@ export function ProjectView() {
     setIsGeneratingDocumentNotes(true);
     const toastId = toast.loading("Generating notes from document...");
     try {
-      const aiService = createGeminiService(geminiApiKey);
-      const notes = await aiService.generateAutomatedNotes(
-        activeProject.pdfContent,
-        "document"
+      const notes = await generateAutomatedNotes(
+        { kind: "text", text: activeProject.pdfContent },
+        routerDeps
       );
       setDocumentNotes(notes);
       toast.success("Document notes generated!", { id: toastId });
@@ -1099,7 +1101,12 @@ export function ProjectView() {
   };
 
   const handleGenerateVideoNotes = async () => {
-    if (!geminiApiKey || !activeProject || !activeProject.originalTranscript) {
+    const defaultProviderId = modelRouting.default.providerId;
+    if (
+      !providers[defaultProviderId].apiKey ||
+      !activeProject ||
+      !activeProject.originalTranscript
+    ) {
       toast.error("Cannot generate video notes", {
         description: "API key or video transcript is missing.",
       });
@@ -1108,10 +1115,9 @@ export function ProjectView() {
     setIsGeneratingVideoNotes(true);
     const toastId = toast.loading("Generating notes from video transcript...");
     try {
-      const aiService = createGeminiService(geminiApiKey);
-      const notes = await aiService.generateAutomatedNotes(
-        activeProject.originalTranscript,
-        "video_transcript"
+      const notes = await generateAutomatedNotes(
+        { kind: "text", text: activeProject.originalTranscript },
+        routerDeps
       );
       setVideoNotes(notes);
       toast.success("Video transcript notes generated!", { id: toastId });
@@ -1127,7 +1133,8 @@ export function ProjectView() {
   };
 
   const handleVideoUploadAndTranscribe = async (videoFile: File) => {
-    if (!geminiApiKey || !activeProject) {
+    const defaultProviderId = modelRouting.default.providerId;
+    if (!providers[defaultProviderId].apiKey || !activeProject) {
       toast.error("Cannot process video", {
         description: "API key or active project is missing.",
       });
@@ -1149,15 +1156,16 @@ export function ProjectView() {
         "Transcription (simulated) complete. Formatting transcript...",
         { id: toastId }
       );
-      const aiService = createGeminiService(geminiApiKey);
-      const formattedTranscript = await aiService.formatTranscriptToMarkdown(
-        simulatedRawTranscript
+      const formattedTranscript = await formatTranscriptToMarkdown(
+        simulatedRawTranscript,
+        routerDeps
       );
       toast.info("Formatting complete. Linking concepts in transcript...", {
         id: toastId,
       });
-      const linkedTranscript = await aiService.linkTranscriptConcepts(
-        formattedTranscript
+      const linkedTranscript = await linkTranscriptConcepts(
+        formattedTranscript,
+        routerDeps
       );
       setVideoProcessingResult(
         videoFile.name,
