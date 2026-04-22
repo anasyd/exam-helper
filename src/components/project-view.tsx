@@ -945,7 +945,7 @@ export function ProjectView() {
 
   useEffect(() => {
     if (mounted && !activeProject) {
-      router.push("/");
+      router.push("/app");
     }
   }, [activeProject, router, mounted]);
 
@@ -955,7 +955,7 @@ export function ProjectView() {
 
   const handleBackToProjects = () => {
     setActiveProject(null);
-    router.push("/");
+    router.push("/app");
   };
 
   const handleDocumentProcessingComplete = async (documentText: string) => {
