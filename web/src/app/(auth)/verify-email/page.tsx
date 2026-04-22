@@ -20,7 +20,7 @@ function VerifyEmailInner() {
     setResending(true);
     const result = await authClient.sendVerificationEmail({
       email,
-      callbackURL: "/app",
+      callbackURL: window.location.origin + "/app",
     });
     setResending(false);
     if (result.error) {

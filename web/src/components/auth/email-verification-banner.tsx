@@ -31,7 +31,7 @@ export function EmailVerificationBanner() {
     setSending(true);
     const result = await authClient.sendVerificationEmail({
       email: session.data!.user.email,
-      callbackURL: "/app",
+      callbackURL: window.location.origin + "/app",
     });
     setSending(false);
     if (result.error) {
