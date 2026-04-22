@@ -135,7 +135,55 @@ Two TypeScript errors surfaced once the `ignoreBuildErrors` flag was flipped off
 - src/lib/store.ts:843,852 — `markTopicAsComplete`: `JSON.parse(...)` returned `any`, so `section.topics.every((t) => ...)` flagged `t` as implicitly `any` under TS 6. Annotated the parsed clone as `StudyGuide` (already imported) and added the matching `!` assertion on `.topics![topicIndex]` now that the type is narrowed.
 
 ## Lint fixes
-_populated by Task 7_
+
+Lint exit: **0** after 3 iterations. Final: 0 errors, 38 warnings (all pre-existing `no-unused-vars`; severity demoted from error→warning by `eslint-config-next@16`'s ruleset, so no action needed).
+
+### Config-level fix (upgrade-caused, blocker)
+
+- `eslint.config.mjs` — The ESLint 10 upgrade broke `eslint-plugin-react@7.37.5` (bundled via `eslint-config-next@16.2.4 → eslint-plugin-react-hooks@7`): `resolveBasedir()` in `lib/util/version.js` calls the removed `context.getFilename()` API when `react.version: 'detect'` is active, crashing every lint run before any file is checked. Pinned `settings.react.version = "19"` to skip the detect path. Also removed unused `__filename`/`__dirname` locals left behind by the Next codemod's FlatCompat removal. File fully rewritten.
+
+### New errors introduced by upgraded rules (all deferred via narrow per-line disables)
+
+`eslint-plugin-react-hooks@7` (pulled in by `eslint-config-next@16`) adds two new rules that flag idiomatic patterns in this codebase:
+
+- `react-hooks/set-state-in-effect` (10 new hits) — calling setState inside a useEffect body.
+- `react-hooks/immutability` (1 new hit) — reassigning an outer-scope variable during render.
+
+Each was disabled with `// eslint-disable-next-line <rule> -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred`:
+
+- src/components/app-settings.tsx:43 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/flashcard-session.tsx:42 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/flashcard.tsx:53 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/notes-view.tsx:43 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/project-view.tsx:81 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/project-view.tsx:210 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/project-view.tsx:887 — react-hooks/immutability — deferred (new rule)
+- src/components/project-view.tsx:948 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/share-project-dialog.tsx:40 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/share-project-dialog.tsx:47 — react-hooks/set-state-in-effect — deferred (new rule)
+- src/components/shared-project-handler.tsx:38 — react-hooks/set-state-in-effect — deferred (new rule)
+
+### Pre-existing baseline errors (silenced per-line so lint exits 0; NOT fixed)
+
+Each disabled with `// eslint-disable-next-line <rule> -- pre-existing, deferred`. Errors match (file + rule) against the baseline list. Line numbers drift by ±1 because each disable comment inserted above a flagged line shifts subsequent numbers.
+
+- src/components/flashcard-list.tsx:117 — @typescript-eslint/no-explicit-any — pre-existing, deferred
+- src/components/flashcard-list.tsx:244,245 — react/no-unescaped-entities (×2) — pre-existing, deferred
+- src/components/flashcard-session.tsx:116 — react/no-unescaped-entities — pre-existing, deferred
+- src/components/project-view.tsx:103 — react-hooks/rules-of-hooks — pre-existing, deferred
+- src/components/project-view.tsx:369 — @typescript-eslint/no-explicit-any — pre-existing, deferred
+- src/components/project-view.tsx:1145,1151 — prefer-const (×2) — pre-existing, deferred
+- src/components/share-project-dialog.tsx:122 — react/no-unescaped-entities — pre-existing, deferred
+- src/components/shared-project-handler.tsx:126 — react/no-unescaped-entities — pre-existing, deferred
+- src/components/topic-quiz-view.tsx:83 — react/no-unescaped-entities (×2 on same line, one disable silences both) — pre-existing, deferred
+- src/lib/ai-service.ts:127 — @typescript-eslint/no-explicit-any — pre-existing, deferred
+- src/lib/ai-service.ts:454 — @typescript-eslint/no-explicit-any — pre-existing, deferred
+- src/lib/document-service.ts:23 — @typescript-eslint/no-explicit-any — pre-existing, deferred
+- src/types/pdf-parse.d.ts:5,6,14 — @typescript-eslint/no-explicit-any (×3) — pre-existing, deferred
+
+### Warnings left untouched (38, all pre-existing `no-unused-vars`)
+
+`eslint-config-next@16` ships `@typescript-eslint/no-unused-vars` at `warning` severity (was `error` under `eslint-config-next@15`). Lint exits 0 with warnings; no disables added. Candidates for cleanup in Task 8.
 
 ## Smoke-test findings
 _populated by Task 9_

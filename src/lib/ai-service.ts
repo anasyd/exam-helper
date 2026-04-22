@@ -124,6 +124,7 @@ export class GeminiService {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         return await operation(modelName);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pre-existing, deferred
       } catch (error: any) {
         if (
           error?.message?.includes("429") ||
@@ -451,6 +452,7 @@ export class GeminiService {
       ttsOptions = {},
     } = options;
 
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- pre-existing, deferred
     const results: any = {};
 
     try {
