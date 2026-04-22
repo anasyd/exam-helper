@@ -1,21 +1,23 @@
 import type { ProviderId } from "../types";
+import { anthropicProvider } from "./anthropic";
 import { geminiProvider } from "./gemini";
+import { openaiProvider } from "./openai";
+import { openrouterProvider } from "./openrouter";
 import type { Provider } from "./provider";
 
-// Other providers are added as their implementations land.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any -- partial registry during staged landing
-const REGISTRY: Partial<Record<ProviderId, Provider>> = {
+const REGISTRY: Record<ProviderId, Provider> = {
   gemini: geminiProvider,
+  openai: openaiProvider,
+  anthropic: anthropicProvider,
+  openrouter: openrouterProvider,
 };
 
 export function getProvider(id: ProviderId): Provider {
-  const p = REGISTRY[id];
-  if (!p) throw new Error(`Provider not yet registered: ${id}`);
-  return p;
+  return REGISTRY[id];
 }
 
 export function allProviders(): Provider[] {
-  return Object.values(REGISTRY).filter((p): p is Provider => Boolean(p));
+  return Object.values(REGISTRY);
 }
 
 export type { Provider } from "./provider";
