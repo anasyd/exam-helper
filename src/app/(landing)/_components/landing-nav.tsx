@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AuthDropdown } from "@/components/auth/auth-dropdown";
 
 export function LandingNav() {
   return (
@@ -11,12 +12,15 @@ export function LandingNav() {
           <span className="text-[color:var(--accent)]">◇</span>
           <span>exam-helper</span>
         </Link>
-        <Link
-          href="/app"
-          className="bg-[color:var(--ink)] text-[color:var(--canvas)] px-5 py-2 rounded-sm text-sm font-medium hover:opacity-90 transition-opacity"
-        >
-          Try it free
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link
+            href="/app"
+            className="text-sm px-4 py-2 rounded-sm bg-[color:var(--ink)] text-[color:var(--canvas)] hover:opacity-90 transition-opacity"
+          >
+            Try it free
+          </Link>
+          <AuthDropdown />
+        </div>
       </div>
     </nav>
   );
