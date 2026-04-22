@@ -50,6 +50,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
         : ["Option A", "Option B", "Option C", "Option D"];
 
     const [shuffled, indices] = shuffleArray(originalOptions);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
     setShuffledOptions(shuffled);
     setOriginalIndices(indices);
     setSelectedOptionIndex(null);
