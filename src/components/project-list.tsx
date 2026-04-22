@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFlashcardStore, Project } from "@/lib/store";
 import {
@@ -65,7 +66,7 @@ export function ProjectList() {
     setIsCreateDialogOpen(false);
 
     // Navigate to the project page automatically
-    router.push("/project");
+    router.push("/app/project");
   };
 
   const handleUpdateProject = () => {
@@ -104,7 +105,7 @@ export function ProjectList() {
 
   const openProject = (project: Project) => {
     setActiveProject(project.id);
-    router.push("/project");
+    router.push("/app/project");
   };
 
   const formatDate = (date: Date) => {
@@ -134,6 +135,12 @@ export function ProjectList() {
         <h1 className="text-3xl font-bold">My Projects</h1>
 
         <div className="flex items-center gap-2">
+          <Link
+            href="/"
+            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
+          >
+            ← Home
+          </Link>
           <AppSettings />
 
           <Dialog
