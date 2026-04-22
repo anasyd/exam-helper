@@ -999,6 +999,23 @@ export const useFlashcardStore = create<FlashcardState>()(
       storage: createJSONStorage(() => localStorage),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand migrate gives untyped persisted state
       migrate: (persisted: any, version: number) => {
+        // Normalize date strings → Date instances for every persisted project.
+        // Runs on EVERY load (not only on version bumps) so rehydrated state is
+        // consistent before React reads it — mutations inside onRehydrateStorage
+        // don't reliably trigger a re-render under React 19 + zustand v5.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted project shape is untyped
+        const rehydrateProjects = (projects: any[] | undefined) =>
+          projects?.map((project) => ({
+            ...project,
+            createdAt: new Date(project.createdAt),
+            updatedAt: new Date(project.updatedAt),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any -- persisted flashcard shape is untyped
+            flashcards: project.flashcards?.map((card: any) => ({
+              ...card,
+              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
+            })),
+          }));
+
         if (version < 3) {
           const oldKey: string | null = persisted?.geminiApiKey ?? null;
           // Drop the legacy geminiApiKey field; its value is folded into providers.gemini.apiKey.
@@ -1006,6 +1023,7 @@ export const useFlashcardStore = create<FlashcardState>()(
           void _discarded;
           return {
             ...rest,
+            projects: rehydrateProjects(rest.projects),
             providers: {
               gemini: { apiKey: oldKey },
               openai: { apiKey: null },
@@ -1018,20 +1036,12 @@ export const useFlashcardStore = create<FlashcardState>()(
             },
           };
         }
-        return persisted;
+        return {
+          ...persisted,
+          projects: rehydrateProjects(persisted?.projects),
+        };
       },
       onRehydrateStorage: () => (state) => {
-        if (state && state.projects) {
-          state.projects = state.projects.map((project) => ({
-            ...project,
-            createdAt: new Date(project.createdAt),
-            updatedAt: new Date(project.updatedAt),
-            flashcards: project.flashcards.map((card) => ({
-              ...card,
-              lastSeen: card.lastSeen ? new Date(card.lastSeen) : null,
-            })),
-          }));
-        }
         if (state?.openRouterCatalog?.models) {
           setOpenRouterCatalog(state.openRouterCatalog.models);
         }
