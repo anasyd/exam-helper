@@ -128,7 +128,11 @@ Tool: `@next/codemod@16.2.4` and `types-react-codemod@3.5.3`. The interactive `n
 - Reverts: none.
 
 ## Build error fixes
-_populated by Task 6_
+
+Two TypeScript errors surfaced once the `ignoreBuildErrors` flag was flipped off. Both were pre-existing latent-type issues exposed by a stricter type-check run, not API changes from the version bumps. Two iterations, no `@ts-expect-error` needed.
+
+- src/lib/store.ts:781,796 — `documentNotes`/`videoNotes` set to `string | null` when `Project` type has them as `string | undefined` — coerced `null` → `undefined` inside `setDocumentNotes` and `setVideoNotes` setters (kept the public setter signature `(notes: string | null) => void` unchanged so call sites keep working).
+- src/lib/store.ts:843,852 — `markTopicAsComplete`: `JSON.parse(...)` returned `any`, so `section.topics.every((t) => ...)` flagged `t` as implicitly `any` under TS 6. Annotated the parsed clone as `StudyGuide` (already imported) and added the matching `!` assertion on `.topics![topicIndex]` now that the type is narrowed.
 
 ## Lint fixes
 _populated by Task 7_

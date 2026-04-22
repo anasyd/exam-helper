@@ -776,7 +776,7 @@ export const useFlashcardStore = create<FlashcardState>()(
         // Strip markdown code fences if present
         const cleanNotes = notes
           ? notes.replace(/^```markdown\s*\n?|\n?```$/g, "").trim()
-          : notes;
+          : undefined;
 
         set((state) => ({
           projects: state.projects.map((project) =>
@@ -793,7 +793,7 @@ export const useFlashcardStore = create<FlashcardState>()(
         set((state) => ({
           projects: state.projects.map((project) =>
             project.id === activeProject.id
-              ? { ...project, updatedAt: new Date(), videoNotes: notes }
+              ? { ...project, updatedAt: new Date(), videoNotes: notes ?? undefined }
               : project
           ),
         }));
@@ -840,10 +840,10 @@ export const useFlashcardStore = create<FlashcardState>()(
         }
 
         // Create a new studyGuide object with the updated topic
-        const newStudyGuide = JSON.parse(
+        const newStudyGuide: StudyGuide = JSON.parse(
           JSON.stringify(activeProject.studyGuide)
         ); // Deep copy
-        newStudyGuide.sections[sectionIndex].topics[topicIndex].isCompleted =
+        newStudyGuide.sections[sectionIndex].topics![topicIndex].isCompleted =
           true;
 
         // Check if all topics in the section are now complete
