@@ -6,15 +6,21 @@ import { authClient, useSession } from "@/lib/auth/client";
 
 const DISMISS_KEY = "ehv-dismissed";
 
+function readDismissed(): boolean {
+  if (typeof window === "undefined") return true;
+  return sessionStorage.getItem(DISMISS_KEY) === "1";
+}
+
 export function EmailVerificationBanner() {
   const session = useSession();
-  const [dismissed, setDismissed] = useState(true);
+  const [dismissed, setDismissed] = useState<boolean>(readDismissed);
   const [sending, setSending] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      setDismissed(sessionStorage.getItem(DISMISS_KEY) === "1");
-    }
+    // Sync post-hydration: SSR produces dismissed=true; on the client the
+    // real sessionStorage value may differ. One-shot, not a cascading render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setDismissed(readDismissed());
   }, []);
 
   if (dismissed || !session.data?.user || session.data.user.emailVerified) {
