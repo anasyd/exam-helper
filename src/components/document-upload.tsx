@@ -26,8 +26,7 @@ export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processProgress, setProcessProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const { setPdfContent, setIsProcessing: setStoreProcessing } = // Note: setPdfContent will be renamed later
-    useFlashcardStore();
+  const { setIsProcessing: setStoreProcessing } = useFlashcardStore();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {

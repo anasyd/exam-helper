@@ -35,6 +35,7 @@ export function SharedProjectHandler() {
   useEffect(() => {
     const shareParam = searchParams.get("share");
     if (shareParam) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
       setShowImportDialog(true);
     }
   }, [searchParams]);
@@ -123,6 +124,7 @@ export function SharedProjectHandler() {
                 </Alert>
 
                 <p className="text-sm text-muted-foreground">
+                  {/* eslint-disable-next-line react/no-unescaped-entities -- pre-existing, deferred */}
                   The imported project will include all flashcards but you'll be
                   able to modify them independently.
                 </p>

@@ -27,7 +27,7 @@ The API key is never stored on any server and is only used for direct communicat
 ### Prerequisites
 
 - Node.js 18 or newer
-- pnpm (preferred) or npm
+- npm
 
 ### Installation
 
@@ -36,13 +36,13 @@ The API key is never stored on any server and is only used for direct communicat
 2. Install dependencies
 
 ```bash
-pnpm install
+npm install
 ```
 
 3. Start the development server
 
 ```bash
-pnpm dev
+npm run dev
 ```
 
 4. Open [http://localhost:3000](http://localhost:3000) in your browser
@@ -72,7 +72,7 @@ pnpm dev
 
 ### Tech Stack
 
-- **Frontend**: Next.js 15.3+, React 19+
+- **Frontend**: Next.js 16+, React 19+
 - **UI Components**: ShadCN UI, Tailwind CSS
 - **State Management**: Zustand with persistence
 - **PDF Processing**: pdf-parse

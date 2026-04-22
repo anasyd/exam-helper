@@ -36,6 +36,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# playwright smoke-test artifacts
+.playwright-mcp/
+smoke-*.png
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

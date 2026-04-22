@@ -40,6 +40,7 @@ export function AppSettings() {
 
   useEffect(() => {
     if (geminiApiKey) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
       setApiKey(geminiApiKey);
     }
   }, [geminiApiKey]);
