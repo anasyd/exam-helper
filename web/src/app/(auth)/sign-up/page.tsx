@@ -23,7 +23,7 @@ export default function SignUpPage() {
       email,
       password,
       name,
-      callbackURL: "/app",
+      callbackURL: window.location.origin + "/app",
     });
     setLoading(false);
     if (result.error) {
@@ -38,7 +38,7 @@ export default function SignUpPage() {
     setLoading(true);
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/app",
+      callbackURL: window.location.origin + "/app",
     });
   }
 

@@ -21,7 +21,7 @@ export default function SignInPage() {
     const result = await authClient.signIn.email({
       email,
       password,
-      callbackURL: "/app",
+      callbackURL: window.location.origin + "/app",
     });
     setLoading(false);
     if (result.error) {
@@ -35,7 +35,7 @@ export default function SignInPage() {
     setLoading(true);
     await authClient.signIn.social({
       provider: "google",
-      callbackURL: "/app",
+      callbackURL: window.location.origin + "/app",
     });
   }
 
