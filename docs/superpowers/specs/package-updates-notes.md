@@ -68,7 +68,40 @@ All entries below are **pre-existing — deferred** (out-of-scope per spec; not 
 - src/types/pdf-parse.d.ts:14 — Unexpected any. Specify a different type (no-explicit-any)
 
 ## Version bumps (before → after)
-_populated by Task 3_
+
+| package | before | after | jump |
+| --- | --- | --- | --- |
+| @google/generative-ai | ^0.24.0 | ^0.24.1 | patch |
+| @hookform/resolvers | ^5.0.1 | ^5.2.2 | minor |
+| @radix-ui/react-accordion | ^1.2.11 | ^1.2.12 | patch |
+| @radix-ui/react-checkbox | ^1.2.3 | ^1.3.3 | minor |
+| @radix-ui/react-dialog | ^1.1.11 | ^1.1.15 | patch |
+| @radix-ui/react-dropdown-menu | ^2.1.12 | ^2.1.16 | patch |
+| @radix-ui/react-label | ^2.1.4 | ^2.1.8 | patch |
+| @radix-ui/react-progress | ^1.1.4 | ^1.1.8 | patch |
+| @radix-ui/react-separator | ^1.1.4 | ^1.1.8 | patch |
+| @radix-ui/react-slot | ^1.2.0 | ^1.2.4 | patch |
+| @radix-ui/react-tabs | ^1.1.9 | ^1.1.13 | patch |
+| @types/node | ^20 | ^25 | **major** |
+| eslint | ^9 | ^10 | **major** |
+| eslint-config-next | 15.3.1 | 16.2.4 | **major** |
+| lucide-react | ^0.503.0 | ^1.8.0 | **major** |
+| mammoth | ^1.9.1 | ^1.12.0 | minor |
+| next | ^15.5.9 | ^16.2.4 | **major** |
+| pdf-parse | ^1.1.1 | ^2.4.5 | **major** |
+| pdfjs-dist | ^5.1.91 | ^5.6.205 | minor |
+| react | ^19.0.0 | ^19.2.5 | minor |
+| react-dom | ^19.0.0 | ^19.2.5 | minor |
+| react-hook-form | ^7.56.1 | ^7.73.1 | minor |
+| react-pdf | ^9.2.1 | ^10.4.1 | **major** |
+| sonner | ^2.0.3 | ^2.0.7 | patch |
+| tailwind-merge | ^3.2.0 | ^3.5.0 | minor |
+| tw-animate-css | ^1.2.8 | ^1.4.0 | minor |
+| typescript | ^5 | ^6 | **major** |
+| zod | ^3.24.3 | ^4.3.6 | **major** |
+| zustand | ^5.0.3 | ^5.0.12 | patch |
+
+Totals: **9 majors**, 9 minors, 11 patches (29 bumps).
 
 ## Peer-dep resolution issues
 _populated by Task 4_
