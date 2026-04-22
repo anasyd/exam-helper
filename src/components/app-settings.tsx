@@ -1,83 +1,345 @@
-import { useState, useEffect, useRef } from "react"; // Added useRef
+"use client";
+
+import {
+  useState,
+  useEffect,
+  useRef,
+  type ChangeEvent,
+} from "react";
 import { useFlashcardStore } from "@/lib/store";
+import * as catalog from "@/lib/ai/catalog";
+import { getProvider } from "@/lib/ai/providers";
+import { listCompatibleModels } from "@/lib/ai/router";
+import {
+  FEATURE_IDS,
+  PROVIDER_IDS,
+  type FeatureId,
+  type ProviderId,
+} from "@/lib/ai/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogFooter,
 } from "@/components/ui/dialog";
 import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
   Settings,
-  Save,
   ExternalLink,
-  Check,
   Upload,
   Download,
-  // Gamepad2, // Reverted
+  CheckCircle2,
+  XCircle,
+  CircleDashed,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Separator } from "@/components/ui/separator";
+
+const PROVIDER_CONSOLE_URLS: Record<ProviderId, string> = {
+  gemini: "https://ai.google.dev/",
+  openai: "https://platform.openai.com/api-keys",
+  anthropic: "https://console.anthropic.com/settings/keys",
+  openrouter: "https://openrouter.ai/keys",
+};
+
+const FEATURE_LABELS: Record<FeatureId, string> = {
+  flashcards: "Flashcards",
+  notes: "Notes",
+  "study-guide": "Study guide",
+  transcript: "Transcript",
+  summary: "Summary",
+};
+
+function ProviderCard({ providerId }: { providerId: ProviderId }) {
+  const provider = getProvider(providerId);
+  const stored = useFlashcardStore((s) => s.providers[providerId]);
+  const setProviderKey = useFlashcardStore((s) => s.setProviderKey);
+  const setProviderValidated = useFlashcardStore((s) => s.setProviderValidated);
+
+  const [localKey, setLocalKey] = useState(stored.apiKey ?? "");
+  const [testing, setTesting] = useState(false);
+  const [status, setStatus] = useState<"ok" | "invalid" | "unknown">(
+    stored.lastValidatedAt ? "ok" : "unknown"
+  );
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- re-sync local input when persisted key changes externally
+    setLocalKey(stored.apiKey ?? "");
+  }, [stored.apiKey]);
+
+  const saveKey = () => {
+    const trimmed = localKey.trim();
+    setProviderKey(providerId, trimmed || null);
+    setStatus("unknown");
+    toast.success(`${provider.displayName} key saved`);
+  };
+
+  const testKey = async () => {
+    if (!localKey.trim()) return;
+    setTesting(true);
+    const result = await provider.testConnection(localKey.trim());
+    setTesting(false);
+    if (result.ok) {
+      setStatus("ok");
+      setProviderKey(providerId, localKey.trim());
+      setProviderValidated(providerId, Date.now());
+      toast.success(`${provider.displayName} connection OK`);
+    } else {
+      setStatus("invalid");
+      toast.error(`${provider.displayName} error: ${result.error}`);
+    }
+  };
+
+  const clearKey = () => {
+    setProviderKey(providerId, null);
+    setLocalKey("");
+    setStatus("unknown");
+    toast.info(`${provider.displayName} key cleared`);
+  };
+
+  return (
+    <div className="border rounded-md p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <h3 className="font-semibold text-sm">{provider.displayName}</h3>
+        {status === "ok" && (
+          <span className="inline-flex items-center gap-1 text-green-600 text-xs">
+            <CheckCircle2 className="h-3.5 w-3.5" /> Connected
+          </span>
+        )}
+        {status === "invalid" && (
+          <span className="inline-flex items-center gap-1 text-red-600 text-xs">
+            <XCircle className="h-3.5 w-3.5" /> Invalid
+          </span>
+        )}
+        {status === "unknown" && stored.apiKey && (
+          <span className="inline-flex items-center gap-1 text-muted-foreground text-xs">
+            <CircleDashed className="h-3.5 w-3.5" /> Untested
+          </span>
+        )}
+        {status === "unknown" && !stored.apiKey && (
+          <span className="text-muted-foreground text-xs">Not configured</span>
+        )}
+      </div>
+      <Input
+        type="password"
+        value={localKey}
+        onChange={(e) => setLocalKey(e.target.value)}
+        placeholder={`${provider.displayName} API key`}
+      />
+      <div className="flex gap-2 items-center flex-wrap">
+        <Button onClick={saveKey} size="sm">
+          Save
+        </Button>
+        <Button
+          onClick={testKey}
+          size="sm"
+          variant="outline"
+          disabled={!localKey.trim() || testing}
+        >
+          {testing ? "Testing…" : "Test connection"}
+        </Button>
+        {stored.apiKey && (
+          <Button onClick={clearKey} size="sm" variant="ghost">
+            Clear
+          </Button>
+        )}
+        <a
+          href={PROVIDER_CONSOLE_URLS[providerId]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-xs text-muted-foreground hover:underline inline-flex items-center gap-1 ml-auto"
+        >
+          Get a key <ExternalLink className="h-3 w-3" />
+        </a>
+      </div>
+    </div>
+  );
+}
+
+function DefaultModelPicker() {
+  const selection = useFlashcardStore((s) => s.modelRouting.default);
+  const setDefaultModel = useFlashcardStore((s) => s.setDefaultModel);
+  const providers = useFlashcardStore((s) => s.providers);
+
+  const availableProviders = PROVIDER_IDS.filter((id) => providers[id].apiKey);
+  const modelsForProvider = catalog.listForProvider(selection.providerId);
+
+  return (
+    <div className="space-y-2">
+      <h3 className="font-semibold">Default model</h3>
+      <p className="text-sm text-muted-foreground">
+        Used for every feature without a specific override.
+      </p>
+      <div className="grid grid-cols-2 gap-2">
+        <select
+          value={selection.providerId}
+          onChange={(e) => {
+            const providerId = e.target.value as ProviderId;
+            const first = catalog.listForProvider(providerId)[0];
+            if (first) setDefaultModel({ providerId, modelId: first.modelId });
+          }}
+          className="border rounded px-2 py-1 bg-background text-sm"
+        >
+          {PROVIDER_IDS.map((id) => (
+            <option key={id} value={id} disabled={!availableProviders.includes(id)}>
+              {getProvider(id).displayName}
+              {!availableProviders.includes(id) ? " (no key)" : ""}
+            </option>
+          ))}
+        </select>
+        <select
+          value={selection.modelId}
+          onChange={(e) =>
+            setDefaultModel({ providerId: selection.providerId, modelId: e.target.value })
+          }
+          className="border rounded px-2 py-1 bg-background text-sm"
+        >
+          {modelsForProvider.map((m) => (
+            <option key={m.modelId} value={m.modelId}>
+              {m.displayName}
+              {m.supportsVision ? " 👁" : ""}
+            </option>
+          ))}
+        </select>
+      </div>
+    </div>
+  );
+}
+
+function FeatureOverridesSection() {
+  const overrides = useFlashcardStore((s) => s.modelRouting.overrides);
+  const setFeatureOverride = useFlashcardStore((s) => s.setFeatureOverride);
+  const providers = useFlashcardStore((s) => s.providers);
+  const availableProviders = PROVIDER_IDS.filter((id) => providers[id].apiKey);
+
+  return (
+    <div className="space-y-3">
+      <h3 className="font-semibold">Per-feature overrides</h3>
+      <p className="text-sm text-muted-foreground">
+        Optional. Toggle a feature to route it to a model different from the default. Incompatible
+        models are filtered out per feature.
+      </p>
+      {FEATURE_IDS.map((feature) => {
+        const sel = overrides[feature];
+        const compatible = listCompatibleModels(feature);
+        const compatibleForSelected = sel
+          ? compatible.filter((m) => m.providerId === sel.providerId)
+          : [];
+        return (
+          <div key={feature} className="border rounded p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium">{FEATURE_LABELS[feature]}</span>
+              <label className="text-sm flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={!!sel}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      const first = compatible.find((m) =>
+                        availableProviders.includes(m.providerId)
+                      );
+                      if (first) {
+                        setFeatureOverride(feature, {
+                          providerId: first.providerId,
+                          modelId: first.modelId,
+                        });
+                      } else {
+                        toast.error(
+                          "No compatible model available among configured providers for this feature."
+                        );
+                      }
+                    } else {
+                      setFeatureOverride(feature, null);
+                    }
+                  }}
+                />
+                Override
+              </label>
+            </div>
+            {sel && (
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={sel.providerId}
+                  onChange={(e) => {
+                    const providerId = e.target.value as ProviderId;
+                    const first = compatible.find((m) => m.providerId === providerId);
+                    if (first) {
+                      setFeatureOverride(feature, { providerId, modelId: first.modelId });
+                    }
+                  }}
+                  className="border rounded px-2 py-1 bg-background text-sm"
+                >
+                  {PROVIDER_IDS.map((id) => {
+                    const hasCompat = compatible.some((m) => m.providerId === id);
+                    return (
+                      <option
+                        key={id}
+                        value={id}
+                        disabled={!availableProviders.includes(id) || !hasCompat}
+                      >
+                        {getProvider(id).displayName}
+                        {!availableProviders.includes(id) ? " (no key)" : ""}
+                        {availableProviders.includes(id) && !hasCompat ? " (incompatible)" : ""}
+                      </option>
+                    );
+                  })}
+                </select>
+                <select
+                  value={sel.modelId}
+                  onChange={(e) =>
+                    setFeatureOverride(feature, {
+                      providerId: sel.providerId,
+                      modelId: e.target.value,
+                    })
+                  }
+                  className="border rounded px-2 py-1 bg-background text-sm"
+                >
+                  {compatibleForSelected.map((m) => (
+                    <option key={m.modelId} value={m.modelId}>
+                      {m.displayName}
+                      {m.supportsVision ? " 👁" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function AppSettings() {
-  const {
-    geminiApiKey,
-    setGeminiApiKey,
-    exportAllProjects,
-    importProjects,
-    projects,
-  } = useFlashcardStore();
-  const [apiKey, setApiKey] = useState<string>("");
+  const exportAllProjects = useFlashcardStore((s) => s.exportAllProjects);
+  const importProjects = useFlashcardStore((s) => s.importProjects);
+  const projects = useFlashcardStore((s) => s.projects);
+  const refreshOpenRouterCatalog = useFlashcardStore((s) => s.refreshOpenRouterCatalog);
+  const openRouterCatalog = useFlashcardStore((s) => s.openRouterCatalog);
+
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // const [localGamificationEnabled, setLocalGamificationEnabled] = useState(gamificationEnabled); // Reverted
-  const [isSaved, setIsSaved] = useState(false);
   const importFileInputRef = useRef<HTMLInputElement>(null);
 
+  // Kick off OpenRouter catalog fetch once, silently
   useEffect(() => {
-    if (geminiApiKey) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
-      setApiKey(geminiApiKey);
+    if (!openRouterCatalog) {
+      refreshOpenRouterCatalog().catch(() => {
+        // intentional no-op; OpenRouter list just stays empty if it fails
+      });
     }
-  }, [geminiApiKey]);
+  }, [openRouterCatalog, refreshOpenRouterCatalog]);
 
-  // Re-sync local state if dialog is reopened and global state changed
-  useEffect(() => {
-    if (isDialogOpen) {
-      // setLocalGamificationEnabled(gamificationEnabled); // Reverted
-    }
-  }, [isDialogOpen /*, gamificationEnabled Reverted */]);
-
-  const handleSaveSettings = () => {
-    // Save API Key
-    setGeminiApiKey(apiKey);
-
-    // // Save Gamification Setting - Reverted
-    // if (setGamificationEnabled) { // Check if function exists
-    //   setGamificationEnabled(localGamificationEnabled);
-    // }
-
-    setIsSaved(true);
-    toast.success("Settings saved successfully!");
-    setTimeout(() => setIsSaved(false), 3000);
-    // setIsDialogOpen(false); // Optionally close dialog on save
-  };
-
-  const handleClearApiKey = () => {
-    setApiKey("");
-    setGeminiApiKey(null);
-    toast.info("API key removed", {
-      description: "Your Gemini API key has been cleared.",
-    });
-  };
-
-  // --- Import/Export Handlers ---
-
-  const handleExportAll = () => {
+  const handleExport = () => {
     if (projects.length === 0) {
       toast.info("No projects to export.");
       return;
@@ -94,7 +356,7 @@ export function AppSettings() {
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      toast.success("All projects exported successfully.");
+      toast.success(`Exported ${projects.length} project(s)`);
     } catch (error) {
       console.error("Export failed:", error);
       toast.error("Failed to export projects.", {
@@ -104,176 +366,107 @@ export function AppSettings() {
     }
   };
 
-  const handleImportClick = () => {
-    importFileInputRef.current?.click(); // Trigger hidden file input
-  };
-
-  const handleImportFileChange = (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const file = event.target.files?.[0];
-    if (!file) {
-      return;
-    }
+  const handleImportFile = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = (ev) => {
       try {
-        const content = e.target?.result as string;
+        const content = ev.target?.result as string;
         if (!content) {
           throw new Error("File content is empty.");
         }
-        const result = importProjects(content); // Use importProjects for multi-project import
-
+        const result = importProjects(content);
         if (result.success) {
           toast.success(`${result.count} project(s) imported successfully.`);
-          // Optionally, you might want to navigate the user or refresh the view
         } else {
           throw new Error(result.error || "Import failed.");
         }
-      } catch (error) {
-        console.error("Import failed:", error);
-        toast.error("Failed to import projects.", {
-          description:
-            error instanceof Error
-              ? error.message
-              : "Invalid file format or content.",
-        });
+      } catch (err) {
+        toast.error(
+          `Import failed: ${err instanceof Error ? err.message : String(err)}`
+        );
       } finally {
-        // Reset file input value to allow importing the same file again if needed
-        if (importFileInputRef.current) {
-          importFileInputRef.current.value = "";
-        }
+        if (importFileInputRef.current) importFileInputRef.current.value = "";
       }
     };
     reader.onerror = () => {
       toast.error("Failed to read the import file.");
-      if (importFileInputRef.current) {
-        importFileInputRef.current.value = "";
-      }
+      if (importFileInputRef.current) importFileInputRef.current.value = "";
     };
     reader.readAsText(file);
   };
 
-  // --- End Import/Export Handlers ---
-
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      {/* ... DialogTrigger ... */}
       <DialogTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" aria-label="Settings">
           <Settings className="h-4 w-4" />
-          <span className="sr-only">Settings</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Application Settings</DialogTitle>
           <DialogDescription>
-            Configure global settings and manage project data.
+            Configure AI providers, per-feature models, and project data.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* API Key Section */}
-          <div className="space-y-2">
-            {/* ... existing API key input and description ... */}
-            <Label htmlFor="api-key" className="font-medium">
-              Gemini API Key
-            </Label>
-            <Input
-              id="api-key"
-              type="password"
-              value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
-              placeholder="Enter your Gemini API key"
-              className="font-mono"
+        <Tabs defaultValue="providers" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="providers">Providers</TabsTrigger>
+            <TabsTrigger value="models">Models</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="providers" className="space-y-4 pt-4">
+            {PROVIDER_IDS.map((id) => (
+              <ProviderCard key={id} providerId={id} />
+            ))}
+          </TabsContent>
+
+          <TabsContent value="models" className="space-y-4 pt-4">
+            <DefaultModelPicker />
+            <Separator />
+            <FeatureOverridesSection />
+          </TabsContent>
+        </Tabs>
+
+        <Separator className="my-4" />
+
+        <div className="space-y-3">
+          <h3 className="font-semibold">Project Data Management</h3>
+          <p className="text-sm text-muted-foreground">
+            Export all projects to a backup file or import previously-exported projects.
+          </p>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              onClick={handleExport}
+              variant="outline"
+              size="sm"
+              disabled={projects.length === 0}
+            >
+              <Download className="h-4 w-4 mr-2" /> Export all projects
+            </Button>
+            <Button
+              onClick={() => importFileInputRef.current?.click()}
+              variant="outline"
+              size="sm"
+            >
+              <Upload className="h-4 w-4 mr-2" /> Import projects
+            </Button>
+            <input
+              ref={importFileInputRef}
+              type="file"
+              accept="application/json,.json"
+              className="hidden"
+              onChange={handleImportFile}
             />
-            <p className="text-xs text-muted-foreground">
-              This API key will be stored locally in your browser and used for
-              all flashcard generation.
-            </p>
-
-            <div className="text-xs text-muted-foreground space-y-2 mt-4 p-3 border rounded-md bg-muted/30">
-              <p className="font-medium">How to get your API key:</p>
-              <ol className="list-decimal pl-5 space-y-1">
-                <li>
-                  Visit{" "}
-                  <a
-                    href="https://aistudio.google.com/app/apikey"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-primary underline underline-offset-2 inline-flex items-center"
-                  >
-                    Google AI Studio <ExternalLink className="h-3 w-3 ml-1" />
-                  </a>
-                </li>
-                <li>Create or sign in to your Google account</li>
-                <li>Go to the API Keys section</li>
-                <li>Create a new API key and copy it</li>
-              </ol>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Import/Export Section */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Project Data Management</h3>
-            <p className="text-sm text-muted-foreground">
-              Export all your projects into a single backup file, or import
-              projects from a previously exported file. Importing a file with a
-              single project will create a new project.
-            </p>
-            <div className="flex gap-2">
-              <Button
-                variant="outline"
-                onClick={handleExportAll}
-                disabled={projects.length === 0}
-              >
-                <Download className="mr-2 h-4 w-4" />
-                Export All Projects
-              </Button>
-              <Button variant="outline" onClick={handleImportClick}>
-                <Upload className="mr-2 h-4 w-4" />
-                Import Projects
-              </Button>
-              {/* Hidden file input */}
-              <input
-                type="file"
-                ref={importFileInputRef}
-                onChange={handleImportFileChange}
-                accept=".json"
-                style={{ display: "none" }}
-              />
-            </div>
           </div>
         </div>
 
-        <DialogFooter className="flex flex-col sm:flex-row gap-2 pt-4 border-t">
-          {/* API Key Buttons on one side */}
-          <div className="flex gap-2 justify-end flex-grow">
-            <Button
-              variant="outline"
-              onClick={handleClearApiKey}
-              disabled={!apiKey}
-            >
-              Clear API Key
-            </Button>
-            <Button onClick={handleSaveSettings} disabled={!apiKey || isSaved}>
-              {isSaved ? (
-                <>
-                  <Check className="mr-2 h-4 w-4" />
-                  Saved
-                </>
-              ) : (
-                <>
-                  <Save className="mr-2 h-4 w-4" />
-                  Save API Key
-                </>
-              )}
-            </Button>
-          </div>
+        <DialogFooter>
+          <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
