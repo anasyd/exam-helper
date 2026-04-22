@@ -104,7 +104,11 @@ All entries below are **pre-existing — deferred** (out-of-scope per spec; not 
 Totals: **9 majors**, 9 minors, 11 patches (29 bumps).
 
 ## Peer-dep resolution issues
-_populated by Task 4_
+
+_None — install was clean on first attempt (no `--legacy-peer-deps` needed)._
+
+npm emitted three `ERESOLVE overriding peer dependency` warnings (non-fatal, auto-resolved) and one deprecation notice:
+- `@types/pdfjs-dist@2.10.378` — deprecated stub types; `pdfjs-dist` now ships its own types. Candidate for removal in Task 8 (cleanup).
 
 ## Build error fixes
 _populated by Task 6_
