@@ -22,7 +22,6 @@ const schema = z.object({
 
 const parsed = schema.safeParse(process.env);
 if (!parsed.success) {
-  // eslint-disable-next-line no-console -- bootstrap error before logger is initialized
   console.error(
     "Invalid env:",
     JSON.stringify(parsed.error.flatten().fieldErrors, null, 2),
