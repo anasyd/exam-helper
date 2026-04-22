@@ -155,6 +155,12 @@ interface FlashcardState {
     count: number;
     error?: string;
   };
+  createShareableLink: (projectId: string) => string | null;
+  importFromShareableLink: (shareLink: string) => {
+    success: boolean;
+    newProjectId?: string;
+    error?: string;
+  };
   setGamificationEnabled: (enabled: boolean) => void;
   markTopicAsComplete: (sectionIndex: number, topicIndex: number) => void;
   addXPtoProject: (amount: number) => void;
