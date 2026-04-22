@@ -10,6 +10,7 @@ import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
 import { AppSettings } from "@/components/app-settings";
 import { ShareProjectDialog } from "@/components/share-project-dialog";
+import { AuthDropdown } from "@/components/auth/auth-dropdown";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -1241,6 +1242,7 @@ export function ProjectView() {
           )}
           <ShareProjectDialog projectId={activeProject.id} />
           <AppSettings />
+          <AuthDropdown />
         </div>
       </div>
       {gamificationEnabled && activeProject.studyGuide ? (
