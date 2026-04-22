@@ -42,6 +42,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "./ui/label";
 import { AppSettings } from "./app-settings";
+import { AuthDropdown } from "@/components/auth/auth-dropdown";
 
 export function ProjectList() {
   const router = useRouter();
@@ -204,6 +205,8 @@ export function ProjectList() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
+
+          <AuthDropdown />
         </div>
       </div>
 
