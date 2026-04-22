@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { Fraunces, Inter } from "next/font/google";
+import { LogoIcon } from "@/components/logo-icon";
 
 const fraunces = Fraunces({
   variable: "--font-display",
@@ -23,7 +24,7 @@ export default function AuthLayout({ children }: { children: ReactNode }) {
       <nav className="border-b border-[color:var(--rule)]">
         <div className="max-w-6xl mx-auto px-6 py-4">
           <Link href="/" className="display text-xl flex items-center gap-2">
-            <span className="text-[color:var(--accent)]">◇</span>
+            <LogoIcon size={22} />
             exam-helper
           </Link>
         </div>
