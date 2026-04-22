@@ -1,14 +1,21 @@
 # exam-helper
 
-AI-powered flashcard and study tool.
+AI-powered flashcard and study tool — upload your documents, generate flashcards, notes, and study guides using the AI model of your choice.
+
+[![Server image](https://ghcr-badge.egpl.dev/your-username/exam-helper-server/latest_tag?label=server)](https://github.com/your-username/exam-helper/pkgs/container/exam-helper-server)
+[![Web image](https://ghcr-badge.egpl.dev/your-username/exam-helper-web/latest_tag?label=web)](https://github.com/your-username/exam-helper/pkgs/container/exam-helper-web)
 
 ## Structure
 
 ```
 exam-helper/
-├── web/      # Next.js frontend (deployed on Vercel)
-└── server/   # Express backend  (deployed on Coolify)
+├── web/      # Next.js frontend  — ghcr.io/your-username/exam-helper-web
+└── server/   # Express backend   — ghcr.io/your-username/exam-helper-server
 ```
+
+## Self-hosting
+
+See **[docs/self-hosting.md](docs/self-hosting.md)** for the full Coolify deployment guide — including auto-generated secrets and one-compose setup.
 
 ## Local development
 
@@ -28,4 +35,12 @@ npm install
 npm run dev            # http://localhost:3000
 ```
 
-See [docs/deployment.md](docs/deployment.md) for production setup.
+## Releasing a new version
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+GitHub Actions builds both Docker images and pushes them to GHCR automatically.
+Tags `latest`, `1`, `1.0`, and `1.0.0` are all published.
