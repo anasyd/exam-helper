@@ -31,7 +31,6 @@ export default async function OpenGraphImage() {
             gap: "12px",
           }}
         >
-          <span>◇</span>
           <span>exam-helper</span>
         </div>
         <div
