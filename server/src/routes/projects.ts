@@ -29,7 +29,7 @@ projectsRouter.get("/", async (req, res) => {
 
 // GET /api/projects/:id — full project including content
 projectsRouter.get("/:id", async (req, res) => {
-  const { userId } = req as AuthedRequest;
+  const { userId } = req as unknown as AuthedRequest;
   const project = await col().findOne(
     { userId, id: req.params.id },
     { projection: { _id: 0 } },
@@ -43,7 +43,7 @@ projectsRouter.get("/:id", async (req, res) => {
 
 // PUT /api/projects/:id — upsert (create or update)
 projectsRouter.put("/:id", async (req, res) => {
-  const { userId } = req as AuthedRequest;
+  const { userId } = req as unknown as AuthedRequest;
   const { id } = req.params;
 
   // Strip ephemeral fields and internal fields before saving
@@ -73,7 +73,7 @@ projectsRouter.put("/:id", async (req, res) => {
 
 // DELETE /api/projects/:id
 projectsRouter.delete("/:id", async (req, res) => {
-  const { userId } = req as AuthedRequest;
+  const { userId } = req as unknown as AuthedRequest;
   const result = await col().deleteOne({ userId, id: req.params.id });
   if (result.deletedCount === 0) {
     res.status(404).json({ error: "Not found" });
