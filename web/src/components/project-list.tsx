@@ -8,7 +8,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -29,9 +28,9 @@ import {
   FileText,
   Edit2,
   Trash2,
-  BookOpen,
   MoreHorizontal,
   Clock,
+  ChevronLeft,
 } from "lucide-react";
 import { LogoIcon } from "@/components/logo-icon";
 import { Progress } from "@/components/ui/progress";
@@ -125,17 +124,16 @@ export function ProjectList() {
 
   return (
     <div className="container mx-auto py-8">
+      <Link
+        href="/"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
+      >
+        <ChevronLeft className="h-4 w-4" /> Home
+      </Link>
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">My Projects</h1>
 
         <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1"
-          >
-            ← Home
-          </Link>
-
           <Dialog
             open={isCreateDialogOpen}
             onOpenChange={setIsCreateDialogOpen}
@@ -318,7 +316,8 @@ export function ProjectList() {
             return (
               <Card
                 key={project.id}
-                className="overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
+                onClick={() => openProject(project)}
+                className="overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer"
               >
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
@@ -330,7 +329,12 @@ export function ProjectList() {
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 flex-shrink-0"
+                          onClick={(e) => e.stopPropagation()}
+                        >
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -367,13 +371,6 @@ export function ProjectList() {
                     )}
                   </div>
                 </CardContent>
-
-                <CardFooter className="pt-1">
-                  <Button onClick={() => openProject(project)} className="w-full">
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Open Project
-                  </Button>
-                </CardFooter>
               </Card>
             );
           })

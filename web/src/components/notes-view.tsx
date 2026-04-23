@@ -92,7 +92,7 @@ function NotesContent({ notes }: { notes: string }) {
       {/* TOC sidebar */}
       {headings.length > 0 && (
         <aside className="hidden md:block w-52 shrink-0">
-          <div className="sticky top-4 space-y-0.5">
+          <div className="sticky top-4 max-h-[calc(100vh-6rem)] overflow-y-auto scrollbar-thin space-y-0.5">
             <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-2">
               Contents
             </p>

@@ -13,7 +13,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings } from "lucide-react";
+import { Settings, User, FolderOpen, LogOut } from "lucide-react";
 import { AppSettings } from "@/components/app-settings";
 
 function initialsFrom(name: string | null | undefined, email: string): string {
@@ -71,10 +71,16 @@ export function AuthDropdown() {
         </div>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
-          <Link href="/app/profile">Profile</Link>
+          <Link href="/app/profile" className="flex items-center">
+            <User className="mr-2 h-4 w-4" />
+            Profile
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
-          <Link href="/app">My projects</Link>
+          <Link href="/app" className="flex items-center">
+            <FolderOpen className="mr-2 h-4 w-4" />
+            My projects
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
@@ -82,7 +88,10 @@ export function AuthDropdown() {
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>
+          <LogOut className="mr-2 h-4 w-4" />
+          Sign out
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
     </>

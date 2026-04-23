@@ -125,105 +125,89 @@ export function FlashcardList() {
         </div>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {filteredFlashcards.length === 0 ? (
           <p className="text-center py-4 text-muted-foreground">
             No flashcards match your search criteria.
           </p>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground">
-              Showing {filteredFlashcards.length} of{" "}
-              {activeProject.flashcards.length} flashcards
+            <p className="text-xs text-muted-foreground pb-1">
+              Showing {filteredFlashcards.length} of {activeProject.flashcards.length} flashcards
             </p>
 
             {filteredFlashcards.map((card) => (
               <Card
                 key={card.id}
-                className="border-2 hover:border-primary/50 transition-all"
+                className="hover:border-primary/50 transition-all"
               >
-                <CardHeader className="p-4 pb-2">
-                  <div
-                    className="flex items-start justify-between cursor-pointer"
-                    onClick={() => toggleCard(card.id)}
-                  >
-                    <div className="space-y-1">
-                      <div className="font-medium">{card.question}</div>
-                      <div className="flex gap-2">
-                        <span
-                          className={`text-xs px-2 py-0.5 rounded-full ${
-                            card.difficulty <= 2
-                              ? "bg-green-100 text-green-800"
-                              : card.difficulty >= 4
-                              ? "bg-red-100 text-red-800"
-                              : "bg-yellow-100 text-yellow-800"
-                          }`}
-                        >
-                          Level: {card.difficulty}
-                        </span>
-                        {card.timesCorrect + card.timesIncorrect > 0 && (
-                          <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
-                            {Math.round(
-                              (card.timesCorrect /
-                                (card.timesCorrect + card.timesIncorrect)) *
-                                100
-                            )}
-                            % correct
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) =>
-                          handleDeleteClick(e, {
-                            id: card.id,
-                            question: card.question,
-                          })
-                        }
-                      >
-                        <Trash2 className="h-4 w-4 text-red-500" />
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        {expandedCardId === card.id ? (
-                          <ChevronUp className="h-4 w-4" />
-                        ) : (
-                          <ChevronDown className="h-4 w-4" />
-                        )}
-                      </Button>
-                    </div>
+                <div
+                  className="flex items-center justify-between px-4 py-3 cursor-pointer gap-3"
+                  onClick={() => toggleCard(card.id)}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span
+                      className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
+                        card.difficulty <= 2
+                          ? "bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-400"
+                          : card.difficulty >= 4
+                          ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-400"
+                          : "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-400"
+                      }`}
+                    >
+                      {card.difficulty}
+                    </span>
+                    <span className="text-sm font-medium truncate">{card.question}</span>
+                    {card.timesCorrect + card.timesIncorrect > 0 && (
+                      <span className="shrink-0 text-xs text-muted-foreground">
+                        {Math.round((card.timesCorrect / (card.timesCorrect + card.timesIncorrect)) * 100)}%
+                      </span>
+                    )}
                   </div>
-                </CardHeader>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={(e) => handleDeleteClick(e, { id: card.id, question: card.question })}
+                    >
+                      <Trash2 className="h-3.5 w-3.5 text-red-500" />
+                    </Button>
+                    {expandedCardId === card.id ? (
+                      <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    ) : (
+                      <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                    )}
+                  </div>
+                </div>
 
                 {expandedCardId === card.id && (
-                  <CardContent className="p-4 pt-1 border-t">
-                    <div className="space-y-2">
-                      <div className="font-medium text-sm">Answer:</div>
-                      <div className="text-sm">{card.answer}</div>
-
-                      <div className="mt-2">
-                        <div className="font-medium text-sm mb-1">Options:</div>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                          {card.options.map((option, index) => (
-                            <div
-                              key={index}
-                              className={`text-xs p-2 rounded border ${
-                                index === card.correctOptionIndex
-                                  ? "border-green-500 bg-green-50 text-green-800"
-                                  : "border-gray-200 text-gray-600"
-                              }`}
-                            >
-                              {String.fromCharCode(65 + index)}. {option}
-                              {index === card.correctOptionIndex && (
-                                <span className="ml-1 text-green-600 font-medium">
-                                  ✓
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                  <CardContent className="px-4 pb-4 pt-0 border-t">
+                    <div className="pt-3 space-y-3">
+                      {card.explanation ? (
+                        <div>
+                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Explanation</div>
+                          <p className="text-sm">{card.explanation}</p>
                         </div>
+                      ) : (
+                        <div>
+                          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Answer</div>
+                          <p className="text-sm">{card.answer}</p>
+                        </div>
+                      )}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
+                        {card.options.map((option, index) => (
+                          <div
+                            key={index}
+                            className={`text-xs p-2 rounded border ${
+                              index === card.correctOptionIndex
+                                ? "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400"
+                                : "border-muted text-muted-foreground"
+                            }`}
+                          >
+                            {String.fromCharCode(65 + index)}. {option}
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </CardContent>

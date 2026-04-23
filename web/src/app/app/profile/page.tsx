@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "@/lib/auth/client";
 import { useRequireAuth } from "@/lib/auth/hooks";
+import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,9 +51,9 @@ export default function ProfilePage() {
       <div>
         <Link
           href="/app"
-          className="text-sm text-muted-foreground hover:underline"
+          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
         >
-          ← Back to projects
+          <ChevronLeft className="h-4 w-4" /> Back to projects
         </Link>
       </div>
 

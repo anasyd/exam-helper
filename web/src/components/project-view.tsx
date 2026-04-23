@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useRef } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useFlashcardStore, Project as ProjectType } from "@/lib/store"; // Import Project type
 import { DocumentUpload } from "@/components/document-upload";
 import { FlashcardSession } from "@/components/flashcard-session";
@@ -705,8 +705,11 @@ function GamifiedRoadmapView({
   );
 }
 
+const VALID_TABS = ["study", "guide", "notes", "source", "settings"] as const;
+
 export function ProjectView() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const {
     getActiveProject,
     setActiveProject,
@@ -730,9 +733,18 @@ export function ProjectView() {
     [providers, modelRouting]
   );
   const [activeTab, setActiveTab] = useState<string>(() => {
+    const urlTab = searchParams.get("tab");
+    if (urlTab && (VALID_TABS as readonly string[]).includes(urlTab)) return urlTab;
     const ap = getActiveProject();
-    return ap && ap.flashcards.length > 0 ? "study" : "source";
+    return ap && ap.studyGuide ? "guide" : "source";
   });
+
+  const switchTab = (tab: string) => {
+    setActiveTab(tab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", tab);
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
   const [showAllCards, setShowAllCards] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isGeneratingStudyContent, setIsGeneratingStudyContent] =
@@ -856,7 +868,7 @@ export function ProjectView() {
               }${allContent.flashcards?.length || 0} flashcards!`,
         }
       );
-      setActiveTab("guide");
+      switchTab("guide");
     } catch (error) {
       console.error("Failed to generate study content:", error);
       toast.error("Failed to Generate Study Content", {
@@ -976,7 +988,7 @@ export function ProjectView() {
       toast.success("Video processed and transcript generated!", {
         id: toastId,
       });
-      setActiveTab("video");
+      switchTab("video");
     } catch (error) {
       console.error("Error processing video:", error);
       toast.error("Failed to process video", {
@@ -1029,37 +1041,37 @@ export function ProjectView() {
       </div>
       <div className="container mx-auto py-6 px-4">
         {/* Tab bar */}
-        <div className="mb-6">
-          <div className="border rounded-lg p-1 flex overflow-x-auto scrollbar-none gap-1 w-full justify-center">
-            <TabButton
-              isActive={activeTab === "study"}
-              onClick={() => setActiveTab("study")}
-              icon={<Brain className="h-4 w-4" />}
-              label="Study"
-            />
+        <div className="mb-6 flex justify-center">
+          <div className="border rounded-full p-1 inline-flex overflow-x-auto scrollbar-none gap-1">
             <TabButton
               isActive={activeTab === "guide"}
-              onClick={() => setActiveTab("guide")}
+              onClick={() => switchTab("guide")}
               icon={<LayoutDashboard className="h-4 w-4" />}
               label="Roadmap"
               disabled={!activeProject.studyGuide && !isGeneratingStudyContent}
             />
             <TabButton
+              isActive={activeTab === "study"}
+              onClick={() => switchTab("study")}
+              icon={<Brain className="h-4 w-4" />}
+              label="Flashcards"
+            />
+            <TabButton
               isActive={activeTab === "notes"}
-              onClick={() => setActiveTab("notes")}
+              onClick={() => switchTab("notes")}
               icon={<FileTextIcon className="h-4 w-4" />}
               label="Notes"
               disabled={!activeProject.pdfContent && !activeProject.originalTranscript}
             />
             <TabButton
               isActive={activeTab === "source"}
-              onClick={() => setActiveTab("source")}
+              onClick={() => switchTab("source")}
               icon={<FileUp className="h-4 w-4" />}
               label="Source"
             />
             <TabButton
               isActive={activeTab === "settings"}
-              onClick={() => setActiveTab("settings")}
+              onClick={() => switchTab("settings")}
               icon={<SlidersHorizontal className="h-4 w-4" />}
               label="Settings"
             />
@@ -1265,7 +1277,7 @@ function TabButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-3 py-2 flex items-center rounded-md transition-all whitespace-nowrap flex-shrink-0 text-sm ${
+      className={`px-3 py-2 flex items-center rounded-full transition-all whitespace-nowrap flex-shrink-0 text-sm ${
         isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >

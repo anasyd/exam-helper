@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ThumbsUp, ThumbsDown, RotateCw } from "lucide-react";
+import { RotateCw } from "lucide-react";
 import {
   useFlashcardStore,
   type Flashcard as FlashcardType,
@@ -15,61 +15,44 @@ interface FlashcardProps {
   onNext: () => void;
 }
 
-// Function to shuffle an array using Fisher-Yates algorithm
 const shuffleArray = <T,>(array: T[]): [T[], number[]] => {
   const shuffled = [...array];
-  const indices = array.map((_, i) => i); // Create an array of original indices
-
-  // Fisher-Yates shuffle
+  const indices = array.map((_, i) => i);
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    // Swap elements in both arrays
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
     [indices[i], indices[j]] = [indices[j], indices[i]];
   }
-
   return [shuffled, indices];
 };
 
 export function Flashcard({ card, onNext }: FlashcardProps) {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(
-    null
-  );
+  const [selectedOptionIndex, setSelectedOptionIndex] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
   const [originalIndices, setOriginalIndices] = useState<number[]>([]);
   const { markCorrect, markIncorrect, skipCard } = useFlashcardStore();
 
-  // Shuffle options when card changes
   useEffect(() => {
-    // Ensure options exists, fallback to empty array if it doesn't
     const originalOptions =
       card.options && card.options.length === 4
         ? card.options
         : ["Option A", "Option B", "Option C", "Option D"];
-
     const [shuffled, indices] = shuffleArray(originalOptions);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShuffledOptions(shuffled);
     setOriginalIndices(indices);
     setSelectedOptionIndex(null);
     setIsAnswered(false);
+    setIsFlipped(false);
   }, [card]);
-
-  const handleFlip = () => {
-    setIsFlipped(!isFlipped);
-  };
 
   const handleOptionSelect = (index: number) => {
     if (isAnswered) return;
-
     setSelectedOptionIndex(index);
     setIsAnswered(true);
-
-    // Map the selected shuffle index back to its original index
     const originalIndex = originalIndices[index];
-
     if (originalIndex === card.correctOptionIndex) {
       markCorrect(card.id);
     } else {
@@ -92,18 +75,26 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
     onNext();
   };
 
-  // Calculate score metrics
   const score = calculateCardScore(card.timesCorrect, card.timesIncorrect);
   const totalAttempts = card.timesCorrect + card.timesIncorrect;
+  const shuffledCorrectIndex = originalIndices.findIndex((i) => i === card.correctOptionIndex);
 
-  // Find the shuffled index that corresponds to the correct option
-  const shuffledCorrectIndex = originalIndices.findIndex(
-    (i) => i === card.correctOptionIndex
+  const footerButtons = (
+    <div className="flex items-center gap-3 justify-center">
+      <Button onClick={() => setIsFlipped((f) => !f)} variant="outline">
+        <RotateCw className="mr-1.5 h-3.5 w-3.5" />
+        {isFlipped ? "Question" : "See answer"}
+      </Button>
+      {isAnswered ? (
+        <Button onClick={handleNext}>Next</Button>
+      ) : (
+        <Button onClick={handleSkip} variant="outline">Skip</Button>
+      )}
+    </div>
   );
 
   return (
     <div className="w-full max-w-md mx-auto" style={{ perspective: "1200px" }}>
-      {/* Flipping container */}
       <div
         className="relative w-full transition-transform duration-700"
         style={{
@@ -111,15 +102,12 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
         }}
       >
-        {/* FRONT — Question + Options (normal flow, sets container height) */}
+        {/* FRONT */}
         <Card
-          className="w-full overflow-hidden border-2 shadow-md"
-          style={{
-            backfaceVisibility: "hidden",
-            pointerEvents: isFlipped ? "none" : "auto",
-          }}
+          className="w-full flex flex-col border-2 shadow-md overflow-hidden"
+          style={{ backfaceVisibility: "hidden", pointerEvents: isFlipped ? "none" : "auto", minHeight: "420px" }}
         >
-          <CardContent className="p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
             <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide">Question</h3>
             <p className="text-lg leading-snug">{card.question}</p>
             <div className="space-y-2.5 pt-1">
@@ -155,55 +143,41 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
                 </Button>
               ))}
             </div>
-          </CardContent>
-          <CardFooter className="flex gap-2 p-6 pt-0 border-t">
-            <div className="flex-1 text-xs text-muted-foreground self-center">
-              {totalAttempts > 0 && `${score}% · ${totalAttempts} attempts`}
-            </div>
-            <Button onClick={handleFlip} variant="outline" size="sm">
-              <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-              See answer
-            </Button>
-            {isAnswered ? (
-              <Button onClick={handleNext} size="sm">Next</Button>
-            ) : (
-              <Button onClick={handleSkip} variant="outline" size="sm">Skip</Button>
+          </div>
+          <div className="flex-shrink-0 border-t px-6 py-4 space-y-2">
+            {footerButtons}
+            {totalAttempts > 0 && (
+              <p className="text-center text-xs text-muted-foreground">{score}% · {totalAttempts} attempts</p>
             )}
-          </CardFooter>
+          </div>
         </Card>
 
-        {/* BACK — Answer (absolute, same size as front, rotated 180deg) */}
+        {/* BACK */}
         <Card
-          className="absolute top-0 left-0 w-full h-full overflow-hidden border-2 shadow-md"
+          className="absolute top-0 left-0 w-full h-full flex flex-col border-2 shadow-md overflow-hidden"
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
             pointerEvents: isFlipped ? "auto" : "none",
           }}
         >
-          <CardContent className="p-6 space-y-4">
+          <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
             <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide">Answer</h3>
             <div className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3">
               <p className="font-semibold text-green-700 dark:text-green-400">
                 {shuffledOptions[shuffledCorrectIndex]}
               </p>
             </div>
-            <p className="leading-relaxed">{card.answer}</p>
-          </CardContent>
-          <CardFooter className="flex gap-2 p-6 pt-0 border-t">
-            <div className="flex-1 text-xs text-muted-foreground self-center">
-              Difficulty {card.difficulty}/5
-            </div>
-            <Button onClick={handleFlip} variant="outline" size="sm">
-              <RotateCw className="mr-1.5 h-3.5 w-3.5" />
-              Back
-            </Button>
-            {isAnswered ? (
-              <Button onClick={handleNext} size="sm">Next</Button>
-            ) : (
-              <Button onClick={handleSkip} variant="outline" size="sm">Skip</Button>
+            {(card.explanation ?? card.answer) && (
+              <p className="leading-relaxed text-muted-foreground">
+                {card.explanation ?? card.answer}
+              </p>
             )}
-          </CardFooter>
+          </div>
+          <div className="flex-shrink-0 border-t px-6 py-4 space-y-2">
+            {footerButtons}
+            <p className="text-center text-xs text-muted-foreground">Difficulty {card.difficulty}/5</p>
+          </div>
         </Card>
       </div>
     </div>

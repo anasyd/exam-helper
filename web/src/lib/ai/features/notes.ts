@@ -2,9 +2,16 @@ import { buildDocumentInput } from "../document-input";
 import { resolveModelFor, type RouterDependencies } from "../router";
 import type { ProjectSource } from "../types";
 
-const NOTES_SYSTEM = `You are an expert educational note-taker. Convert the provided content into
-comprehensive study notes using well-structured markdown: headings for topics, bullet points for facts,
-tables for comparisons, and callouts for key definitions. Be thorough but not verbose.`;
+const NOTES_SYSTEM = `You are an expert study note-taker and educator. Transform the provided material into comprehensive, well-structured study notes optimised for exam preparation.
+
+Format requirements:
+- Use ## for major topic headings, ### for subtopics
+- Use bullet points for key facts; numbered lists for processes, steps, or ordered concepts
+- Include comparison tables where relevant (algorithms, techniques, trade-offs)
+- Bold (**term**) key vocabulary and definitions on first use
+- Add a short "Key Takeaways" callout at the end of each major section
+- Be thorough but concise — no filler, every sentence must add value
+- Explain concepts clearly in plain language, not just name them`;
 
 export async function generateAutomatedNotes(
   source: ProjectSource,
@@ -21,7 +28,7 @@ export async function generateAutomatedNotes(
       apiKey: resolved.apiKey,
       model: resolved.model.modelId,
       systemPrompt: NOTES_SYSTEM,
-      prompt: `Generate study notes from the following content:\n\n${input.content}`,
+      prompt: `Generate comprehensive study notes from the following content:\n\n${input.content}`,
     });
   }
   if (input.kind === "file") {
@@ -29,16 +36,15 @@ export async function generateAutomatedNotes(
       apiKey: resolved.apiKey,
       model: resolved.model.modelId,
       systemPrompt: NOTES_SYSTEM,
-      prompt: "Generate comprehensive study notes from the attached document.",
+      prompt: "Generate comprehensive study notes from the attached document, following the format requirements precisely.",
       document: { mimeType: input.mimeType, data: input.data },
     });
   }
-  // multi-image
   return resolved.provider.generateTextFromImages({
     apiKey: resolved.apiKey,
     model: resolved.model.modelId,
     systemPrompt: NOTES_SYSTEM,
-    prompt: "Generate comprehensive study notes from the attached document pages (images).",
+    prompt: "Generate comprehensive study notes from the attached document pages, following the format requirements precisely.",
     images: input.images,
   });
 }

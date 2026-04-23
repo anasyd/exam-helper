@@ -51,6 +51,7 @@ export interface ModelSelection {
 export interface FlashcardData {
   question: string;
   answer: string;
+  explanation?: string;
   options: string[];
   correctOptionIndex: number;
   difficulty: number;

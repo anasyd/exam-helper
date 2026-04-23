@@ -18,6 +18,7 @@ export type Flashcard = {
   id: string;
   question: string;
   answer: string;
+  explanation?: string;
   options: string[]; // Array of multiple choice options
   correctOptionIndex: number; // Index of the correct option in the array
   difficulty: number; // 1-5, where 1 is easy and 5 is hard

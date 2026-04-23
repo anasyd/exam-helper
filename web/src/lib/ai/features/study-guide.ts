@@ -2,9 +2,16 @@ import { buildDocumentInput } from "../document-input";
 import { resolveModelFor, type RouterDependencies } from "../router";
 import type { JsonSchema, ProjectSource, StudyGuide } from "../types";
 
-const STUDY_GUIDE_SYSTEM = `You are an expert course designer. Organize the provided content into a
-structured study guide with a title, logically-ordered sections, and a list of topics per section.
-Each section and topic has a short summary. Cover the material comprehensively.`;
+const STUDY_GUIDE_SYSTEM = `You are an expert curriculum designer. Analyse the provided material and produce a logical, comprehensive study guide optimised for progressive learning.
+
+Requirements:
+- Organise content from foundational concepts to advanced applications — earlier sections should be prerequisites for later ones
+- Each section represents a coherent learning unit (theme, module, or chapter)
+- Each topic within a section is learnable in one focused study session (15–30 min)
+- Section summaries must describe what the learner will understand after studying it — not just name the topic
+- Topic summaries must be specific: include the key idea, a concrete example or mechanism, and why it matters
+- Cover all material comprehensively; do not omit edge cases, advanced topics, or nuanced distinctions
+- Aim for 4–8 sections, each with 3–6 topics`;
 
 const STUDY_GUIDE_SCHEMA: JsonSchema = {
   type: "object",
@@ -43,7 +50,7 @@ export async function generateStudyContent(
   const resolved = resolveModelFor("study-guide", deps);
   const input = await buildDocumentInput(source, resolved.model);
   const userPrompt =
-    "Build a structured study guide with sections and topics, each with concise summaries.";
+    "Build a structured study guide with logically ordered sections and topics, each with specific and informative summaries. Ensure comprehensive coverage of all material.";
 
   if (input.kind === "text") {
     return resolved.provider.generateStructuredJson<StudyGuide>({
