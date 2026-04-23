@@ -265,9 +265,19 @@ function DefaultModelPicker() {
   const selection = useFlashcardStore((s) => s.modelRouting.default);
   const setDefaultModel = useFlashcardStore((s) => s.setDefaultModel);
   const providers = useFlashcardStore((s) => s.providers);
+  // Subscribe so we re-render whenever the OpenRouter catalog updates
+  useFlashcardStore((s) => s.openRouterCatalog);
+  useFlashcardStore((s) => s.openRouterCustomModels);
 
   const availableProviders = PROVIDER_IDS.filter((id) => providers[id].apiKey);
   const modelsForProvider = catalog.listForProvider(selection.providerId);
+
+  // Auto-correct stale model ID (e.g. an OpenRouter model left selected after switching provider)
+  useEffect(() => {
+    if (modelsForProvider.length > 0 && !modelsForProvider.find((m) => m.modelId === selection.modelId)) {
+      setDefaultModel({ providerId: selection.providerId, modelId: modelsForProvider[0].modelId });
+    }
+  }, [selection.providerId, selection.modelId, modelsForProvider, setDefaultModel]);
 
   return (
     <div className="space-y-2">
@@ -283,7 +293,7 @@ function DefaultModelPicker() {
             const first = catalog.listForProvider(providerId)[0];
             if (first) setDefaultModel({ providerId, modelId: first.modelId });
           }}
-          className="border rounded px-2 py-1 bg-background text-sm"
+          className="border rounded-full px-3 py-1 bg-background text-sm"
         >
           {PROVIDER_IDS.map((id) => (
             <option key={id} value={id} disabled={!availableProviders.includes(id)}>
@@ -293,11 +303,11 @@ function DefaultModelPicker() {
           ))}
         </select>
         <select
-          value={selection.modelId}
+          value={modelsForProvider.find((m) => m.modelId === selection.modelId) ? selection.modelId : (modelsForProvider[0]?.modelId ?? "")}
           onChange={(e) =>
             setDefaultModel({ providerId: selection.providerId, modelId: e.target.value })
           }
-          className="border rounded px-2 py-1 bg-background text-sm"
+          className="border rounded-full px-3 py-1 bg-background text-sm"
         >
           {modelsForProvider.map((m) => (
             <option key={m.modelId} value={m.modelId}>
@@ -371,7 +381,7 @@ function FeatureOverridesSection() {
                       setFeatureOverride(feature, { providerId, modelId: first.modelId });
                     }
                   }}
-                  className="border rounded px-2 py-1 bg-background text-sm"
+                  className="border rounded-full px-3 py-1 bg-background text-sm"
                 >
                   {PROVIDER_IDS.map((id) => {
                     const hasCompat = compatible.some((m) => m.providerId === id);
@@ -396,7 +406,7 @@ function FeatureOverridesSection() {
                       modelId: e.target.value,
                     })
                   }
-                  className="border rounded px-2 py-1 bg-background text-sm"
+                  className="border rounded-full px-3 py-1 bg-background text-sm"
                 >
                   {compatibleForSelected.map((m) => (
                     <option key={m.modelId} value={m.modelId}>

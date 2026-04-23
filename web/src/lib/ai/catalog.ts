@@ -4,7 +4,7 @@ import type { ModelMeta, ProviderId } from "./types";
 // OpenRouter models are fetched at runtime and merged in via setOpenRouterCatalog().
 
 const HARDCODED_MODELS: ModelMeta[] = [
-  // Gemini
+  // Gemini — newest first
   {
     providerId: "gemini",
     modelId: "gemini-2.5-pro",
@@ -27,6 +27,42 @@ const HARDCODED_MODELS: ModelMeta[] = [
     providerId: "gemini",
     modelId: "gemini-2.5-flash-lite",
     displayName: "Gemini 2.5 Flash Lite",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 1_000_000,
+  },
+  {
+    providerId: "gemini",
+    modelId: "gemini-2.0-flash",
+    displayName: "Gemini 2.0 Flash",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 1_000_000,
+  },
+  {
+    providerId: "gemini",
+    modelId: "gemini-2.0-flash-lite",
+    displayName: "Gemini 2.0 Flash Lite",
+    supportsStructuredOutput: true,
+    supportsLongContext: false,
+    supportsVision: true,
+    contextWindowTokens: 1_000_000,
+  },
+  {
+    providerId: "gemini",
+    modelId: "gemini-1.5-pro",
+    displayName: "Gemini 1.5 Pro",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 2_000_000,
+  },
+  {
+    providerId: "gemini",
+    modelId: "gemini-1.5-flash",
+    displayName: "Gemini 1.5 Flash",
     supportsStructuredOutput: true,
     supportsLongContext: true,
     supportsVision: true,
