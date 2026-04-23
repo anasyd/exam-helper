@@ -4,6 +4,7 @@ import {
   useState,
   useEffect,
   useRef,
+  useCallback,
   type ChangeEvent,
 } from "react";
 import { useFlashcardStore } from "@/lib/store";
@@ -42,6 +43,9 @@ import {
   CheckCircle2,
   XCircle,
   CircleDashed,
+  Loader2,
+  Plus,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -59,6 +63,94 @@ const FEATURE_LABELS: Record<FeatureId, string> = {
   transcript: "Transcript",
   summary: "Summary",
 };
+
+function OpenRouterModelInput() {
+  const customModels = useFlashcardStore((s) => s.openRouterCustomModels);
+  const addModel = useFlashcardStore((s) => s.addOpenRouterCustomModel);
+  const removeModel = useFlashcardStore((s) => s.removeOpenRouterCustomModel);
+  const [input, setInput] = useState("");
+  const [checkState, setCheckState] = useState<"idle" | "checking" | "valid" | "invalid">("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const checkModel = useCallback(async (modelId: string) => {
+    if (!modelId.trim()) { setCheckState("idle"); return; }
+    setCheckState("checking");
+    try {
+      const res = await fetch("https://openrouter.ai/api/v1/models");
+      if (!res.ok) { setCheckState("idle"); return; }
+      const json = await res.json() as { data: { id: string }[] };
+      const exists = json.data.some((m) => m.id === modelId.trim());
+      setCheckState(exists ? "valid" : "invalid");
+    } catch {
+      setCheckState("idle");
+    }
+  }, []);
+
+  const handleChange = (val: string) => {
+    setInput(val);
+    setCheckState("idle");
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => checkModel(val), 600);
+  };
+
+  const handleAdd = () => {
+    const id = input.trim();
+    if (!id || checkState !== "valid") return;
+    addModel(id);
+    setInput("");
+    setCheckState("idle");
+    toast.success(`OpenRouter model added: ${id}`);
+  };
+
+  return (
+    <div className="space-y-3 pt-3 border-t">
+      <p className="text-sm font-medium">Custom models</p>
+      <p className="text-xs text-muted-foreground">
+        Paste any model ID from{" "}
+        <a href="https://openrouter.ai/models" target="_blank" rel="noopener noreferrer" className="underline hover:opacity-80">
+          openrouter.ai/models
+        </a>{" "}
+        (e.g. <code className="bg-muted px-1 rounded text-xs">anthropic/claude-3-5-sonnet</code>)
+      </p>
+      <div className="flex gap-2">
+        <div className="relative flex-1">
+          <Input
+            value={input}
+            onChange={(e) => handleChange(e.target.value)}
+            placeholder="anthropic/claude-3-5-sonnet"
+            className="pr-8"
+          />
+          <div className="absolute right-2 top-1/2 -translate-y-1/2">
+            {checkState === "checking" && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
+            {checkState === "valid" && <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />}
+            {checkState === "invalid" && <XCircle className="h-3.5 w-3.5 text-red-500" />}
+          </div>
+        </div>
+        <Button size="sm" onClick={handleAdd} disabled={checkState !== "valid"}>
+          <Plus className="h-3.5 w-3.5" />
+        </Button>
+      </div>
+      {checkState === "invalid" && (
+        <p className="text-xs text-red-500">Model not found on OpenRouter</p>
+      )}
+      {checkState === "valid" && (
+        <p className="text-xs text-green-600 dark:text-green-400">Model found — click + to add</p>
+      )}
+      {customModels.length > 0 && (
+        <div className="space-y-1.5">
+          {customModels.map((m) => (
+            <div key={m} className="flex items-center justify-between rounded border px-3 py-1.5 text-xs">
+              <code className="font-mono">{m}</code>
+              <button onClick={() => removeModel(m)} className="text-muted-foreground hover:text-red-500 transition-colors">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function ProviderCard({ providerId }: { providerId: ProviderId }) {
   const provider = getProvider(providerId);
@@ -162,6 +254,7 @@ function ProviderCard({ providerId }: { providerId: ProviderId }) {
           Get a key <ExternalLink className="h-3 w-3" />
         </a>
       </div>
+      {providerId === "openrouter" && <OpenRouterModelInput />}
     </div>
   );
 }

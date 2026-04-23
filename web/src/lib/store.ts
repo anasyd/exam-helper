@@ -82,6 +82,9 @@ interface FlashcardState {
     overrides: Partial<Record<FeatureId, ModelSelection>>;
   };
   openRouterCatalog?: { fetchedAt: number; models: ModelMeta[] };
+  openRouterCustomModels: string[];
+  addOpenRouterCustomModel: (modelId: string) => void;
+  removeOpenRouterCustomModel: (modelId: string) => void;
   gamificationEnabled: boolean;
   currentStreak: number; // Added for global study streak
   lastStudiedDate: string | null; // YYYY-MM-DD format. Added for streak calculation
@@ -213,9 +216,10 @@ export const useFlashcardStore = create<FlashcardState>()(
         overrides: {},
       },
       gamificationEnabled: true,
-      currentStreak: 0, // Initialize streak
-      lastStudiedDate: null, // Initialize last studied date
+      currentStreak: 0,
+      lastStudiedDate: null,
       demoSeedAttempted: false,
+      openRouterCustomModels: [],
 
       setDemoSeedAttempted: (value) => set({ demoSeedAttempted: value }),
 
@@ -657,6 +661,27 @@ export const useFlashcardStore = create<FlashcardState>()(
         setOpenRouterCatalog(models);
         set({ openRouterCatalog: { fetchedAt: Date.now(), models } });
       },
+      addOpenRouterCustomModel: (modelId) => {
+        set((state) => {
+          if (state.openRouterCustomModels.includes(modelId)) return state;
+          const updated = [...state.openRouterCustomModels, modelId];
+          setOpenRouterCatalog([
+            ...(state.openRouterCatalog?.models ?? []),
+            { providerId: "openrouter", modelId, displayName: modelId, supportsStructuredOutput: true, supportsLongContext: false, supportsVision: false },
+          ]);
+          return { openRouterCustomModels: updated };
+        });
+      },
+      removeOpenRouterCustomModel: (modelId) => {
+        set((state) => {
+          const updated = state.openRouterCustomModels.filter((m) => m !== modelId);
+          setOpenRouterCatalog([
+            ...(state.openRouterCatalog?.models ?? []),
+            ...updated.map((m) => ({ providerId: "openrouter" as const, modelId: m, displayName: m, supportsStructuredOutput: true, supportsLongContext: false, supportsVision: false })),
+          ].filter((m, i, arr) => arr.findIndex((x) => x.modelId === m.modelId) === i));
+          return { openRouterCustomModels: updated };
+        });
+      },
 
       clearFlashcards: (sourceSectionTitle, sourceTopicTitle) => {
         const activeProject = get().getActiveProject();
@@ -1027,6 +1052,7 @@ export const useFlashcardStore = create<FlashcardState>()(
         providers: state.providers,
         modelRouting: state.modelRouting,
         openRouterCatalog: state.openRouterCatalog,
+        openRouterCustomModels: state.openRouterCustomModels,
         currentStreak: state.currentStreak,
         lastStudiedDate: state.lastStudiedDate,
         gamificationEnabled: state.gamificationEnabled,
@@ -1084,6 +1110,15 @@ export const useFlashcardStore = create<FlashcardState>()(
       onRehydrateStorage: () => (state) => {
         if (state?.openRouterCatalog?.models) {
           setOpenRouterCatalog(state.openRouterCatalog.models);
+        }
+        if (state?.openRouterCustomModels?.length) {
+          const existing = state.openRouterCatalog?.models ?? [];
+          const customEntries = state.openRouterCustomModels
+            .filter((id) => !existing.some((m) => m.modelId === id))
+            .map((id) => ({ providerId: "openrouter" as const, modelId: id, displayName: id, supportsStructuredOutput: true, supportsLongContext: false, supportsVision: false }));
+          if (customEntries.length) {
+            setOpenRouterCatalog([...existing, ...customEntries]);
+          }
         }
       },
     }
