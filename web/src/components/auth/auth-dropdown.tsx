@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -12,6 +13,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Settings } from "lucide-react";
+import { AppSettings } from "@/components/app-settings";
 
 function initialsFrom(name: string | null | undefined, email: string): string {
   const source = (name ?? email).trim();
@@ -25,6 +28,7 @@ function initialsFrom(name: string | null | undefined, email: string): string {
 export function AuthDropdown() {
   const session = useSession();
   const router = useRouter();
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   if (session.isPending) {
     return <div className="w-24 h-9" aria-hidden="true" />;
@@ -44,7 +48,9 @@ export function AuthDropdown() {
   }
 
   return (
-    <DropdownMenu>
+    <>
+      <AppSettings open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           type="button"
@@ -71,8 +77,14 @@ export function AuthDropdown() {
           <Link href="/app">My projects</Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
+        <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
+          <Settings className="mr-2 h-4 w-4" />
+          Settings
+        </DropdownMenuItem>
+        <DropdownMenuSeparator />
         <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
+    </>
   );
 }

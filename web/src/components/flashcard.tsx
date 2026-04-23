@@ -102,26 +102,25 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
   );
 
   return (
-    <Card
-      className={cn(
-        "w-full max-w-md mx-auto overflow-hidden transition-all duration-700 border-2 border-gray-900 shadow-md",
-        isFlipped ? "bg-muted/30" : ""
-      )}
-    >
-      <CardContent className="p-6">
-        <div className="min-h-[260px] flex items-start justify-center relative perspective-1000">
-          <div
-            className={cn(
-              "w-full transition-all duration-700 transform backface-visibility-hidden",
-              isFlipped
-                ? "rotate-y-180 absolute opacity-0"
-                : "rotate-y-0 relative opacity-100"
-            )}
-          >
-            <h3 className="text-xl font-semibold mb-4">Question</h3>
-            <p className="text-lg mb-6">{card.question}</p>
-
-            <div className="space-y-3">
+    <div className="w-full max-w-md mx-auto" style={{ perspective: "1200px" }}>
+      {/* Flipping container */}
+      <div
+        className="relative w-full transition-transform duration-700"
+        style={{
+          transformStyle: "preserve-3d",
+          transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
+          minHeight: 420,
+        }}
+      >
+        {/* FRONT — Question + Options */}
+        <Card
+          className="absolute inset-0 w-full overflow-hidden border-2 shadow-md"
+          style={{ backfaceVisibility: "hidden" }}
+        >
+          <CardContent className="p-6 space-y-4">
+            <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide">Question</h3>
+            <p className="text-lg leading-snug">{card.question}</p>
+            <div className="space-y-2.5 pt-1">
               {shuffledOptions.map((option, index) => (
                 <Button
                   key={index}
@@ -135,91 +134,72 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
                       : "outline"
                   }
                   className={cn(
-                    "w-full justify-start text-left p-3 h-auto border-gray-500 rounded-md whitespace-normal",
-                    "flex items-start min-h-[3rem]",
+                    "w-full justify-start text-left p-3 h-auto rounded-md whitespace-normal flex items-start min-h-[3rem] transition-all duration-200",
                     selectedOptionIndex === null
                       ? ""
                       : index === shuffledCorrectIndex
-                      ? "border-green-500 bg-green-50  text-green-700"
+                      ? "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400"
                       : selectedOptionIndex === index
-                      ? "border-red-500 border bg-red-50 text-red-700"
-                      : "opacity-70"
+                      ? "border-red-500 bg-red-500/10 text-red-700 dark:text-red-400"
+                      : "opacity-50"
                   )}
                   onClick={() => handleOptionSelect(index)}
                   disabled={isAnswered}
                 >
-                  <span className="font-medium mr-2 flex-shrink-0">
+                  <span className="font-bold mr-3 shrink-0 text-muted-foreground">
                     {String.fromCharCode(65 + index)}.
                   </span>
-                  <span className="break-words overflow-wrap-anywhere">
-                    {option}
-                  </span>
+                  <span className="break-words flex-1">{option}</span>
                 </Button>
               ))}
             </div>
-          </div>
-
-          <div
-            className={cn(
-              "w-full transition-all duration-700 transform backface-visibility-hidden",
-              isFlipped
-                ? "rotate-y-0 relative opacity-100"
-                : "rotate-y-180 absolute opacity-0"
+          </CardContent>
+          <CardFooter className="flex gap-2 p-6 pt-0 border-t">
+            <div className="flex-1 text-xs text-muted-foreground self-center">
+              {totalAttempts > 0 && `${score}% · ${totalAttempts} attempts`}
+            </div>
+            <Button onClick={handleFlip} variant="outline" size="sm">
+              <RotateCw className="mr-1.5 h-3.5 w-3.5" />
+              See answer
+            </Button>
+            {isAnswered ? (
+              <Button onClick={handleNext} size="sm">Next</Button>
+            ) : (
+              <Button onClick={handleSkip} variant="outline" size="sm">Skip</Button>
             )}
-          >
-            <h3 className="text-xl font-semibold mb-4">Detailed Answer</h3>
-            <div className="text-lg">
-              <div className="mb-4 p-3 bg-green-50 border-2 border-green-300 rounded-md">
-                <p className="font-medium text-green-700">
-                  Correct answer: {shuffledOptions[shuffledCorrectIndex]}
-                </p>
-              </div>
-              <div className="prose max-w-none break-words">{card.answer}</div>
+          </CardFooter>
+        </Card>
+
+        {/* BACK — Answer */}
+        <Card
+          className="absolute inset-0 w-full overflow-hidden border-2 shadow-md"
+          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+        >
+          <CardContent className="p-6 space-y-4">
+            <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide">Answer</h3>
+            <div className="rounded-lg bg-green-500/10 border border-green-500/30 px-4 py-3">
+              <p className="font-semibold text-green-700 dark:text-green-400">
+                {shuffledOptions[shuffledCorrectIndex]}
+              </p>
             </div>
-          </div>
-        </div>
-      </CardContent>
-
-      <CardFooter className="flex flex-col gap-4 p-6 pt-0 border-t-2">
-        <div className="w-full flex items-center justify-between text-sm text-muted-foreground">
-          <div>Difficulty: {card.difficulty}/5</div>
-          {totalAttempts > 0 && (
-            <div className="flex gap-1 items-center">
-              <span>Score: {score}%</span>
-              <span className="text-xs">({totalAttempts} attempts)</span>
+            <p className="leading-relaxed">{card.answer}</p>
+          </CardContent>
+          <CardFooter className="flex gap-2 p-6 pt-0 border-t">
+            <div className="flex-1 text-xs text-muted-foreground self-center">
+              Difficulty {card.difficulty}/5
             </div>
-          )}
-        </div>
-
-        <div className="flex justify-between gap-2">
-          <Button
-            onClick={handleFlip}
-            variant="outline"
-            className="flex-1 border-gray-500"
-          >
-            <RotateCw className="mr-2 h-4 w-4" />
-            {isFlipped ? "Show Question" : "Show Answer"}
-          </Button>
-
-          {isAnswered ? (
-            <Button
-              onClick={handleNext}
-              variant="default"
-              className="flex-1 border-2"
-            >
-              Next Card
+            <Button onClick={handleFlip} variant="outline" size="sm">
+              <RotateCw className="mr-1.5 h-3.5 w-3.5" />
+              Back
             </Button>
-          ) : (
-            <Button
-              onClick={handleSkip}
-              variant="outline"
-              className="flex-1 border-gray-500"
-            >
-              Skip
-            </Button>
-          )}
-        </div>
-      </CardFooter>
-    </Card>
+            {isAnswered ? (
+              <Button onClick={handleNext} size="sm">Next</Button>
+            ) : (
+              <Button onClick={handleSkip} variant="outline" size="sm">Skip</Button>
+            )}
+          </CardFooter>
+        </Card>
+      </div>
+    </div>
   );
 }

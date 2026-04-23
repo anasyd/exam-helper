@@ -227,3 +227,23 @@
 .scrollbar-none::-webkit-scrollbar {
   display: none;
 }
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20%       { transform: translateX(-6px); }
+  40%       { transform: translateX(6px); }
+  60%       { transform: translateX(-4px); }
+  80%       { transform: translateX(4px); }
+}
+
+@keyframes confetti {
+  0%   { transform: translateY(0) scale(1); opacity: 1; }
+  100% { transform: translateY(-80px) scale(0.3); opacity: 0; }
+}
+
+@keyframes card-flip {
+  0%   { transform: perspective(1000px) rotateY(0deg); }
+  50%  { transform: perspective(1000px) rotateY(90deg); }
+  100% { transform: perspective(1000px) rotateY(0deg); }
+}
+

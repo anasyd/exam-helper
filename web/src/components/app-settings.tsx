@@ -318,14 +318,24 @@ function FeatureOverridesSection() {
   );
 }
 
-export function AppSettings() {
+interface AppSettingsProps {
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+}
+
+export function AppSettings({ open: externalOpen, onOpenChange: externalOnOpenChange }: AppSettingsProps = {}) {
   const exportAllProjects = useFlashcardStore((s) => s.exportAllProjects);
   const importProjects = useFlashcardStore((s) => s.importProjects);
   const projects = useFlashcardStore((s) => s.projects);
   const refreshOpenRouterCatalog = useFlashcardStore((s) => s.refreshOpenRouterCatalog);
   const openRouterCatalog = useFlashcardStore((s) => s.openRouterCatalog);
 
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const isDialogOpen = externalOpen ?? internalOpen;
+  const setIsDialogOpen = (v: boolean) => {
+    setInternalOpen(v);
+    externalOnOpenChange?.(v);
+  };
   const importFileInputRef = useRef<HTMLInputElement>(null);
 
   // Kick off OpenRouter catalog fetch once, silently
@@ -398,11 +408,13 @@ export function AppSettings() {
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      <DialogTrigger asChild>
-        <Button variant="outline" size="icon" aria-label="Settings">
-          <Settings className="h-4 w-4" />
-        </Button>
-      </DialogTrigger>
+      {externalOpen === undefined && (
+        <DialogTrigger asChild>
+          <Button variant="outline" size="icon" aria-label="Settings">
+            <Settings className="h-4 w-4" />
+          </Button>
+        </DialogTrigger>
+      )}
       <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Application Settings</DialogTitle>

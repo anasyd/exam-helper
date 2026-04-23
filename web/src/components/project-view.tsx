@@ -7,7 +7,6 @@ import { DocumentUpload } from "@/components/document-upload";
 import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
-import { AppSettings } from "@/components/app-settings";
 import { ShareProjectDialog } from "@/components/share-project-dialog";
 import { AuthDropdown } from "@/components/auth/auth-dropdown";
 import { Button } from "@/components/ui/button";
@@ -24,7 +23,7 @@ import { Loader2, CheckCircle, Lock } from "lucide-react";
 import {
   FileUp,
   Brain,
-  ArrowLeft,
+
   VideoIcon,
   FileTextIcon,
   LayoutDashboard,
@@ -186,16 +185,6 @@ function GamifiedRoadmapView({
               inline: "nearest",
             });
 
-            // Add a subtle visual indicator
-            element.style.boxShadow = "0 0 0 3px rgba(59, 130, 246, 0.3)";
-            setTimeout(() => {
-              element.style.boxShadow = "";
-            }, 2000);
-
-            // Show a helpful toast
-            toast.info("📍 Scrolled to your current progress", {
-              duration: 2000,
-            });
           }
         }, 500); // Small delay to ensure DOM is fully rendered
       }
@@ -1015,8 +1004,7 @@ export function ProjectView() {
                 className="flex-shrink-0"
                 onClick={handleBackToProjects}
               >
-                <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline ml-1">Projects</span>
+                <span className="text-sm">Projects</span>
               </Button>
               <span className="text-muted-foreground hidden sm:inline">/</span>
               <h1 className="font-semibold truncate text-sm sm:text-base">{activeProject.name}</h1>
@@ -1034,7 +1022,6 @@ export function ProjectView() {
                   {activeProject.xp || 0} XP
                 </div>
               </div>
-              <AppSettings />
               <AuthDropdown />
             </div>
           </div>

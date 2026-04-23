@@ -42,7 +42,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "./ui/label";
-import { AppSettings } from "./app-settings";
 import { AuthDropdown } from "@/components/auth/auth-dropdown";
 
 export function ProjectList() {
@@ -136,7 +135,6 @@ export function ProjectList() {
           >
             ← Home
           </Link>
-          <AppSettings />
 
           <Dialog
             open={isCreateDialogOpen}

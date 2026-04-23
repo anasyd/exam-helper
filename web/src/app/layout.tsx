@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { Toaster } from "sonner";
+import { ThemeToaster } from "@/components/theme-toaster";
 import { ThemeProvider } from "next-themes";
 import { DemoSeedProvider } from "./_demo-seed-provider";
 
@@ -38,7 +38,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <DemoSeedProvider>
-            <Toaster />
+            <ThemeToaster />
             {children}
           </DemoSeedProvider>
         </ThemeProvider>

@@ -1,17 +1,12 @@
 "use client";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { Loader2, FileText, Video, ChevronRight } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import rehypeSlug from "rehype-slug";
 
 interface NotesViewProps {
   documentNotes: string | null | undefined;
@@ -24,6 +19,154 @@ interface NotesViewProps {
   hasVideoTranscript: boolean;
 }
 
+interface HeadingEntry {
+  level: number;
+  text: string;
+  id: string;
+}
+
+function slugify(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
+function extractHeadings(markdown: string): HeadingEntry[] {
+  const headings: HeadingEntry[] = [];
+  const seenIds: Record<string, number> = {};
+  const lines = markdown.split("\n");
+  for (const line of lines) {
+    const m = line.match(/^(#{1,3})\s+(.+)/);
+    if (m) {
+      const level = m[1].length;
+      const text = m[2].trim();
+      let id = slugify(text);
+      if (seenIds[id]) { id = `${id}-${seenIds[id]}`; }
+      seenIds[id] = (seenIds[id] ?? 0) + 1;
+      headings.push({ level, text, id });
+    }
+  }
+  return headings;
+}
+
+function cleanMarkdown(raw: string): string {
+  return raw
+    .replace(/^```markdown\s*\n?/gm, "")
+    .replace(/\n?```$/gm, "")
+    .replace(/^```[a-z]*\s*\n?/gim, "")
+    .trim();
+}
+
+function NotesContent({ notes }: { notes: string }) {
+  const clean = cleanMarkdown(notes);
+  const headings = extractHeadings(clean);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [activeId, setActiveId] = useState<string>("");
+
+  // Highlight active section on scroll
+  useEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const handleScroll = () => {
+      const allHeadings = el.querySelectorAll("h1[id],h2[id],h3[id]");
+      let found = "";
+      for (const h of allHeadings) {
+        const rect = h.getBoundingClientRect();
+        if (rect.top <= 120) found = h.id;
+      }
+      if (found) setActiveId(found);
+    };
+    const scrollable = el.closest(".notes-scroll") as HTMLElement | null;
+    (scrollable ?? window).addEventListener("scroll", handleScroll, { passive: true });
+    return () => (scrollable ?? window).removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollTo = (id: string) => {
+    const target = contentRef.current?.querySelector(`#${id}`);
+    target?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  return (
+    <div className="flex gap-6">
+      {/* TOC sidebar */}
+      {headings.length > 0 && (
+        <aside className="hidden md:block w-52 shrink-0">
+          <div className="sticky top-4 space-y-0.5">
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-2">
+              Contents
+            </p>
+            {headings.map((h) => (
+              <button
+                key={h.id}
+                onClick={() => scrollTo(h.id)}
+                className={`block w-full text-left text-sm px-2 py-1 rounded transition-colors truncate
+                  ${h.level === 1 ? "font-semibold" : h.level === 2 ? "pl-4" : "pl-6"}
+                  ${activeId === h.id
+                    ? "text-foreground bg-muted font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  }`}
+              >
+                {h.text}
+              </button>
+            ))}
+          </div>
+        </aside>
+      )}
+
+      {/* Content */}
+      <div ref={contentRef} className="flex-1 min-w-0">
+        <ReactMarkdown
+          rehypePlugins={[rehypeRaw, rehypeSlug]}
+          remarkPlugins={[remarkGfm]}
+          components={{
+            h1: ({ children, ...props }) => (
+              <h1 className="text-2xl font-bold mb-3 text-foreground border-b border-border pb-2 mt-8 first:mt-0" {...props}>{children}</h1>
+            ),
+            h2: ({ children, ...props }) => (
+              <h2 className="text-lg font-semibold mb-2 text-foreground mt-6 first:mt-0" {...props}>{children}</h2>
+            ),
+            h3: ({ children, ...props }) => (
+              <h3 className="text-base font-medium mb-2 text-foreground mt-4 first:mt-0" {...props}>{children}</h3>
+            ),
+            p: ({ children, ...props }) => (
+              <p className="mb-3 text-foreground leading-relaxed" {...props}>{children}</p>
+            ),
+            ul: ({ children, ...props }) => (
+              <ul className="list-disc list-outside ml-5 mb-4 text-foreground space-y-1" {...props}>{children}</ul>
+            ),
+            ol: ({ children, ...props }) => (
+              <ol className="list-decimal list-outside ml-5 mb-4 text-foreground space-y-1" {...props}>{children}</ol>
+            ),
+            li: ({ children, ...props }) => (
+              <li className="text-foreground leading-relaxed" {...props}>{children}</li>
+            ),
+            code: ({ children, ...props }) => (
+              <code className="bg-muted px-1 py-0.5 rounded text-sm font-mono text-foreground" {...props}>{children}</code>
+            ),
+            pre: ({ children, ...props }) => (
+              <pre className="bg-muted p-3 rounded-md overflow-x-auto mb-4 text-foreground" {...props}>{children}</pre>
+            ),
+            blockquote: ({ children, ...props }) => (
+              <blockquote className="border-l-4 border-border pl-4 italic mb-4 text-muted-foreground" {...props}>{children}</blockquote>
+            ),
+            strong: ({ children, ...props }) => (
+              <strong className="font-semibold text-foreground" {...props}>{children}</strong>
+            ),
+            hr: ({ ...props }) => <hr className="my-6 border-t border-border" {...props} />,
+            a: ({ children, ...props }) => (
+              <a className="text-primary underline hover:opacity-80" {...props}>{children}</a>
+            ),
+          }}
+        >
+          {clean}
+        </ReactMarkdown>
+      </div>
+    </div>
+  );
+}
+
 export function NotesView({
   documentNotes,
   videoNotes,
@@ -34,267 +177,70 @@ export function NotesView({
   hasDocumentContent,
   hasVideoTranscript,
 }: NotesViewProps) {
-  const [activeNoteType, setActiveNoteType] = useState<
-    "document" | "video" | null
-  >(null);
+  const [activeTab, setActiveTab] = useState<"document" | "video">("document");
+  const hasBoth = hasDocumentContent && hasVideoTranscript;
 
-  // Determine which notes to show initially
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
-    if (documentNotes) setActiveNoteType("document");
-    else if (videoNotes) setActiveNoteType("video");
-    else setActiveNoteType(null);
+    if (documentNotes) setActiveTab("document");
+    else if (videoNotes) setActiveTab("video");
   }, [documentNotes, videoNotes]);
 
-  const renderNotesContent = (
-    notes: string | null | undefined,
-    type: "document" | "video"
-  ) => {
-    if (!notes) {
-      return (
-        <p className="text-muted-foreground">No {type} notes generated yet.</p>
-      );
-    }
-
-    // Clean up the content - remove markdown code fences if they exist
-    let cleanedNotes = notes;
-
-    // Handle multiple patterns that might occur from appending content:
-    // 1. Remove code fences at the very start and end
-    cleanedNotes = cleanedNotes.replace(/^```markdown\s*\n?/, "");
-    cleanedNotes = cleanedNotes.replace(/\n?```$/, "");
-
-    // 2. Remove any remaining markdown code fences that might be in the middle from appended content
-    cleanedNotes = cleanedNotes.replace(/```markdown\s*\n?/g, "");
-    cleanedNotes = cleanedNotes.replace(/\n?```/g, "");
-
-    // 3. Also handle other common code fence patterns (typescript, javascript, etc.)
-    cleanedNotes = cleanedNotes.replace(/^```[a-z]*\s*\n?/gi, "");
-    cleanedNotes = cleanedNotes.replace(/\n?```$/gi, "");
-
-    // 4. Clean up any extra whitespace that might be left
-    cleanedNotes = cleanedNotes.trim();
-
-    return (
-      <div className="bg-muted p-4 rounded-md max-h-[70vh] overflow-auto">
-        <ReactMarkdown
-          rehypePlugins={[rehypeRaw]}
-          remarkPlugins={[remarkGfm]}
-          components={{
-            // Custom styling for markdown elements
-            h1: ({ children, ...props }) => (
-              <h1
-                className="text-2xl font-bold mb-4 text-foreground border-b border-border pb-2 mt-6 first:mt-0"
-                {...props}
-              >
-                {children}
-              </h1>
-            ),
-            h2: ({ children, ...props }) => (
-              <h2
-                className="text-xl font-semibold mb-3 text-foreground mt-6 border-b border-border pb-1 first:mt-0"
-                {...props}
-              >
-                {children}
-              </h2>
-            ),
-            h3: ({ children, ...props }) => (
-              <h3
-                className="text-lg font-medium mb-2 text-foreground mt-4 first:mt-0"
-                {...props}
-              >
-                {children}
-              </h3>
-            ),
-            h4: ({ children, ...props }) => (
-              <h4
-                className="text-base font-medium mb-2 text-foreground mt-3 first:mt-0"
-                {...props}
-              >
-                {children}
-              </h4>
-            ),
-            h5: ({ children, ...props }) => (
-              <h5
-                className="text-sm font-medium mb-2 text-foreground mt-3 first:mt-0"
-                {...props}
-              >
-                {children}
-              </h5>
-            ),
-            h6: ({ children, ...props }) => (
-              <h6
-                className="text-sm font-medium mb-2 text-foreground mt-3 first:mt-0"
-                {...props}
-              >
-                {children}
-              </h6>
-            ),
-            p: ({ children, ...props }) => (
-              <p className="mb-3 text-foreground leading-relaxed" {...props}>
-                {children}
-              </p>
-            ),
-            ul: ({ children, ...props }) => (
-              <ul
-                className="list-disc list-outside ml-6 mb-4 text-foreground space-y-1"
-                {...props}
-              >
-                {children}
-              </ul>
-            ),
-            ol: ({ children, ...props }) => (
-              <ol
-                className="list-decimal list-outside ml-6 mb-4 text-foreground space-y-1"
-                {...props}
-              >
-                {children}
-              </ol>
-            ),
-            li: ({ children, ...props }) => (
-              <li className="mb-1 text-foreground" {...props}>
-                {children}
-              </li>
-            ),
-            code: ({ children, ...props }) => (
-              <code
-                className="bg-gray-200 dark:bg-gray-700 px-1 py-0.5 rounded text-sm font-mono text-foreground"
-                {...props}
-              >
-                {children}
-              </code>
-            ),
-            pre: ({ children, ...props }) => (
-              <pre
-                className="bg-gray-100 dark:bg-gray-800 p-3 rounded-md overflow-x-auto mb-4 text-foreground"
-                {...props}
-              >
-                {children}
-              </pre>
-            ),
-            blockquote: ({ children, ...props }) => (
-              <blockquote
-                className="border-l-4 border-blue-500 pl-4 italic mb-4 text-foreground bg-gray-50 dark:bg-gray-800 py-2 rounded-r"
-                {...props}
-              >
-                {children}
-              </blockquote>
-            ),
-            strong: ({ children, ...props }) => (
-              <strong className="font-semibold text-foreground" {...props}>
-                {children}
-              </strong>
-            ),
-            em: ({ children, ...props }) => (
-              <em className="italic text-foreground" {...props}>
-                {children}
-              </em>
-            ),
-            hr: ({ ...props }) => (
-              <hr className="my-6 border-t border-border" {...props} />
-            ),
-            a: ({ children, ...props }) => (
-              <a
-                className="text-blue-600 dark:text-blue-400 underline hover:text-blue-800 dark:hover:text-blue-300"
-                {...props}
-              >
-                {children}
-              </a>
-            ),
-          }}
-        >
-          {cleanedNotes}
-        </ReactMarkdown>
-      </div>
-    );
-  };
+  const activeNotes = activeTab === "document" ? documentNotes : videoNotes;
+  const isGenerating = activeTab === "document" ? isGeneratingDocumentNotes : isGeneratingVideoNotes;
+  const hasContent = activeTab === "document" ? hasDocumentContent : hasVideoTranscript;
+  const handleGenerate = activeTab === "document" ? onGenerateDocumentNotes : onGenerateVideoNotes;
 
   return (
-    <Card className="mt-6">
-      <CardHeader>
-        <CardTitle>Automated Notes</CardTitle>
-        <CardDescription>
-          Generate concise notes from your uploaded documents or video
-          transcripts.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="flex space-x-2 border-b pb-4">
-          {hasDocumentContent && (
-            <Button
-              variant={activeNoteType === "document" ? "default" : "outline"}
-              onClick={() => setActiveNoteType("document")}
-              disabled={isGeneratingDocumentNotes || isGeneratingVideoNotes}
-            >
-              Document Notes
-            </Button>
-          )}
-          {hasVideoTranscript && (
-            <Button
-              variant={activeNoteType === "video" ? "default" : "outline"}
-              onClick={() => setActiveNoteType("video")}
-              disabled={isGeneratingDocumentNotes || isGeneratingVideoNotes}
-            >
-              Video Transcript Notes
-            </Button>
-          )}
+    <div className="space-y-5">
+      {/* Tab switcher — only shown if both sources exist */}
+      {hasBoth && (
+        <div className="flex gap-2">
+          <button
+            onClick={() => setActiveTab("document")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+              ${activeTab === "document" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+          >
+            <FileText className="h-3.5 w-3.5" /> Document
+          </button>
+          <button
+            onClick={() => setActiveTab("video")}
+            className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors
+              ${activeTab === "video" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-muted"}`}
+          >
+            <Video className="h-3.5 w-3.5" /> Video
+          </button>
         </div>
+      )}
 
-        {activeNoteType === "document" && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold">Notes from Document</h3>
-              {!documentNotes && hasDocumentContent && (
-                <Button
-                  onClick={onGenerateDocumentNotes}
-                  disabled={isGeneratingDocumentNotes}
-                >
-                  {isGeneratingDocumentNotes
-                    ? "Generating..."
-                    : "Generate Document Notes"}
-                </Button>
-              )}
-            </div>
-            {isGeneratingDocumentNotes && (
-              <p>Generating document notes, please wait...</p>
-            )}
-            {!isGeneratingDocumentNotes &&
-              renderNotesContent(documentNotes, "document")}
+      {/* Content area */}
+      {isGenerating ? (
+        <div className="flex items-center gap-3 py-12 justify-center text-muted-foreground">
+          <Loader2 className="h-5 w-5 animate-spin" />
+          <span>Generating notes…</span>
+        </div>
+      ) : activeNotes ? (
+        <NotesContent notes={activeNotes} />
+      ) : hasContent ? (
+        <div className="flex flex-col items-center gap-4 py-16 text-center">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+            {activeTab === "document" ? <FileText className="h-5 w-5 text-muted-foreground" /> : <Video className="h-5 w-5 text-muted-foreground" />}
           </div>
-        )}
-
-        {activeNoteType === "video" && (
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-xl font-semibold">
-                Notes from Video Transcript
-              </h3>
-              {!videoNotes && hasVideoTranscript && (
-                <Button
-                  onClick={onGenerateVideoNotes}
-                  disabled={isGeneratingVideoNotes}
-                >
-                  {isGeneratingVideoNotes
-                    ? "Generating..."
-                    : "Generate Video Notes"}
-                </Button>
-              )}
-            </div>
-            {isGeneratingVideoNotes && (
-              <p>Generating video notes, please wait...</p>
-            )}
-            {!isGeneratingVideoNotes && renderNotesContent(videoNotes, "video")}
+          <div>
+            <p className="font-medium">No notes yet</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              AI will summarise your {activeTab === "document" ? "document" : "video"} into structured notes.
+            </p>
           </div>
-        )}
-
-        {!activeNoteType && (
-          <p className="text-muted-foreground text-center py-8">
-            {hasDocumentContent || hasVideoTranscript
-              ? "Select a note type to view or generate notes."
-              : "Upload documents or process a video to generate notes."}
-          </p>
-        )}
-      </CardContent>
-    </Card>
+          <Button onClick={handleGenerate} className="gap-2">
+            <ChevronRight className="h-4 w-4" />
+            Generate notes
+          </Button>
+        </div>
+      ) : (
+        <p className="text-center text-muted-foreground py-12">
+          Upload a {activeTab === "document" ? "document" : "video"} first to generate notes.
+        </p>
+      )}
+    </div>
   );
 }

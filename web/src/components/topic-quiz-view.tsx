@@ -1,226 +1,254 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Flashcard } from "@/lib/store";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { ArrowLeft, ArrowRight, CheckCircle, XCircle } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { CheckCircle, XCircle, ChevronLeft, Heart } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+const MAX_LIVES = 3;
 
 interface TopicQuizViewProps {
   cardsToPractice: Flashcard[];
   quizTitle: string;
-  onQuizComplete: (passed: boolean) => void; // Updated to indicate if quiz was "passed"
+  onQuizComplete: (passed: boolean) => void;
 }
 
-export function TopicQuizView({
-  cardsToPractice,
-  quizTitle,
-  onQuizComplete,
-}: TopicQuizViewProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [showAnswer, setShowAnswer] = useState(false);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [quizFinished, setQuizFinished] = useState(false);
-
-  if (!cardsToPractice || cardsToPractice.length === 0) {
-    return (
-      <Card className="max-w-2xl mx-auto mt-8">
-        <CardHeader>
-          <CardTitle>Quiz: {quizTitle}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p>No questions available for this topic.</p>
-          <Button onClick={() => onQuizComplete(false)} className="mt-4">
-            Back
-          </Button>{" "}
-          {/* Passed false */}
-        </CardContent>
-      </Card>
-    );
+function shuffle<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+}
 
-  const currentCard = cardsToPractice[currentIndex];
+export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: TopicQuizViewProps) {
+  const [queue, setQueue] = useState<Flashcard[]>(() => shuffle(cardsToPractice));
+  const [answeredIds, setAnsweredIds] = useState<Set<string>>(() => new Set());
+  const [lives, setLives] = useState(MAX_LIVES);
+  const [selectedIdx, setSelectedIdx] = useState<number | null>(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [shuffledOptions, setShuffledOptions] = useState<string[]>([]);
+  const [optionMap, setOptionMap] = useState<number[]>([]);
+  const [celebration, setCelebration] = useState(false);
+  const [wrongShake, setWrongShake] = useState(false);
+  const [quizDone, setQuizDone] = useState(false);
+  const [passed, setPassed] = useState(false);
+
   const totalCards = cardsToPractice.length;
+  const currentCard = queue[0] ?? null;
+  const progress = Math.round((answeredIds.size / totalCards) * 100);
 
-  const handleNext = () => {
-    setShowAnswer(false);
-    setSelectedOption(null);
-    if (currentIndex < totalCards - 1) {
-      setCurrentIndex(currentIndex + 1);
+  // Shuffle options when current card changes
+  useEffect(() => {
+    if (!currentCard?.options?.length) return;
+    const indices = currentCard.options.map((_, i) => i);
+    const shuffledIdx = shuffle(indices);
+    setShuffledOptions(shuffledIdx.map((i) => currentCard.options[i]));
+    setOptionMap(shuffledIdx);
+    setSelectedIdx(null);
+    setIsAnswered(false);
+  }, [currentCard?.id]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleSelect = useCallback((displayIdx: number) => {
+    if (isAnswered || !currentCard) return;
+    setSelectedIdx(displayIdx);
+    setIsAnswered(true);
+
+    const originalIdx = optionMap[displayIdx];
+    const correct = originalIdx === currentCard.correctOptionIndex;
+
+    if (correct) {
+      setCelebration(true);
+      setTimeout(() => setCelebration(false), 900);
+      setAnsweredIds((prev) => new Set(prev).add(currentCard.id));
+      setQueue((prev) => prev.slice(1));
     } else {
-      setQuizFinished(true); // Mark as finished to show completion screen
+      setWrongShake(true);
+      setTimeout(() => setWrongShake(false), 600);
+      const newLives = lives - 1;
+      setLives(newLives);
+      if (newLives <= 0) {
+        setTimeout(() => { setQuizDone(true); setPassed(false); }, 800);
+        return;
+      }
+      // Move wrong card to back of queue
+      setQueue((prev) => [...prev.slice(1), currentCard]);
     }
-  };
+  }, [isAnswered, currentCard, optionMap, lives]);
 
-  const handlePrevious = () => {
-    setShowAnswer(false);
-    setSelectedOption(null);
-    setQuizFinished(false); // If going back, quiz is not finished
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-    }
-  };
+  // Auto-advance after correct answer
+  useEffect(() => {
+    if (!isAnswered || !currentCard) return;
+    const originalIdx = optionMap[selectedIdx ?? -1];
+    if (originalIdx !== currentCard.correctOptionIndex) return;
+    const t = setTimeout(() => {
+      if (queue.length <= 1) {
+        setQuizDone(true);
+        setPassed(true);
+      }
+    }, 1000);
+    return () => clearTimeout(t);
+  }, [isAnswered, currentCard, optionMap, selectedIdx, queue.length]);  // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleOptionSelect = (optionIndex: number) => {
-    setSelectedOption(optionIndex);
-    setShowAnswer(true); // Automatically show answer when an option is selected
-  };
-
-  if (quizFinished) {
+  if (!cardsToPractice.length) {
     return (
-      <Card className="max-w-2xl mx-auto mt-8 text-center">
-        <CardHeader>
-          <CardTitle>Quiz Complete!</CardTitle>
-          <CardDescription>
-            {/* eslint-disable-next-line react/no-unescaped-entities -- pre-existing, deferred */}
-            You have finished the quiz for "{quizTitle}".
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <CheckCircle className="h-16 w-16 text-green-500 mx-auto mb-4" />
-          <p>Great job reviewing the material!</p>
-        </CardContent>
-        <CardFooter className="flex justify-center">
-          <Button onClick={() => onQuizComplete(true)}>
-            Close Quiz & Mark Complete
-          </Button>{" "}
-          {/* Passed true */}
-        </CardFooter>
-      </Card>
+      <div className="max-w-xl mx-auto mt-6 space-y-4">
+        <button onClick={() => onQuizComplete(false)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="h-4 w-4" /> Back to Roadmap
+        </button>
+        <p className="text-muted-foreground text-center py-12">No questions available for this topic.</p>
+      </div>
     );
   }
+
+  if (quizDone) {
+    return (
+      <div className="max-w-xl mx-auto mt-6 space-y-6 text-center">
+        <button onClick={() => onQuizComplete(passed)} className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors">
+          <ChevronLeft className="h-4 w-4" /> Back to Roadmap
+        </button>
+        <div className="py-12 space-y-4">
+          {passed ? (
+            <>
+              <CheckCircle className="h-20 w-20 text-green-500 mx-auto animate-bounce" />
+              <h2 className="text-2xl font-bold">Section Complete!</h2>
+              <p className="text-muted-foreground">You answered all {totalCards} questions correctly.</p>
+            </>
+          ) : (
+            <>
+              <XCircle className="h-20 w-20 text-red-500 mx-auto" />
+              <h2 className="text-2xl font-bold">Out of lives</h2>
+              <p className="text-muted-foreground">You ran out of hearts. Try again!</p>
+            </>
+          )}
+          <div className="flex gap-3 justify-center pt-2">
+            {!passed && (
+              <Button variant="outline" onClick={() => {
+                setQueue(shuffle(cardsToPractice));
+                setAnsweredIds(new Set());
+                setLives(MAX_LIVES);
+                setSelectedIdx(null);
+                setIsAnswered(false);
+                setQuizDone(false);
+              }}>
+                Try Again
+              </Button>
+            )}
+            <Button onClick={() => onQuizComplete(passed)}>
+              {passed ? "Continue" : "Back to Roadmap"}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!currentCard) return null;
+
+  const shuffledCorrectIdx = optionMap.findIndex((i) => i === currentCard.correctOptionIndex);
+  const isCorrect = selectedIdx === shuffledCorrectIdx;
 
   return (
-    <Card className="max-w-2xl mx-auto mt-8">
-      <CardHeader>
-        <div className="flex justify-between items-start mb-2">
-          <div className="flex-1">
-            <CardTitle>Quiz: {quizTitle}</CardTitle>
-            <CardDescription>
-              Question {currentIndex + 1} of {totalCards}
-            </CardDescription>
+    <div className="max-w-xl mx-auto mt-2 space-y-4">
+      {/* Back button — leftmost */}
+      <button
+        onClick={() => onQuizComplete(false)}
+        className="flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors"
+      >
+        <ChevronLeft className="h-4 w-4" /> Back to Roadmap
+      </button>
+
+      {/* Lives + title */}
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-base">{quizTitle}</h2>
+        <div className="flex items-center gap-1">
+          {Array.from({ length: MAX_LIVES }).map((_, i) => (
+            <Heart
+              key={i}
+              className={cn("h-5 w-5 transition-all duration-300", i < lives ? "text-red-500 fill-red-500" : "text-muted-foreground/30")}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Progress bar */}
+      <div className="space-y-1">
+        <Progress value={progress} className="h-2" />
+        <p className="text-xs text-muted-foreground text-right">{answeredIds.size}/{totalCards} done</p>
+      </div>
+
+      {/* Question card */}
+      <div className={cn("rounded-xl border bg-card p-6 space-y-5 shadow-sm transition-all duration-300", wrongShake && "animate-[shake_0.4s_ease-in-out]", celebration && "ring-2 ring-green-500 ring-offset-2")}>
+        {/* Celebration overlay */}
+        {celebration && (
+          <div className="absolute inset-0 pointer-events-none overflow-hidden rounded-xl">
+            {[...Array(8)].map((_, i) => (
+              <div
+                key={i}
+                className="absolute w-2 h-2 rounded-full animate-[confetti_0.8s_ease-out_forwards]"
+                style={{
+                  background: ["#22c55e","#f59e0b","#3b82f6","#ec4899","#a855f7"][i % 5],
+                  left: `${15 + i * 10}%`,
+                  top: "40%",
+                  animationDelay: `${i * 60}ms`,
+                }}
+              />
+            ))}
           </div>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onQuizComplete(false)}
-            className="ml-4"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Study Guide
-          </Button>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="text-lg font-semibold p-6 bg-muted rounded-md min-h-[100px] break-words whitespace-normal leading-relaxed">
-          {currentCard.question}
-        </div>
+        )}
 
-        <div className="space-y-3">
-          {currentCard.options.map((option, index) => {
-            const isCorrect = index === currentCard.correctOptionIndex;
-            const isSelected = selectedOption === index;
+        <p className="text-lg font-medium leading-snug">{currentCard.question}</p>
 
-            let variant:
-              | "default"
-              | "outline"
-              | "secondary"
-              | "destructive"
-              | "ghost"
-              | "link" = "outline";
-            if (showAnswer) {
-              if (isCorrect) variant = "secondary"; // Correct answer
-              if (isSelected && !isCorrect) variant = "destructive"; // User selected wrong
+        <div className="space-y-2.5">
+          {shuffledOptions.map((option, idx) => {
+            let variant: "outline" | "default" | "destructive" = "outline";
+            let extra = "";
+            if (isAnswered) {
+              if (idx === shuffledCorrectIdx) { variant = "default"; extra = "border-green-500 bg-green-500/10 text-green-700 dark:text-green-400 hover:bg-green-500/10"; }
+              else if (idx === selectedIdx) { variant = "destructive"; extra = "opacity-90"; }
+              else { extra = "opacity-40"; }
             }
-
             return (
               <Button
-                key={index}
+                key={idx}
                 variant={variant}
-                className={`w-full justify-start text-left h-auto py-3 px-4 whitespace-normal break-words min-h-[48px] ${
-                  showAnswer && isCorrect ? "border-2 border-green-500" : ""
-                } ${
-                  showAnswer && isSelected && !isCorrect
-                    ? "border-2 border-red-500"
-                    : ""
-                }`}
-                onClick={() => !showAnswer && handleOptionSelect(index)} // Allow selection only if answer isn't shown
-                disabled={showAnswer && selectedOption !== null} // Disable options after one is selected and answer shown
+                disabled={isAnswered}
+                onClick={() => handleSelect(idx)}
+                className={cn("w-full justify-start text-left h-auto py-3 px-4 whitespace-normal min-h-[44px] transition-all duration-200", extra)}
               >
-                <div className="flex items-start w-full">
-                  <Badge
-                    variant="outline"
-                    className="mr-3 flex-shrink-0 mt-0.5"
-                  >
-                    {String.fromCharCode(65 + index)}
-                  </Badge>
-                  <span className="flex-1 break-words">{option}</span>
-                  <div className="flex-shrink-0 ml-2">
-                    {showAnswer && isCorrect && (
-                      <CheckCircle className="h-5 w-5 text-green-500" />
-                    )}
-                    {showAnswer && isSelected && !isCorrect && (
-                      <XCircle className="h-5 w-5 text-red-500" />
-                    )}
-                  </div>
-                </div>
+                <span className="font-bold mr-3 shrink-0 text-muted-foreground">{String.fromCharCode(65 + idx)}</span>
+                <span className="flex-1 break-words">{option}</span>
+                {isAnswered && idx === shuffledCorrectIdx && <CheckCircle className="ml-2 h-4 w-4 shrink-0 text-green-500" />}
+                {isAnswered && idx === selectedIdx && idx !== shuffledCorrectIdx && <XCircle className="ml-2 h-4 w-4 shrink-0 text-red-500" />}
               </Button>
             );
           })}
         </div>
 
-        {showAnswer && (
-          <Card className="bg-green-50 dark:bg-green-900/30 border-green-200 dark:border-green-700">
-            <CardHeader>
-              <CardTitle className="text-md text-green-700 dark:text-green-300">
-                Answer & Explanation
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="prose prose-sm dark:prose-invert max-w-none break-words">
-              <p className="break-words">
-                <strong>
-                  Correct Answer:{" "}
-                  {String.fromCharCode(65 + currentCard.correctOptionIndex)}.
-                </strong>{" "}
-                <span className="break-words">
-                  {currentCard.options[currentCard.correctOptionIndex]}
-                </span>
-              </p>
-              <p className="break-words leading-relaxed">
-                {currentCard.answer}
-              </p>
-            </CardContent>
-          </Card>
+        {isAnswered && !isCorrect && (
+          <div className="rounded-lg bg-muted px-4 py-3 text-sm">
+            <p className="font-semibold mb-1">Correct answer: {String.fromCharCode(65 + shuffledCorrectIdx)}</p>
+            <p className="text-muted-foreground">{currentCard.answer}</p>
+          </div>
         )}
-      </CardContent>
-      <CardFooter className="flex justify-between">
-        <Button
-          variant="outline"
-          onClick={handlePrevious}
-          disabled={currentIndex === 0}
-        >
-          <ArrowLeft className="mr-2 h-4 w-4" /> Previous
-        </Button>
-        {!showAnswer && selectedOption === null && (
-          <Button onClick={() => setShowAnswer(true)} variant="outline">
-            Show Answer
+
+        {isAnswered && !isCorrect && (
+          <Button
+            className="w-full"
+            onClick={() => {
+              const newLives = lives;
+              if (newLives <= 0) return;
+              setSelectedIdx(null);
+              setIsAnswered(false);
+            }}
+          >
+            Continue
           </Button>
         )}
-        {showAnswer && (
-          <Button onClick={handleNext}>
-            {currentIndex === totalCards - 1 ? "Finish Quiz" : "Next"}{" "}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
-        )}
-      </CardFooter>
-    </Card>
+      </div>
+    </div>
   );
 }
