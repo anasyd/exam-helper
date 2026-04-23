@@ -25,17 +25,14 @@ import {
   FileUp,
   Brain,
   ArrowLeft,
-  BookCopy,
   VideoIcon,
   FileTextIcon,
   LayoutDashboard,
-  ListChecks,
   Flame,
   Zap,
   ChevronDown,
   SlidersHorizontal,
 } from "lucide-react";
-import { StudyContentView } from "./study-content-view";
 import { generateFlashcards } from "@/lib/ai/features/flashcards";
 import { generateAutomatedNotes } from "@/lib/ai/features/notes";
 import {
@@ -913,8 +910,6 @@ export function ProjectView() {
     setDocumentNotes,
     setVideoNotes,
     setDocumentFileName,
-    gamificationEnabled,
-    setGamificationEnabled,
     currentStreak,
   } = useFlashcardStore();
   const providers = useFlashcardStore((s) => s.providers);
@@ -1241,8 +1236,8 @@ export function ProjectView() {
             <TabButton
               isActive={activeTab === "guide"}
               onClick={() => setActiveTab("guide")}
-              icon={<BookCopy className="h-4 w-4" />}
-              label="Guide"
+              icon={<LayoutDashboard className="h-4 w-4" />}
+              label="Roadmap"
               disabled={!activeProject.studyGuide && !isGeneratingStudyContent}
             />
             <TabButton
@@ -1268,7 +1263,7 @@ export function ProjectView() {
         </div>
 
         {/* Tab content */}
-        <div className="max-w-3xl mx-auto" key={activeTab} style={{ animation: "fadeIn 0.18s ease" }}>
+        <div className="max-w-4xl mx-auto" key={activeTab} style={{ animation: "fadeIn 0.18s ease" }}>
 
           {/* ── Study ── */}
           {activeTab === "study" && (
@@ -1291,38 +1286,25 @@ export function ProjectView() {
             </div>
           )}
 
-          {/* ── Guide ── */}
+          {/* ── Roadmap ── */}
           {activeTab === "guide" && (
             <div>
               {isGeneratingStudyContent && (
                 <div className="flex items-center gap-3 mb-6 text-sm text-muted-foreground">
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Generating study guide…
+                  Generating roadmap…
                 </div>
               )}
-              {activeProject.studyGuide && (
-                <div className="flex justify-end mb-4">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setGamificationEnabled(!gamificationEnabled)}
-                  >
-                    {gamificationEnabled ? (
-                      <><ListChecks className="h-4 w-4 mr-1" />Study Guide</>
-                    ) : (
-                      <><LayoutDashboard className="h-4 w-4 mr-1" />Roadmap</>
-                    )}
-                  </Button>
-                </div>
-              )}
-              {gamificationEnabled && activeProject.studyGuide ? (
+              {activeProject.studyGuide ? (
                 <GamifiedRoadmapView
                   project={activeProject}
-                  key={`roadmap-${gamificationEnabled}`}
+                  key="roadmap"
                 />
-              ) : (
-                <StudyContentView studyGuide={activeProject.studyGuide} />
-              )}
+              ) : !isGeneratingStudyContent ? (
+                <div className="text-center py-12 text-muted-foreground text-sm">
+                  Upload a document to generate your learning roadmap.
+                </div>
+              ) : null}
             </div>
           )}
 

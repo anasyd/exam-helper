@@ -455,7 +455,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                         ),
                         blockquote: ({ ...props }) => (
                           <blockquote
-                            className="border-l-4 border-blue-500 pl-3 italic mb-3 text-foreground"
+                            className="border-l-4 border-border pl-3 italic mb-3 text-foreground"
                             {...props}
                           />
                         ),
@@ -483,7 +483,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                           <AccordionItem
                             value={`section-${sectionIndex}-topic-${topicIndex}`}
                             key={topicIndex}
-                            className="border rounded-md bg-slate-50/50 dark:bg-slate-900/50"
+                            className="border rounded-md bg-background"
                           >
                             <AccordionTrigger className="p-3 hover:no-underline text-left">
                               <h5 className="text-sm font-medium flex-grow mr-2">
@@ -491,7 +491,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                               </h5>
                             </AccordionTrigger>
                             {topic.audioSummaryText && (
-                              <div className="px-3 pb-2 bg-slate-50/50 dark:bg-slate-900/50 border-b flex justify-end">
+                              <div className="px-3 pb-2 bg-background border-b flex justify-end">
                                 <Button
                                   variant="ghost"
                                   size="sm"
@@ -637,7 +637,7 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                                     ),
                                     blockquote: ({ ...props }) => (
                                       <blockquote
-                                        className="border-l-4 border-blue-500 pl-2 italic mb-2 text-foreground"
+                                        className="border-l-4 border-border pl-2 italic mb-2 text-foreground"
                                         {...props}
                                       />
                                     ),

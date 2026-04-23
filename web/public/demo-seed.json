@@ -179,6 +179,114 @@
         "timesIncorrect": 0,
         "sourceSectionTitle": "Quantum Gates",
         "sourceTopicTitle": "Single-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q2-t2-a",
+        "question": "What does the CNOT gate do to the target qubit when the control qubit is |0⟩?",
+        "answer": "Nothing — the target qubit is unchanged.",
+        "options": [
+          "Flips the target qubit",
+          "Nothing — the target qubit is unchanged",
+          "Puts both qubits in superposition",
+          "Applies a phase of π"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Two-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q2-t2-b",
+        "question": "Which gate set is considered universal for quantum computation?",
+        "answer": "Single-qubit gates plus CNOT.",
+        "options": [
+          "Pauli gates alone",
+          "Single-qubit gates plus CNOT",
+          "Toffoli gate alone",
+          "SWAP and Hadamard only"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Two-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q3-t1-a",
+        "question": "What is the time complexity of Shor's algorithm for factoring an n-bit integer?",
+        "answer": "O(n³) — polynomial in the number of bits.",
+        "options": [
+          "O(2ⁿ) — exponential",
+          "O(n log n) — nearly linear",
+          "O(n³) — polynomial in the number of bits",
+          "O(√n) — sub-linear"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Shor's algorithm"
+      },
+      {
+        "id": "demo-mcq-q3-t1-b",
+        "question": "Which quantum subroutine is at the heart of Shor's algorithm?",
+        "answer": "The Quantum Fourier Transform (QFT).",
+        "options": [
+          "Grover's oracle",
+          "Amplitude amplification",
+          "The Quantum Fourier Transform (QFT)",
+          "Phase estimation alone"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Shor's algorithm"
+      },
+      {
+        "id": "demo-mcq-q3-t2-a",
+        "question": "How many oracle queries does Grover's algorithm need to find one item in an unsorted list of N items?",
+        "answer": "O(√N) queries.",
+        "options": [
+          "O(N) — same as classical",
+          "O(log N) — logarithmic",
+          "O(N²) — quadratic",
+          "O(√N) — square root of N"
+        ],
+        "correctOptionIndex": 3,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Grover's algorithm"
+      },
+      {
+        "id": "demo-mcq-q3-t2-b",
+        "question": "What kind of speedup does Grover's algorithm achieve over the best classical search?",
+        "answer": "Quadratic speedup.",
+        "options": [
+          "Exponential speedup",
+          "Linear speedup",
+          "Quadratic speedup",
+          "No speedup — it is equivalent"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Grover's algorithm"
       }
     ],
     "documentNotes": "# Introduction to Quantum Computing\n\n## Qubits\n- Basic unit; superposition of |0⟩ and |1⟩.\n- Measured probabilistically (Born rule).\n\n## Gates\n- **Hadamard** — creates superposition from basis states.\n- **CNOT** — two-qubit gate for entanglement.\n- **Pauli X, Y, Z** — single-qubit rotations.\n\n## Key algorithms\n- **Shor's** — factoring; exponential speedup; breaks RSA.\n- **Grover's** — unstructured search; quadratic speedup.\n\n## Entanglement\n- Bell states: maximally entangled pairs.\n- Enables teleportation and QKD.",
@@ -230,7 +338,7 @@
               "summary": "CNOT as the canonical entangling gate.",
               "content": "The CNOT (controlled-NOT) gate flips the target qubit if the control qubit is |1⟩. Together with single-qubit gates, CNOT forms a universal gate set. The Toffoli gate is a three-qubit gate useful for reversible classical computation.",
               "isCompleted": false,
-              "mcqsGenerated": false,
+              "mcqsGenerated": true,
               "xpAwardedOnCompletion": 40
             }
           ]
@@ -247,7 +355,7 @@
               "summary": "Polynomial-time integer factoring on a quantum computer.",
               "content": "Shor's algorithm (1994) factors an n-bit integer in O(n³) time, exponentially faster than the best known classical algorithm. It uses the quantum Fourier transform to find the period of a function, from which the factors can be derived. This breaks RSA encryption.",
               "isCompleted": false,
-              "mcqsGenerated": false,
+              "mcqsGenerated": true,
               "xpAwardedOnCompletion": 60
             },
             {
@@ -255,7 +363,7 @@
               "summary": "Quadratic speedup for unstructured search.",
               "content": "Grover's algorithm (1996) searches an unsorted database of N items in O(√N) operations, compared to O(N) classically. While not exponential, this quadratic speedup has practical applications in optimization and cryptanalysis.",
               "isCompleted": false,
-              "mcqsGenerated": false,
+              "mcqsGenerated": true,
               "xpAwardedOnCompletion": 60
             }
           ]
