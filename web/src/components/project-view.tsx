@@ -1030,7 +1030,7 @@ export function ProjectView() {
       <div className="container mx-auto py-6 px-4">
         {/* Tab bar */}
         <div className="mb-6">
-          <div className="border rounded-lg p-1 flex overflow-x-auto scrollbar-none gap-1 w-full">
+          <div className="border rounded-lg p-1 flex overflow-x-auto scrollbar-none gap-1 w-full justify-center">
             <TabButton
               isActive={activeTab === "study"}
               onClick={() => setActiveTab("study")}

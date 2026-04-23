@@ -78,13 +78,12 @@ function NotesContent({ notes }: { notes: string }) {
       }
       if (found) setActiveId(found);
     };
-    const scrollable = el.closest(".notes-scroll") as HTMLElement | null;
-    (scrollable ?? window).addEventListener("scroll", handleScroll, { passive: true });
-    return () => (scrollable ?? window).removeEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollTo = (id: string) => {
-    const target = contentRef.current?.querySelector(`#${id}`);
+    const target = document.getElementById(id);
     target?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 

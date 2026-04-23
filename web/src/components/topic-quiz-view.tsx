@@ -64,7 +64,13 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
       setCelebration(true);
       setTimeout(() => setCelebration(false), 900);
       setAnsweredIds((prev) => new Set(prev).add(currentCard.id));
-      setQueue((prev) => prev.slice(1));
+      if (queue.length === 1) {
+        // Last card — don't empty queue yet (would cause blank screen)
+        // Set done after celebration completes
+        setTimeout(() => { setQuizDone(true); setPassed(true); }, 1000);
+      } else {
+        setQueue((prev) => prev.slice(1));
+      }
     } else {
       setWrongShake(true);
       setTimeout(() => setWrongShake(false), 600);
@@ -79,19 +85,6 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
     }
   }, [isAnswered, currentCard, optionMap, lives]);
 
-  // Auto-advance after correct answer
-  useEffect(() => {
-    if (!isAnswered || !currentCard) return;
-    const originalIdx = optionMap[selectedIdx ?? -1];
-    if (originalIdx !== currentCard.correctOptionIndex) return;
-    const t = setTimeout(() => {
-      if (queue.length <= 1) {
-        setQuizDone(true);
-        setPassed(true);
-      }
-    }, 1000);
-    return () => clearTimeout(t);
-  }, [isAnswered, currentCard, optionMap, selectedIdx, queue.length]);  // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!cardsToPractice.length) {
     return (

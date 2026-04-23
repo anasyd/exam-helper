@@ -109,13 +109,15 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
         style={{
           transformStyle: "preserve-3d",
           transform: isFlipped ? "rotateY(180deg)" : "rotateY(0deg)",
-          minHeight: 420,
         }}
       >
-        {/* FRONT — Question + Options */}
+        {/* FRONT — Question + Options (normal flow, sets container height) */}
         <Card
-          className="absolute inset-0 w-full overflow-hidden border-2 shadow-md"
-          style={{ backfaceVisibility: "hidden" }}
+          className="w-full overflow-hidden border-2 shadow-md"
+          style={{
+            backfaceVisibility: "hidden",
+            pointerEvents: isFlipped ? "none" : "auto",
+          }}
         >
           <CardContent className="p-6 space-y-4">
             <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide">Question</h3>
@@ -170,10 +172,14 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
           </CardFooter>
         </Card>
 
-        {/* BACK — Answer */}
+        {/* BACK — Answer (absolute, same size as front, rotated 180deg) */}
         <Card
-          className="absolute inset-0 w-full overflow-hidden border-2 shadow-md"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          className="absolute top-0 left-0 w-full h-full overflow-hidden border-2 shadow-md"
+          style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            pointerEvents: isFlipped ? "auto" : "none",
+          }}
         >
           <CardContent className="p-6 space-y-4">
             <h3 className="text-base font-semibold text-muted-foreground uppercase tracking-wide">Answer</h3>
