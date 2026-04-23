@@ -232,14 +232,24 @@ function GamifiedRoadmapView({
       return;
     }
 
+    const sectionTitle = studyGuide.sections[sectionIndex].title;
     const cardsForTopic = flashcards.filter(
       (card) =>
-        card.sourceSectionTitle === studyGuide.sections[sectionIndex].title &&
+        card.sourceSectionTitle === sectionTitle &&
         card.sourceTopicTitle === topic.title
     );
 
     if (cardsForTopic.length > 0) {
-      setQuizCards(cardsForTopic);
+      // Mix in review cards from other topics (up to 5, capped at 15 total)
+      const reviewPool = flashcards.filter(
+        (card) =>
+          !(card.sourceSectionTitle === sectionTitle && card.sourceTopicTitle === topic.title)
+      );
+      const reviewCount = Math.min(reviewPool.length, Math.max(0, 15 - cardsForTopic.length));
+      const reviewCards = [...reviewPool].sort(() => Math.random() - 0.5).slice(0, reviewCount);
+      const combined = [...cardsForTopic, ...reviewCards].sort(() => Math.random() - 0.5);
+
+      setQuizCards(combined);
       setQuizTitle(topic.title);
       setCurrentQuizContext({ sectionIndex, topicIndex });
       setShowQuizView(true);
@@ -318,7 +328,7 @@ function GamifiedRoadmapView({
             const sectionTitle = title; // Section title
             const topicTitle = topic.title;
 
-            const numCardsToGenerate = 5;
+            const numCardsToGenerate = 10;
 
             const newMcqs = await generateFlashcards(
               { kind: "text", text: topic.content || project.pdfContent },
@@ -395,7 +405,7 @@ function GamifiedRoadmapView({
         : studyGuide.sections[sectionIdx]?.title || "Unknown Section";
       const topicTitle = isSection ? undefined : title;
 
-      const numCardsToGenerate = 5; // Or make this configurable
+      const numCardsToGenerate = 10;
 
       const newMcqs = await generateFlashcards(
         { kind: "text", text: contentToUse || project.pdfContent },
