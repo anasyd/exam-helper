@@ -18,7 +18,7 @@ const ACCEPTED_FILE_TYPES = {
 };
 
 interface PdfUploadProps {
-  onProcessingComplete: (text: string) => void;
+  onProcessingComplete: (text: string, fileName: string) => void;
 }
 
 export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
@@ -98,7 +98,8 @@ export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
       // setPdfContent(combinedText); // This will be handled by the callback prop if needed by parent
 
       // Call the completion callback
-      onProcessingComplete(combinedText);
+      const fileNames = files.map((f) => f.name).join(", ");
+      onProcessingComplete(combinedText, fileNames);
 
       // Dismiss loading toast and show success
       toast.dismiss(toastId);

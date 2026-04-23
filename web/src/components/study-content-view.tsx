@@ -323,13 +323,13 @@ export function StudyContentView({ studyGuide }: StudyContentViewProps) {
                 key={sectionIndex}
                 className="border rounded-lg"
               >
-                <AccordionTrigger className="p-4 hover:no-underline bg-slate-50 dark:bg-slate-800 rounded-t-lg text-left">
+                <AccordionTrigger className="p-4 hover:no-underline bg-muted rounded-t-lg text-left">
                   <h3 className="text-lg font-semibold flex-grow mr-2">
                     {section.title}
                   </h3>
                 </AccordionTrigger>
                 {section.audioSummaryText && (
-                  <div className="px-4 pb-2 bg-slate-50 dark:bg-slate-800 border-b flex justify-end">
+                  <div className="px-4 pb-2 bg-muted border-b flex justify-end">
                     <Button
                       variant="ghost"
                       size="sm"

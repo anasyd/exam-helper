@@ -17,12 +17,21 @@ export function FlashcardSession() {
   const { getActiveProject, getNextCard, resetSession } = useFlashcardStore();
 
   const activeProject = getActiveProject();
-  const [currentCard, setCurrentCard] = useState(getNextCard());
+  const flashcardCount = activeProject?.flashcards.length ?? 0;
+  const [currentCard, setCurrentCard] = useState<ReturnType<typeof getNextCard>>(null);
   const [sessionStats, setSessionStats] = useState({
     cardsStudied: 0,
     correctAnswers: 0,
     incorrectAnswers: 0,
   });
+
+  // Initialize first card and refresh when new cards are added
+  useEffect(() => {
+    if (flashcardCount > 0 && !currentCard) {
+      setCurrentCard(getNextCard());
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [flashcardCount]);
 
   // Update stats when project's flashcards change
   useEffect(() => {

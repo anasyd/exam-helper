@@ -207,7 +207,6 @@ function DefaultModelPicker() {
           {modelsForProvider.map((m) => (
             <option key={m.modelId} value={m.modelId}>
               {m.displayName}
-              {m.supportsVision ? " 👁" : ""}
             </option>
           ))}
         </select>
@@ -307,7 +306,6 @@ function FeatureOverridesSection() {
                   {compatibleForSelected.map((m) => (
                     <option key={m.modelId} value={m.modelId}>
                       {m.displayName}
-                      {m.supportsVision ? " 👁" : ""}
                     </option>
                   ))}
                 </select>

@@ -3,11 +3,12 @@
     "id": "demo-intro-to-qc",
     "name": "Introduction to Quantum Computing",
     "description": "Lecture notes — MIT 8.370x week 1",
+    "documentFileName": "mit-8370x-week1.pdf",
     "pdfContent": "Quantum computing uses qubits, which can exist in superpositions of 0 and 1. Unlike classical bits that are deterministically 0 or 1, qubits leverage quantum mechanical phenomena like superposition and entanglement. The Bloch sphere is a geometric representation of a qubit's state. Quantum gates such as Hadamard, CNOT, and Pauli gates manipulate qubit states to perform computations. Shor's algorithm demonstrates exponential speedup over classical factoring algorithms, threatening RSA cryptography. Grover's algorithm provides quadratic speedup for unstructured search problems. Quantum entanglement allows correlated measurements across separated qubits, forming the basis of quantum teleportation and quantum key distribution.",
     "processedHashes": [],
     "cardsSeenThisSession": [],
     "sessionComplete": false,
-    "xp": 0,
+    "xp": 130,
     "flashcards": [
       {
         "id": "demo-card-1",
@@ -22,7 +23,7 @@
         "correctOptionIndex": 1,
         "difficulty": 1,
         "lastSeen": null,
-        "timesCorrect": 0,
+        "timesCorrect": 2,
         "timesIncorrect": 0
       },
       {
@@ -38,8 +39,8 @@
         "correctOptionIndex": 2,
         "difficulty": 2,
         "lastSeen": null,
-        "timesCorrect": 0,
-        "timesIncorrect": 0
+        "timesCorrect": 1,
+        "timesIncorrect": 1
       },
       {
         "id": "demo-card-3",
@@ -88,6 +89,96 @@
         "lastSeen": null,
         "timesCorrect": 0,
         "timesIncorrect": 0
+      },
+      {
+        "id": "demo-mcq-q1-t1",
+        "question": "How many states can a classical bit represent at once?",
+        "answer": "Exactly one — either 0 or 1.",
+        "options": [
+          "Two simultaneously",
+          "Exactly one — either 0 or 1",
+          "Infinitely many via analog voltage",
+          "It depends on the hardware"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 1,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Qubits and Superposition",
+        "sourceTopicTitle": "Bit vs qubit"
+      },
+      {
+        "id": "demo-mcq-q1-t1-b",
+        "question": "A qubit in the |+⟩ state is measured. What are the probabilities of outcomes?",
+        "answer": "50% |0⟩ and 50% |1⟩.",
+        "options": [
+          "100% |0⟩",
+          "100% |1⟩",
+          "50% |0⟩ and 50% |1⟩",
+          "The result is always |0⟩ after the first measurement"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Qubits and Superposition",
+        "sourceTopicTitle": "Bit vs qubit"
+      },
+      {
+        "id": "demo-mcq-q1-t2",
+        "question": "What does a point on the surface of the Bloch sphere represent?",
+        "answer": "A pure qubit state.",
+        "options": [
+          "A mixed quantum state",
+          "A pure qubit state",
+          "A classical probability distribution",
+          "An entangled two-qubit system"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Qubits and Superposition",
+        "sourceTopicTitle": "The Bloch sphere"
+      },
+      {
+        "id": "demo-mcq-q2-t1",
+        "question": "Which gate is its own inverse?",
+        "answer": "The Hadamard gate (H² = I).",
+        "options": [
+          "CNOT",
+          "Phase gate S",
+          "The Hadamard gate",
+          "Toffoli gate"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Single-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q2-t1-b",
+        "question": "What does the Pauli-X gate do?",
+        "answer": "Flips |0⟩ to |1⟩ and |1⟩ to |0⟩ (quantum NOT gate).",
+        "options": [
+          "Applies a phase of π/2",
+          "Flips |0⟩ to |1⟩ and |1⟩ to |0⟩",
+          "Creates a Bell state",
+          "Measures the qubit in the Z basis"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 1,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Single-qubit gates"
       }
     ],
     "documentNotes": "# Introduction to Quantum Computing\n\n## Qubits\n- Basic unit; superposition of |0⟩ and |1⟩.\n- Measured probabilistically (Born rule).\n\n## Gates\n- **Hadamard** — creates superposition from basis states.\n- **CNOT** — two-qubit gate for entanglement.\n- **Pauli X, Y, Z** — single-qubit rotations.\n\n## Key algorithms\n- **Shor's** — factoring; exponential speedup; breaks RSA.\n- **Grover's** — unstructured search; quadratic speedup.\n\n## Entanglement\n- Bell states: maximally entangled pairs.\n- Enables teleportation and QKD.",
@@ -97,42 +188,75 @@
         {
           "title": "Qubits and Superposition",
           "summary": "The fundamental units of quantum information and how they differ from classical bits.",
+          "content": "A qubit is the quantum analogue of a classical bit. While a classical bit can be either 0 or 1, a qubit can exist in a superposition of both states simultaneously. This is described mathematically as α|0⟩ + β|1⟩, where |α|² + |β|² = 1. When measured, the qubit collapses to |0⟩ with probability |α|² or to |1⟩ with probability |β|².",
+          "isCompleted": false,
+          "xpAwardedOnCompletion": 100,
           "topics": [
             {
               "title": "Bit vs qubit",
-              "summary": "A qubit can represent |0⟩, |1⟩, or any superposition of the two."
+              "summary": "A qubit can represent |0⟩, |1⟩, or any superposition of the two.",
+              "content": "Classical bits are deterministic — a 0 is a 0. A qubit is probabilistic until measured. This is not mere ignorance about the state; the qubit genuinely exists in multiple states at once (superposition). Measuring collapses the wave function.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 30
             },
             {
               "title": "The Bloch sphere",
-              "summary": "A geometric representation of a single qubit state."
+              "summary": "A geometric representation of a single qubit state.",
+              "content": "The Bloch sphere is a unit sphere where each point on the surface represents a pure qubit state. The north pole is |0⟩, the south pole is |1⟩. Quantum gates correspond to rotations of the sphere.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 30
             }
           ]
         },
         {
           "title": "Quantum Gates",
           "summary": "Unitary operations that manipulate qubit states.",
+          "content": "Quantum gates are the building blocks of quantum circuits. Unlike classical gates, all quantum gates are reversible (unitary). They can be represented as unitary matrices acting on qubit state vectors.",
+          "isCompleted": false,
+          "xpAwardedOnCompletion": 150,
           "topics": [
             {
               "title": "Single-qubit gates",
-              "summary": "Hadamard, Pauli X/Y/Z, phase gates."
+              "summary": "Hadamard, Pauli X/Y/Z, phase gates.",
+              "content": "The Hadamard gate H puts a qubit into equal superposition. Pauli-X is the quantum NOT gate. Pauli-Y and Z introduce phase shifts. The S and T gates apply π/2 and π/4 phase rotations respectively.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 40
             },
             {
               "title": "Two-qubit gates",
-              "summary": "CNOT as the canonical entangling gate."
+              "summary": "CNOT as the canonical entangling gate.",
+              "content": "The CNOT (controlled-NOT) gate flips the target qubit if the control qubit is |1⟩. Together with single-qubit gates, CNOT forms a universal gate set. The Toffoli gate is a three-qubit gate useful for reversible classical computation.",
+              "isCompleted": false,
+              "mcqsGenerated": false,
+              "xpAwardedOnCompletion": 40
             }
           ]
         },
         {
           "title": "Landmark Algorithms",
           "summary": "Two algorithms that demonstrate quantum speedup.",
+          "content": "Quantum algorithms exploit superposition and interference to solve certain problems exponentially faster than classical computers. The two most celebrated examples are Shor's factoring algorithm and Grover's search algorithm.",
+          "isCompleted": false,
+          "xpAwardedOnCompletion": 200,
           "topics": [
             {
               "title": "Shor's algorithm",
-              "summary": "Polynomial-time integer factoring on a quantum computer."
+              "summary": "Polynomial-time integer factoring on a quantum computer.",
+              "content": "Shor's algorithm (1994) factors an n-bit integer in O(n³) time, exponentially faster than the best known classical algorithm. It uses the quantum Fourier transform to find the period of a function, from which the factors can be derived. This breaks RSA encryption.",
+              "isCompleted": false,
+              "mcqsGenerated": false,
+              "xpAwardedOnCompletion": 60
             },
             {
               "title": "Grover's algorithm",
-              "summary": "Quadratic speedup for unstructured search."
+              "summary": "Quadratic speedup for unstructured search.",
+              "content": "Grover's algorithm (1996) searches an unsorted database of N items in O(√N) operations, compared to O(N) classically. While not exponential, this quadratic speedup has practical applications in optimization and cryptanalysis.",
+              "isCompleted": false,
+              "mcqsGenerated": false,
+              "xpAwardedOnCompletion": 60
             }
           ]
         }

@@ -26,16 +26,15 @@ import {
   FileUp,
   BookOpen,
   Brain,
-  List,
   ArrowLeft,
-  Settings,
   BookCopy,
   VideoIcon,
   FileTextIcon,
   LayoutDashboard,
   ListChecks,
-  Flame, // Added for streak
-  Zap, // For generate MCQs button
+  Flame,
+  Zap,
+  ChevronDown,
 } from "lucide-react";
 import { StudyContentView } from "./study-content-view";
 import { generateFlashcards } from "@/lib/ai/features/flashcards";
@@ -578,7 +577,7 @@ function GamifiedRoadmapView({
                   ) : currentSectionDisplayCompleted ? (
                     <CheckCircle className="h-7 w-7 text-green-500 mr-3 flex-shrink-0" />
                   ) : (
-                    <div className="h-7 w-7 border-2 border-dashed border-blue-400 rounded-full mr-3 flex-shrink-0 animate-pulse" />
+                    <div className="h-7 w-7 border-2 border-dashed border-amber-400 rounded-full mr-3 flex-shrink-0 animate-pulse" />
                   )}
                   <CardTitle
                     className={`text-xl ${
@@ -602,7 +601,7 @@ function GamifiedRoadmapView({
                               sectionIndex
                             )
                           }
-                          className="text-left hover:text-blue-600 transition-colors cursor-pointer underline decoration-dotted"
+                          className="text-left hover:text-primary transition-colors cursor-pointer underline decoration-dotted"
                           title={`Practice ${allTopicMcqs.length} MCQs from all subtopics in this section`}
                         >
                           {section.title}
@@ -765,7 +764,7 @@ function GamifiedRoadmapView({
                                   <div
                                     className={`h-5 w-5 border-2 ${
                                       canAttemptCurrentTopic
-                                        ? "border-blue-500 animate-pulse"
+                                        ? "border-amber-500 animate-pulse"
                                         : "border-slate-400"
                                     } rounded-full mr-2 flex-shrink-0`}
                                   />
@@ -914,9 +913,10 @@ export function ProjectView() {
     clearVideoProcessingResult,
     setDocumentNotes,
     setVideoNotes,
+    setDocumentFileName,
     gamificationEnabled,
     setGamificationEnabled,
-    currentStreak, // Added for display
+    currentStreak,
   } = useFlashcardStore();
   const providers = useFlashcardStore((s) => s.providers);
   const modelRouting = useFlashcardStore((s) => s.modelRouting);
@@ -930,6 +930,7 @@ export function ProjectView() {
     [providers, modelRouting]
   );
   const [activeTab, setActiveTab] = useState<string>("upload");
+  const [generatorExpanded, setGeneratorExpanded] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isGeneratingStudyContent, setIsGeneratingStudyContent] =
     useState(false);
@@ -959,7 +960,7 @@ export function ProjectView() {
     router.push("/app");
   };
 
-  const handleDocumentProcessingComplete = async (documentText: string) => {
+  const handleDocumentProcessingComplete = async (documentText: string, fileName: string) => {
     const defaultProviderId = modelRouting.default.providerId;
     if (!providers[defaultProviderId].apiKey) {
       toast.error("Missing API Key", {
@@ -983,12 +984,11 @@ export function ProjectView() {
       activeProject?.studyGuide;
 
     if (hasExistingContent) {
-      // Append to existing content
       useFlashcardStore.getState().appendDocumentContent(documentText);
     } else {
-      // First time - set content directly
       useFlashcardStore.getState().setDocumentContent(documentText);
     }
+    if (fileName) setDocumentFileName(fileName);
     setIsGeneratingStudyContent(true);
     useFlashcardStore.getState().setIsProcessing(true);
     const toastId = toast.loading("Generating All Study Content...", {
@@ -1296,25 +1296,11 @@ export function ProjectView() {
                 }
               />
               <TabButton
-                isActive={activeTab === "generateFlashcards"}
-                onClick={() => setActiveTab("generateFlashcards")}
-                icon={<BookOpen className="h-4 w-4" />}
-                label="Generate Flashcards"
-                disabled={!activeProject.pdfContent}
-              />
-              <TabButton
-                isActive={activeTab === "study"}
-                onClick={() => setActiveTab("study")}
+                isActive={activeTab === "flashcards"}
+                onClick={() => setActiveTab("flashcards")}
                 icon={<Brain className="h-4 w-4" />}
-                label="Study Flashcards"
-                disabled={activeProject.flashcards.length === 0}
-              />
-              <TabButton
-                isActive={activeTab === "list"}
-                onClick={() => setActiveTab("list")}
-                icon={<List className="h-4 w-4" />}
-                label="View All Cards"
-                disabled={activeProject.flashcards.length === 0}
+                label="Flashcards"
+                disabled={!activeProject.pdfContent && activeProject.flashcards.length === 0}
               />
             </div>
           </div>
@@ -1333,9 +1319,15 @@ export function ProjectView() {
                           Upload PDF, DOCX, or TXT files to generate study
                           content and flashcards.
                         </CardDescription>
+                        {activeProject.documentFileName && (
+                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                            <FileTextIcon className="h-3 w-3" />
+                            Loaded: {activeProject.documentFileName}
+                          </p>
+                        )}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {activeProject.flashcards.length} cards in this project
+                        {activeProject.flashcards.length} cards
                       </div>
                     </div>
                   </CardHeader>
@@ -1422,26 +1414,42 @@ export function ProjectView() {
               <StudyContentView studyGuide={activeProject.studyGuide} />
             )}
 
-            {activeTab === "generateFlashcards" && activeProject.pdfContent && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <BookOpen className="h-5 w-5 mr-2" />
-                    Generate Flashcards
-                  </CardTitle>
-                  <CardDescription>
-                    Generate flashcards from the processed document content.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <FlashcardGenerator />
-                </CardContent>
-              </Card>
+            {activeTab === "flashcards" && (
+              <div className="space-y-6">
+                {activeProject.pdfContent && (
+                  <Card>
+                    <CardHeader
+                      className="cursor-pointer select-none pb-3"
+                      onClick={() => setGeneratorExpanded(!generatorExpanded)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="flex items-center text-base">
+                          <BookOpen className="h-4 w-4 mr-2" />
+                          Generate Flashcards
+                        </CardTitle>
+                        <ChevronDown
+                          className={`h-4 w-4 text-muted-foreground transition-transform ${
+                            generatorExpanded ? "rotate-180" : ""
+                          }`}
+                        />
+                      </div>
+                      {!generatorExpanded && (
+                        <CardDescription className="mt-1">
+                          Generate new cards from your uploaded document
+                        </CardDescription>
+                      )}
+                    </CardHeader>
+                    {generatorExpanded && (
+                      <CardContent className="pt-0">
+                        <FlashcardGenerator />
+                      </CardContent>
+                    )}
+                  </Card>
+                )}
+                <FlashcardSession />
+                {activeProject.flashcards.length > 0 && <FlashcardList />}
+              </div>
             )}
-
-            {activeTab === "study" && <FlashcardSession />}
-
-            {activeTab === "list" && <FlashcardList />}
           </div>
         </>
       )}{" "}
