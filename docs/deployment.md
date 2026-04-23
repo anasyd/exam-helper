@@ -1,7 +1,8 @@
 # Deployment Guide
 
-Frontend is hosted on **Vercel** at `yourdomain.com`.  
-Backend is hosted on **Coolify** (your own server) at `api.yourdomain.com`.
+> **Self-hosting the full stack?** See [self-hosting.md](self-hosting.md) for the Docker Compose + Coolify guide — auto-generated secrets, one-compose setup, no Vercel required.
+
+This guide covers the split deployment: frontend on **Vercel**, backend on **Coolify** (your own server).
 
 No Docker Compose needed — Coolify manages the container from the `server/Dockerfile` directly.
 
@@ -149,3 +150,15 @@ Run through this checklist after both services are live:
 
 **Coolify build fails with "Invalid env"**  
 → One or more environment variables is missing or wrong format. The server logs will print exactly which field failed.
+
+---
+
+## Using prebuilt GHCR images
+
+Instead of building from source in Coolify, you can pull the published images directly. In your Coolify service settings, set the image to:
+
+```
+ghcr.io/anasyd/exam-helper-server:latest
+```
+
+Switch the resource type to **Docker Image** (not Docker from repo), paste the image name, and set the same environment variables from step 4c. This skips the build step entirely — faster deploys, no repo connection needed.
