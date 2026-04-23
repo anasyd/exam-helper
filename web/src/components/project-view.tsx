@@ -500,27 +500,7 @@ function GamifiedRoadmapView({
     }
   };
 
-  const handlePracticeSectionMCQs = (
-    sectionTitle: string,
-    sectionIndex: number
-  ) => {
-    if (!project) return;
 
-    // Get all MCQs from all subtopics in this section
-    const allTopicMcqs = project.flashcards.filter(
-      (card) =>
-        card.sourceSectionTitle === sectionTitle && card.sourceTopicTitle // Only topic-level MCQs
-    );
-
-    if (allTopicMcqs.length > 0) {
-      setQuizCards(allTopicMcqs);
-      setQuizTitle(`${sectionTitle} (All Subtopics)`);
-      setCurrentQuizContext({ sectionIndex, topicIndex: -1 }); // -1 indicates section-level
-      setShowQuizView(true);
-    } else {
-      toast.info("No MCQs available for this section to practice.");
-    }
-  };
 
   if (showQuizView && currentQuizContext) {
     return (
@@ -543,358 +523,195 @@ function GamifiedRoadmapView({
 
   let overallPreviousNodeCompleted = true;
 
+  const totalTopics = studyGuide.sections.reduce(
+    (acc, s) => acc + (s.topics?.length ?? 0),
+    0
+  );
+  const completedTopics = studyGuide.sections.reduce(
+    (acc, s) => acc + (s.topics?.filter((t) => t.isCompleted).length ?? 0),
+    0
+  );
+
   return (
-    <div className="space-y-6 pb-12">
-      <Card className="shadow-xl sticky top-4 z-10 backdrop-blur-xl bg-background/20 border-white/20 shadow-black/10">
-        <CardHeader className="text-center pb-2">
-          <CardTitle className="text-3xl font-bold tracking-tight text-foreground/90">
-            {studyGuide.title || "Learning Roadmap"}
-          </CardTitle>
-          <CardDescription className="text-muted-foreground/80">
-            Your personalized journey through the material. Complete topics to
-            earn XP and maintain your streak!
-          </CardDescription>
-        </CardHeader>
-      </Card>
-
-      {studyGuide.sections.map((section, sectionIndex) => {
-        const isCurrentSectionLocked = !overallPreviousNodeCompleted;
-        const currentSectionDisplayCompleted = !!section.isCompleted;
-
-        let previousTopicInSectionCompleted = true;
-
-        const sectionCardContent = (
+    <div className="pb-16">
+      {/* Stats bar */}
+      <div className="flex items-center justify-center gap-10 mb-10 py-5 rounded-2xl bg-muted/50 border border-border/40">
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-amber-500">{xp || 0}</p>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mt-0.5">XP</p>
+        </div>
+        <div className="w-px h-10 bg-border" />
+        <div className="text-center">
+          <p className="text-3xl font-extrabold text-foreground">{completedTopics}<span className="text-muted-foreground text-lg font-normal">/{totalTopics}</span></p>
+          <p className="text-xs text-muted-foreground uppercase tracking-widest mt-0.5">Topics</p>
+        </div>
+        {completedTopics > 0 && (
           <>
-            <CardHeader className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  {isCurrentSectionLocked ? (
-                    <Lock className="h-7 w-7 text-slate-400 mr-3 flex-shrink-0" />
-                  ) : currentSectionDisplayCompleted ? (
-                    <CheckCircle className="h-7 w-7 text-green-500 mr-3 flex-shrink-0" />
-                  ) : (
-                    <div className="h-7 w-7 border-2 border-dashed border-amber-400 rounded-full mr-3 flex-shrink-0 animate-pulse" />
-                  )}
-                  <CardTitle
-                    className={`text-xl ${
-                      isCurrentSectionLocked ? "text-slate-500" : ""
-                    }`}
-                  >
-                    {(() => {
-                      // Check for MCQs across all subtopics instead of section-level MCQs
-                      const allTopicMcqs = project.flashcards.filter(
-                        (f) =>
-                          f.sourceSectionTitle === section.title &&
-                          f.sourceTopicTitle // Only topic-level MCQs
-                      );
-                      const hasMcqs = allTopicMcqs.length > 0;
+            <div className="w-px h-10 bg-border" />
+            <div className="text-center">
+              <p className="text-3xl font-extrabold text-green-500">{Math.round((completedTopics / totalTopics) * 100)}%</p>
+              <p className="text-xs text-muted-foreground uppercase tracking-widest mt-0.5">Done</p>
+            </div>
+          </>
+        )}
+      </div>
 
-                      return hasMcqs && !isCurrentSectionLocked ? (
-                        <button
-                          onClick={() =>
-                            handlePracticeSectionMCQs(
-                              section.title,
-                              sectionIndex
-                            )
-                          }
-                          className="text-left hover:text-primary transition-colors cursor-pointer underline decoration-dotted"
-                          title={`Practice ${allTopicMcqs.length} MCQs from all subtopics in this section`}
-                        >
-                          {section.title}
-                        </button>
-                      ) : (
-                        section.title
-                      );
-                    })()}
-                  </CardTitle>
+      {/* Path */}
+      <div className="relative mx-auto" style={{ maxWidth: 340 }}>
+        {/* Vertical path line */}
+        <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-border/60 -translate-x-1/2 pointer-events-none" />
+
+        {studyGuide.sections.map((section, sectionIndex) => {
+          const isCurrentSectionLocked = !overallPreviousNodeCompleted;
+          const currentSectionDisplayCompleted =
+            !!section.isCompleted ||
+            (section.topics?.length
+              ? section.topics.every((t) => !!t.isCompleted)
+              : false);
+
+          let previousTopicInSectionCompleted = true;
+
+          const sectionEl = (
+            <div key={`section-${sectionIndex}`} id={`section-${sectionIndex}`}>
+              {/* Section banner pill */}
+              <div className="relative z-10 flex justify-center my-6">
+                <div
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-bold border shadow-sm select-none
+                    ${isCurrentSectionLocked
+                      ? "bg-muted text-muted-foreground border-border"
+                      : currentSectionDisplayCompleted
+                      ? "bg-green-500/15 text-green-700 dark:text-green-400 border-green-500/40"
+                      : "bg-primary/10 text-primary border-primary/30"
+                    }`}
+                >
+                  {isCurrentSectionLocked ? (
+                    <Lock className="h-3.5 w-3.5" />
+                  ) : currentSectionDisplayCompleted ? (
+                    <CheckCircle className="h-3.5 w-3.5" />
+                  ) : (
+                    <Zap className="h-3.5 w-3.5" />
+                  )}
+                  {section.title}
+                  {section.xpAwardedOnCompletion && !currentSectionDisplayCompleted && !isCurrentSectionLocked && (
+                    <span className="ml-1 text-xs opacity-70">+{section.xpAwardedOnCompletion} XP</span>
+                  )}
                 </div>
               </div>
-              {!isCurrentSectionLocked && (
-                <div className="pl-10 flex items-center justify-between">
-                  <CardDescription>
-                    {(() => {
-                      // Count MCQs across all subtopics in this section
-                      const allTopicMcqs = project.flashcards.filter(
-                        (f) =>
-                          f.sourceSectionTitle === section.title &&
-                          f.sourceTopicTitle // Only topic-level MCQs
-                      );
 
-                      const totalMcqCount = allTopicMcqs.length;
-                      const subtopicsWithMcqs =
-                        section.topics?.filter((topic) => {
-                          const topicMcqs = project.flashcards.filter(
-                            (f) =>
-                              f.sourceSectionTitle === section.title &&
-                              f.sourceTopicTitle === topic.title
-                          );
-                          return topicMcqs.length > 0;
-                        }).length || 0;
+              {/* Topics */}
+              {!isCurrentSectionLocked && section.topics?.map((topic, topicIndex) => {
+                const isTopicLocked = !previousTopicInSectionCompleted;
+                const topicCompleted = !!topic.isCompleted;
+                const topicMcqs = project.flashcards.filter(
+                  (f) =>
+                    f.sourceSectionTitle === section.title &&
+                    f.sourceTopicTitle === topic.title
+                );
+                const hasMcqs = topicMcqs.length > 0;
+                const canAttempt = !isTopicLocked && !topicCompleted && hasMcqs;
+                const isGeneratingThis =
+                  generatingMcqId === `topic-mcq-${sectionIndex}-${topicIndex}`;
 
-                      return totalMcqCount > 0 ? (
-                        <>
-                          MCQs ({totalMcqCount} total across {subtopicsWithMcqs}{" "}
-                          subtopic{subtopicsWithMcqs !== 1 ? "s" : ""})
-                        </>
-                      ) : (
-                        <>MCQs not generated yet</>
-                      );
-                    })()}
-                    {section.xpAwardedOnCompletion &&
-                      !currentSectionDisplayCompleted && (
-                        <span className="ml-2 text-xs text-amber-600">
-                          +{section.xpAwardedOnCompletion} XP
-                        </span>
-                      )}
-                    {currentSectionDisplayCompleted &&
-                      section.xpAwardedOnCompletion && (
-                        <span className="ml-2 text-xs text-green-600">
-                          +{section.xpAwardedOnCompletion} XP Earned!
-                        </span>
-                      )}
-                  </CardDescription>
-                  {(() => {
-                    // Check if any subtopic has MCQs generated
-                    const hasAnySubtopicMcqs =
-                      section.topics?.some((topic) => {
-                        const topicMcqs = project.flashcards.filter(
-                          (f) =>
-                            f.sourceSectionTitle === section.title &&
-                            f.sourceTopicTitle === topic.title
-                        );
-                        return topicMcqs.length > 0;
-                      }) || false;
+                if (!isTopicLocked) {
+                  previousTopicInSectionCompleted = topicCompleted;
+                }
 
-                    // Only show generate button if no subtopic has MCQs
-                    return !hasAnySubtopicMcqs &&
-                      section.topics &&
-                      section.topics.length > 0 ? (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() =>
-                          handleGenerateMCQs(
-                            section.content ?? "",
-                            section.title,
-                            true,
-                            sectionIndex
-                          )
-                        }
-                        disabled={
-                          generatingMcqId === `section-mcq-${sectionIndex}`
-                        }
-                        className="ml-4"
-                      >
-                        {generatingMcqId === `section-mcq-${sectionIndex}` ? (
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        ) : (
-                          <Zap className="mr-2 h-4 w-4" />
-                        )}
-                        Generate MCQs for All Subtopics
-                      </Button>
-                    ) : null;
-                  })()}
-                </div>
-              )}
-            </CardHeader>
-
-            {section.topics &&
-              section.topics.length > 0 &&
-              !isCurrentSectionLocked && (
-                <CardContent className="pl-10 pr-4 pb-4 space-y-3">
-                  <div className="relative pl-5">
-                    {section.topics.length > 0 && (
-                      <div className="absolute left-[12px] top-2 bottom-2 w-0.5 bg-slate-300 dark:bg-slate-700 -translate-x-1/2"></div>
-                    )}
-                    {section.topics.map((topic, topicIndex) => {
-                      const isCurrentTopicLocked =
-                        !previousTopicInSectionCompleted;
-                      const canAttemptCurrentTopic =
-                        !isCurrentTopicLocked &&
-                        !topic.isCompleted &&
-                        !!topic.mcqsGenerated;
-
-                      const topicNode = (
-                        <div
-                          key={`topic-roadmap-${sectionIndex}-${topicIndex}`}
-                          id={`topic-${sectionIndex}-${topicIndex}`}
-                          className="relative mb-3"
-                        >
-                          <div className="absolute left-[calc(-8px - 0.125rem)] top-1/2 w-2.5 h-2.5 bg-slate-300 dark:bg-slate-700 rounded-full -translate-y-1/2 border-2 border-background"></div>
-                          <Card
-                            className={`p-3 transition-colors
-                                    ${
-                                      isCurrentTopicLocked
-                                        ? "opacity-60 bg-slate-50 dark:bg-slate-700/50 cursor-not-allowed"
-                                        : topic.isCompleted
-                                        ? "bg-green-100 dark:bg-green-800/40 border-green-400 hover:bg-green-200 dark:hover:bg-green-800/60"
-                                        : canAttemptCurrentTopic
-                                        ? "bg-white dark:bg-slate-700/30 hover:bg-slate-100 dark:hover:bg-slate-700/50 cursor-pointer"
-                                        : "bg-white dark:bg-slate-700/30 opacity-70"
-                                    }`}
-                            onClick={
-                              canAttemptCurrentTopic
-                                ? () =>
-                                    handleTopicClick(
-                                      sectionIndex,
-                                      topicIndex,
-                                      false
-                                    )
-                                : isCurrentTopicLocked
-                                ? () =>
-                                    handleTopicClick(
-                                      sectionIndex,
-                                      topicIndex,
-                                      true
-                                    )
-                                : undefined
-                            }
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center">
-                                {isCurrentTopicLocked ? (
-                                  <Lock className="h-5 w-5 text-slate-400 mr-2 flex-shrink-0" />
-                                ) : topic.isCompleted ? (
-                                  <CheckCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0" />
-                                ) : (
-                                  <div
-                                    className={`h-5 w-5 border-2 ${
-                                      canAttemptCurrentTopic
-                                        ? "border-amber-500 animate-pulse"
-                                        : "border-slate-400"
-                                    } rounded-full mr-2 flex-shrink-0`}
-                                  />
-                                )}
-                                <h5
-                                  className={`font-semibold ${
-                                    isCurrentTopicLocked ? "text-slate-500" : ""
-                                  }`}
-                                >
-                                  {topic.title}
-                                </h5>
-                              </div>
-                            </div>
-                            {!isCurrentTopicLocked && (
-                              <div className="pl-7 space-y-1">
-                                <div className="flex items-center justify-between">
-                                  <p className="text-xs text-muted-foreground">
-                                    {(() => {
-                                      const topicMcqs =
-                                        project.flashcards.filter(
-                                          (f) =>
-                                            f.sourceSectionTitle ===
-                                              section.title &&
-                                            f.sourceTopicTitle === topic.title
-                                        );
-                                      const hasMcqs = topicMcqs.length > 0;
-                                      return hasMcqs ? (
-                                        <>MCQs ({topicMcqs.length} available)</>
-                                      ) : (
-                                        <>MCQs not generated yet</>
-                                      );
-                                    })()}
-                                    {topic.xpAwardedOnCompletion &&
-                                      !topic.isCompleted && (
-                                        <span className="ml-2 text-xs text-amber-600">
-                                          +{topic.xpAwardedOnCompletion} XP
-                                        </span>
-                                      )}
-                                    {topic.isCompleted &&
-                                      topic.xpAwardedOnCompletion && (
-                                        <span className="ml-2 text-xs text-green-600">
-                                          +{topic.xpAwardedOnCompletion} XP
-                                          Earned!
-                                        </span>
-                                      )}
-                                  </p>
-                                  {(() => {
-                                    const topicMcqs = project.flashcards.filter(
-                                      (f) =>
-                                        f.sourceSectionTitle ===
-                                          section.title &&
-                                        f.sourceTopicTitle === topic.title
-                                    );
-                                    const hasMcqs = topicMcqs.length > 0;
-
-                                    // Only show generate button if no MCQs exist in store
-                                    return !hasMcqs ? (
-                                      <Button
-                                        variant="outline"
-                                        size="sm"
-                                        onClick={(e) => {
-                                          e.stopPropagation(); // Prevent card click
-                                          handleGenerateMCQs(
-                                            topic.content ?? "",
-                                            topic.title,
-                                            false,
-                                            sectionIndex,
-                                            topicIndex
-                                          );
-                                        }}
-                                        disabled={
-                                          generatingMcqId ===
-                                          `topic-mcq-${sectionIndex}-${topicIndex}`
-                                        }
-                                        className="ml-2 h-6 text-xs px-2"
-                                      >
-                                        {generatingMcqId ===
-                                        `topic-mcq-${sectionIndex}-${topicIndex}` ? (
-                                          <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-                                        ) : (
-                                          <Zap className="mr-1 h-3 w-3" />
-                                        )}
-                                        Generate
-                                      </Button>
-                                    ) : null;
-                                  })()}
-                                </div>
-                              </div>
-                            )}
-                          </Card>
-                        </div>
-                      );
-                      if (!isCurrentTopicLocked) {
-                        previousTopicInSectionCompleted = !!topic.isCompleted;
+                return (
+                  <div
+                    key={`topic-${sectionIndex}-${topicIndex}`}
+                    id={`topic-${sectionIndex}-${topicIndex}`}
+                    className="relative flex flex-col items-center mb-10"
+                  >
+                    {/* Circle node */}
+                    <button
+                      disabled={isTopicLocked || topicCompleted}
+                      onClick={() =>
+                        canAttempt
+                          ? handleTopicClick(sectionIndex, topicIndex, false)
+                          : isTopicLocked
+                          ? handleTopicClick(sectionIndex, topicIndex, true)
+                          : undefined
                       }
-                      return topicNode;
-                    })}
-                  </div>
-                </CardContent>
-              )}
-          </>
-        );
-        if (!isCurrentSectionLocked) {
-          // eslint-disable-next-line react-hooks/immutability -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
-          overallPreviousNodeCompleted =
-            currentSectionDisplayCompleted ||
-            (section.topics && section.topics.length > 0
-              ? section.topics.every((t) => !!t.isCompleted)
-              : true);
-        }
-
-        return (
-          <Card
-            key={`section-roadmap-${sectionIndex}`}
-            id={`section-${sectionIndex}`}
-            className={`transition-all duration-300 ease-in-out transform hover:scale-[1.02]
-                        ${
-                          isCurrentSectionLocked
-                            ? "opacity-50 cursor-not-allowed bg-slate-100 dark:bg-slate-800"
-                            : currentSectionDisplayCompleted
-                            ? "border-green-500 border-2 shadow-green-200/50 shadow-md"
-                            : "border-slate-300 dark:border-slate-700"
+                      className={`relative z-10 w-20 h-20 rounded-full flex items-center justify-center border-4 shadow-lg transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                        ${isTopicLocked
+                          ? "bg-muted border-border cursor-not-allowed"
+                          : topicCompleted
+                          ? "bg-green-500 border-green-700 shadow-green-500/30"
+                          : canAttempt
+                          ? "bg-amber-500 border-amber-700 shadow-amber-500/40 hover:scale-110 hover:shadow-amber-500/60 cursor-pointer"
+                          : "bg-muted/80 border-border/60 opacity-70"
                         }`}
-          >
-            {sectionCardContent}
-          </Card>
-        );
-      })}
-      <Card className="mt-6 text-center p-4 bg-muted/30">
-        <p className="text-sm text-muted-foreground">
-          Further gamification elements like streaks will be built upon this
-          structure.
-        </p>
-      </Card>
+                    >
+                      {isTopicLocked ? (
+                        <Lock className="h-7 w-7 text-muted-foreground" />
+                      ) : topicCompleted ? (
+                        <CheckCircle className="h-8 w-8 text-white" />
+                      ) : canAttempt ? (
+                        <Brain className="h-8 w-8 text-white" />
+                      ) : (
+                        <Zap className="h-7 w-7 text-muted-foreground" />
+                      )}
+                    </button>
+
+                    {/* Label */}
+                    <div className="mt-3 text-center px-2" style={{ maxWidth: 160 }}>
+                      <p className={`text-sm font-semibold leading-snug ${isTopicLocked ? "text-muted-foreground" : "text-foreground"}`}>
+                        {topic.title}
+                      </p>
+                      {!isTopicLocked && (
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {hasMcqs ? `${topicMcqs.length} questions` : "No questions yet"}
+                          {topic.xpAwardedOnCompletion && !topicCompleted && (
+                            <span className="ml-1 text-amber-500 font-medium">· +{topic.xpAwardedOnCompletion} XP</span>
+                          )}
+                          {topicCompleted && topic.xpAwardedOnCompletion && (
+                            <span className="ml-1 text-green-500 font-medium">· +{topic.xpAwardedOnCompletion} XP earned</span>
+                          )}
+                        </p>
+                      )}
+                      {/* Generate button for topics without MCQs */}
+                      {!isTopicLocked && !topicCompleted && !hasMcqs && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleGenerateMCQs(
+                              topic.content ?? "",
+                              topic.title,
+                              false,
+                              sectionIndex,
+                              topicIndex
+                            );
+                          }}
+                          disabled={isGeneratingThis}
+                          className="mt-2 inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-xs font-medium border border-primary/20 transition-colors disabled:opacity-50"
+                        >
+                          {isGeneratingThis ? (
+                            <Loader2 className="h-3 w-3 animate-spin" />
+                          ) : (
+                            <Zap className="h-3 w-3" />
+                          )}
+                          {isGeneratingThis ? "Generating…" : "Generate questions"}
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+
+          if (!isCurrentSectionLocked) {
+            overallPreviousNodeCompleted = currentSectionDisplayCompleted;
+          }
+
+          return sectionEl;
+        })}
+
+        {/* End of path marker */}
+        <div className="relative z-10 flex justify-center mt-4 mb-8">
+          <div className="w-6 h-6 rounded-full bg-border" />
+        </div>
+      </div>
     </div>
   );
 }
