@@ -42,8 +42,12 @@ export function AuthDropdown() {
   const initials = initialsFrom(user.name ?? null, user.email);
 
   async function handleSignOut() {
-    await authClient.signOut();
-    toast.success("Signed out");
+    try {
+      await authClient.signOut();
+      toast.success("Signed out");
+    } catch {
+      // sign-out errors are non-fatal
+    }
     router.replace("/");
   }
 
@@ -88,7 +92,7 @@ export function AuthDropdown() {
           Settings
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut}>
+        <DropdownMenuItem onSelect={() => void handleSignOut()}>
           <LogOut className="mr-2 h-4 w-4" />
           Sign out
         </DropdownMenuItem>

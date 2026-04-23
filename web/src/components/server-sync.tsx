@@ -10,6 +10,7 @@ import {
   batchUpsertProjects,
   type ProjectSummary,
 } from "@/lib/api/projects";
+import { fetchStats, putStats } from "@/lib/api/stats";
 
 const DEBOUNCE_MS = 2_000;
 
@@ -34,9 +35,11 @@ export function ServerSync() {
 
   const initializedRef = useRef(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const statsDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   // projectId → updatedAt timestamp, tracks what we've pushed to server
   const syncedAtRef = useRef<Map<string, number>>(new Map());
   const prevIdsRef = useRef<Set<string>>(new Set());
+  const prevStreakRef = useRef<{ currentStreak: number; lastStudiedDate: string | null } | null>(null);
 
   // On first login: pull server state, merge, and push any local-only projects
   useEffect(() => {
@@ -78,6 +81,28 @@ export function ServerSync() {
           syncedAtRef.current.set(p.id, new Date(p.updatedAt).getTime());
         }
         prevIdsRef.current = new Set(current.map((p) => p.id));
+
+        // Sync streak: server wins if it has a more recent lastStudiedDate, else keep local
+        try {
+          const serverStats = await fetchStats();
+          const localStreak = useFlashcardStore.getState().currentStreak;
+          const localDate = useFlashcardStore.getState().lastStudiedDate;
+          const serverDate = serverStats.lastStudiedDate;
+          const serverIsNewer = serverDate && (!localDate || serverDate > localDate);
+          if (serverIsNewer) {
+            useFlashcardStore.setState({
+              currentStreak: serverStats.currentStreak,
+              lastStudiedDate: serverStats.lastStudiedDate,
+            });
+          } else if (localStreak > 0 || localDate) {
+            // Push local state to server so it's backed up
+            await putStats({ currentStreak: localStreak, lastStudiedDate: localDate });
+          }
+          const s = useFlashcardStore.getState();
+          prevStreakRef.current = { currentStreak: s.currentStreak, lastStudiedDate: s.lastStudiedDate };
+        } catch (err) {
+          console.error("[server-sync] streak sync failed:", err);
+        }
       } catch (err) {
         console.error("[server-sync] initial merge failed:", err);
       }
@@ -137,6 +162,30 @@ export function ServerSync() {
     return () => {
       unsub();
       if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [userId]);
+
+  // Debounce-push streak changes to server
+  useEffect(() => {
+    if (!userId) return;
+
+    const unsub = useFlashcardStore.subscribe((state) => {
+      const { currentStreak, lastStudiedDate } = state;
+      const prev = prevStreakRef.current;
+      if (prev && prev.currentStreak === currentStreak && prev.lastStudiedDate === lastStudiedDate) return;
+      prevStreakRef.current = { currentStreak, lastStudiedDate };
+
+      if (statsDebounceRef.current) clearTimeout(statsDebounceRef.current);
+      statsDebounceRef.current = setTimeout(() => {
+        void putStats({ currentStreak, lastStudiedDate }).catch((e) =>
+          console.warn("[server-sync] streak push failed:", e),
+        );
+      }, DEBOUNCE_MS);
+    });
+
+    return () => {
+      unsub();
+      if (statsDebounceRef.current) clearTimeout(statsDebounceRef.current);
     };
   }, [userId]);
 

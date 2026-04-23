@@ -11,6 +11,7 @@ import { healthRouter } from "./routes/health.js";
 import { meRouter } from "./routes/me.js";
 import { projectsRouter } from "./routes/projects.js";
 import { filesRouter } from "./routes/files.js";
+import { statsRouter } from "./routes/stats.js";
 
 async function main(): Promise<void> {
   await connectDb();
@@ -30,6 +31,7 @@ async function main(): Promise<void> {
 
   app.use("/api/health", healthRouter);
   app.use("/api/me", meRouter);
+  app.use("/api/me/stats", statsRouter);
   app.use("/api/projects", projectsRouter);
   app.use("/api/files", filesRouter);
 
