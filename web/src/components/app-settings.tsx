@@ -118,7 +118,7 @@ function OpenRouterModelInput() {
             value={input}
             onChange={(e) => handleChange(e.target.value)}
             placeholder="anthropic/claude-3-5-sonnet"
-            className="pr-8"
+            className="rounded-full pr-8"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2">
             {checkState === "checking" && <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />}
@@ -126,7 +126,7 @@ function OpenRouterModelInput() {
             {checkState === "invalid" && <XCircle className="h-3.5 w-3.5 text-red-500" />}
           </div>
         </div>
-        <Button size="sm" onClick={handleAdd} disabled={checkState !== "valid"}>
+        <Button size="sm" onClick={handleAdd} disabled={checkState !== "valid"} className="rounded-full">
           <Plus className="h-3.5 w-3.5" />
         </Button>
       </div>
@@ -139,7 +139,7 @@ function OpenRouterModelInput() {
       {customModels.length > 0 && (
         <div className="space-y-1.5">
           {customModels.map((m) => (
-            <div key={m} className="flex items-center justify-between rounded border px-3 py-1.5 text-xs">
+            <div key={m} className="flex items-center justify-between rounded-full border px-3 py-1.5 text-xs">
               <code className="font-mono">{m}</code>
               <button onClick={() => removeModel(m)} className="text-muted-foreground hover:text-red-500 transition-colors">
                 <Trash2 className="h-3.5 w-3.5" />
@@ -227,9 +227,10 @@ function ProviderCard({ providerId }: { providerId: ProviderId }) {
         value={localKey}
         onChange={(e) => setLocalKey(e.target.value)}
         placeholder={`${provider.displayName} API key`}
+        className="rounded-full"
       />
       <div className="flex gap-2 items-center flex-wrap">
-        <Button onClick={saveKey} size="sm">
+        <Button onClick={saveKey} size="sm" className="rounded-full">
           Save
         </Button>
         <Button
@@ -237,11 +238,12 @@ function ProviderCard({ providerId }: { providerId: ProviderId }) {
           size="sm"
           variant="outline"
           disabled={!localKey.trim() || testing}
+          className="rounded-full"
         >
           {testing ? "Testing…" : "Test connection"}
         </Button>
         {stored.apiKey && (
-          <Button onClick={clearKey} size="sm" variant="ghost">
+          <Button onClick={clearKey} size="sm" variant="ghost" className="rounded-full">
             Clear
           </Button>
         )}
@@ -548,6 +550,7 @@ export function AppSettings({ open: externalOpen, onOpenChange: externalOnOpenCh
               variant="outline"
               size="sm"
               disabled={projects.length === 0}
+              className="rounded-full"
             >
               <Download className="h-4 w-4 mr-2" /> Export all projects
             </Button>
@@ -555,6 +558,7 @@ export function AppSettings({ open: externalOpen, onOpenChange: externalOnOpenCh
               onClick={() => importFileInputRef.current?.click()}
               variant="outline"
               size="sm"
+              className="rounded-full"
             >
               <Upload className="h-4 w-4 mr-2" /> Import projects
             </Button>
@@ -569,7 +573,7 @@ export function AppSettings({ open: externalOpen, onOpenChange: externalOnOpenCh
         </div>
 
         <DialogFooter>
-          <Button onClick={() => setIsDialogOpen(false)}>Close</Button>
+          <Button onClick={() => setIsDialogOpen(false)} className="rounded-full">Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
