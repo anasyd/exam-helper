@@ -7,24 +7,25 @@ export function LogoIcon({ size = 20 }: { size?: number }) {
       height={size}
       aria-hidden="true"
     >
-      {/* Open book from above — left page (light side) */}
-      <path d="M16 2 L2 16 L16 30 Z" fill="#c99252" />
-      {/* Right page (shadow side) */}
-      <path d="M16 2 L30 16 L16 30 Z" fill="#9e6830" />
-      {/* Spine */}
-      <line x1="16" y1="2" x2="16" y2="30" stroke="#6b4418" strokeWidth="1.5" strokeLinecap="round" />
-      {/* Left page lines */}
-      <line x1="15.5" y1="10" x2="8"  y2="12.5" stroke="rgba(255,255,255,0.38)" strokeWidth="1" strokeLinecap="round" />
-      <line x1="15.5" y1="14" x2="5"  y2="15"   stroke="rgba(255,255,255,0.38)" strokeWidth="1" strokeLinecap="round" />
-      <line x1="15.5" y1="18" x2="6"  y2="18.5" stroke="rgba(255,255,255,0.38)" strokeWidth="1" strokeLinecap="round" />
-      <line x1="15.5" y1="22" x2="9"  y2="21.5" stroke="rgba(255,255,255,0.30)" strokeWidth="1" strokeLinecap="round" />
-      {/* Right page lines */}
-      <line x1="16.5" y1="10" x2="24" y2="12.5" stroke="rgba(0,0,0,0.18)" strokeWidth="1" strokeLinecap="round" />
-      <line x1="16.5" y1="14" x2="27" y2="15"   stroke="rgba(0,0,0,0.18)" strokeWidth="1" strokeLinecap="round" />
-      <line x1="16.5" y1="18" x2="26" y2="18.5" stroke="rgba(0,0,0,0.18)" strokeWidth="1" strokeLinecap="round" />
-      <line x1="16.5" y1="22" x2="23" y2="21.5" stroke="rgba(0,0,0,0.14)" strokeWidth="1" strokeLinecap="round" />
-      {/* Spark at apex */}
-      <circle cx="16" cy="2" r="2" fill="#f5c97a" />
+      <defs>
+        <linearGradient id="lbar" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%"   stopColor="#e8b870" />
+          <stop offset="100%" stopColor="#8a5020" />
+        </linearGradient>
+        <radialGradient id="ldot" cx="50%" cy="50%" r="50%">
+          <stop offset="0%"   stopColor="#fff4d6" />
+          <stop offset="60%"  stopColor="#fcd98a" />
+          <stop offset="100%" stopColor="#c99252" />
+        </radialGradient>
+        <filter id="lglow" x="-80%" y="-80%" width="260%" height="260%">
+          <feGaussianBlur stdDeviation="1.4" result="blur" />
+          <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+        </filter>
+      </defs>
+      <rect x="4" y="5.5"  width="24" height="5" rx="2.5" fill="url(#lbar)" />
+      <rect x="4" y="13.5" width="16" height="5" rx="2.5" fill="url(#lbar)" />
+      <rect x="4" y="21.5" width="24" height="5" rx="2.5" fill="url(#lbar)" />
+      <circle cx="24" cy="16" r="3.8" fill="url(#ldot)" filter="url(#lglow)" />
     </svg>
   );
 }
