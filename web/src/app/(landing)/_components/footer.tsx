@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { LogoIcon } from "@/components/logo-icon";
 
 function GithubIcon({ className }: { className?: string }) {
   return (
@@ -25,7 +26,7 @@ export function Footer() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-start">
         <div>
           <div className="display text-lg mb-2 flex items-center gap-2">
-            <span className="text-[color:var(--accent)]">◇</span>
+            <LogoIcon size={18} />
             exam-helper
           </div>
           <p className="text-[color:var(--muted)] text-sm max-w-xs leading-relaxed">
@@ -40,7 +41,7 @@ export function Footer() {
             Launch app
           </Link>
           <a
-            href="https://github.com/your-username/exam-helper"
+            href="https://github.com/anasyd/exam-helper"
             target="_blank"
             rel="noopener noreferrer"
             className="hover:underline text-[color:var(--ink)] inline-flex items-center gap-1"

@@ -1,10 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <!-- 4-facet diamond gem — NE lightest (light source), SW darkest (shadow) -->
-  <polygon points="16,2 30,16 16,16" fill="#dba96a"/>
-  <polygon points="16,2 16,16 2,16"  fill="#c29252"/>
-  <polygon points="16,16 30,16 16,30" fill="#a87438"/>
-  <polygon points="2,16 16,16 16,30"  fill="#8e5f28"/>
-  <!-- Thin hairline to crisp the equatorial seam at large sizes -->
-  <line x1="2" y1="16" x2="30" y2="16" stroke="#b8854a" stroke-width="0.4"/>
-  <line x1="16" y1="2" x2="16" y2="30" stroke="#b8854a" stroke-width="0.4"/>
+  <!-- Open book viewed from above, forming a diamond -->
+  <!-- Left page: warm light (catching light) -->
+  <path d="M16 2 L2 16 L16 30 Z" fill="#c99252"/>
+  <!-- Right page: deeper amber (in shadow) -->
+  <path d="M16 2 L30 16 L16 30 Z" fill="#9e6830"/>
+  <!-- Book spine -->
+  <line x1="16" y1="2" x2="16" y2="30" stroke="#6b4418" stroke-width="1.5" stroke-linecap="round"/>
+  <!-- Left page lines (fanning outward from spine, suggesting text) -->
+  <line x1="15.5" y1="10" x2="8"  y2="12.5" stroke="rgba(255,255,255,0.38)" stroke-width="1" stroke-linecap="round"/>
+  <line x1="15.5" y1="14" x2="5"  y2="15"   stroke="rgba(255,255,255,0.38)" stroke-width="1" stroke-linecap="round"/>
+  <line x1="15.5" y1="18" x2="6"  y2="18.5" stroke="rgba(255,255,255,0.38)" stroke-width="1" stroke-linecap="round"/>
+  <line x1="15.5" y1="22" x2="9"  y2="21.5" stroke="rgba(255,255,255,0.30)" stroke-width="1" stroke-linecap="round"/>
+  <!-- Right page lines (shadow side, subtler) -->
+  <line x1="16.5" y1="10" x2="24" y2="12.5" stroke="rgba(0,0,0,0.18)" stroke-width="1" stroke-linecap="round"/>
+  <line x1="16.5" y1="14" x2="27" y2="15"   stroke="rgba(0,0,0,0.18)" stroke-width="1" stroke-linecap="round"/>
+  <line x1="16.5" y1="18" x2="26" y2="18.5" stroke="rgba(0,0,0,0.18)" stroke-width="1" stroke-linecap="round"/>
+  <line x1="16.5" y1="22" x2="23" y2="21.5" stroke="rgba(0,0,0,0.14)" stroke-width="1" stroke-linecap="round"/>
+  <!-- Warm glow dot at the top point — the spark of insight -->
+  <circle cx="16" cy="2" r="2" fill="#f5c97a"/>
 </svg>
