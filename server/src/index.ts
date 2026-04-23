@@ -10,6 +10,7 @@ import { errorHandler } from "./middleware/error.js";
 import { healthRouter } from "./routes/health.js";
 import { meRouter } from "./routes/me.js";
 import { projectsRouter } from "./routes/projects.js";
+import { filesRouter } from "./routes/files.js";
 
 async function main(): Promise<void> {
   await connectDb();
@@ -23,11 +24,14 @@ async function main(): Promise<void> {
   // Better Auth's handler must come BEFORE express.json() — it parses request bodies itself.
   app.all("/api/auth/*", toNodeHandler(auth));
 
+  // Projects can include large PDF text blobs; files router uses multer (no JSON limit needed there)
+  app.use("/api/projects", express.json({ limit: "20mb" }));
   app.use(express.json({ limit: "64kb" }));
 
   app.use("/api/health", healthRouter);
   app.use("/api/me", meRouter);
   app.use("/api/projects", projectsRouter);
+  app.use("/api/files", filesRouter);
 
   app.use(errorHandler);
 

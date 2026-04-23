@@ -1323,6 +1323,16 @@ export function ProjectView() {
                           <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
                             <FileTextIcon className="h-3 w-3" />
                             Loaded: {activeProject.documentFileName}
+                            {activeProject.documentFileId && (
+                              <a
+                                href={`${process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000"}/api/files/${activeProject.documentFileId}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="ml-1 underline hover:text-foreground"
+                              >
+                                (view)
+                              </a>
+                            )}
                           </p>
                         )}
                       </div>

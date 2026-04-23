@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useFlashcardStore } from "@/lib/store";
+import { useSession } from "@/lib/auth/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
@@ -9,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUp, Loader2, File as FileIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import mammoth from "mammoth";
+import { uploadFile } from "@/lib/api/files";
 
 const ACCEPTED_FILE_TYPES = {
   "application/pdf": ".pdf",
@@ -26,7 +28,8 @@ export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processProgress, setProcessProgress] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
-  const { setIsProcessing: setStoreProcessing } = useFlashcardStore();
+  const { setIsProcessing: setStoreProcessing, setDocumentFileId } = useFlashcardStore();
+  const { data: session } = useSession();
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -100,6 +103,23 @@ export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
       // Call the completion callback
       const fileNames = files.map((f) => f.name).join(", ");
       onProcessingComplete(combinedText, fileNames);
+
+      // If authenticated, upload raw files to server in the background
+      if (session?.user) {
+        const filesToUpload = [...files];
+        void (async () => {
+          try {
+            // Upload the first file (primary source); subsequent ones are appended text
+            const first = filesToUpload[0];
+            if (first) {
+              const { fileId } = await uploadFile(first);
+              setDocumentFileId(fileId);
+            }
+          } catch (e) {
+            console.warn("[document-upload] server file upload failed:", e);
+          }
+        })();
+      }
 
       // Dismiss loading toast and show success
       toast.dismiss(toastId);

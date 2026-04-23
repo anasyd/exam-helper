@@ -39,6 +39,7 @@ export type Project = {
   flashcards: Flashcard[];
   pdfContent: string | null; // Stores the text from various documents, used as source for flashcards & study guides
   documentFileName?: string; // Name of the last uploaded document file(s)
+  documentFileId?: string;  // GridFS file ID on the server (set after authenticated upload)
   processedHashes: string[]; // Hashes of content that already have general flashcards generated
   cardsSeenThisSession: string[]; // IDs of all cards shown in the current study session
   sessionComplete: boolean;
@@ -125,6 +126,7 @@ interface FlashcardState {
   setIsProcessing: (isProcessing: boolean) => void;
   setDocumentContent: (content: string | null) => void; // Renamed from setPdfContent
   setDocumentFileName: (name: string) => void;
+  setDocumentFileId: (id: string) => void;
   appendDocumentContent: (newContent: string) => void; // Append new document content
   appendDocumentNotes: (newNotes: string) => void; // Append new notes to existing ones
   mergeStudyGuide: (newStudyGuide: StudyGuide) => void; // Merge new study guide with existing one
@@ -512,6 +514,18 @@ export const useFlashcardStore = create<FlashcardState>()(
           projects: state.projects.map((project) =>
             project.id === activeProject.id
               ? { ...project, documentFileName: name }
+              : project
+          ),
+        }));
+      },
+
+      setDocumentFileId: (id) => {
+        const activeProject = get().getActiveProject();
+        if (!activeProject) return;
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === activeProject.id
+              ? { ...project, documentFileId: id }
               : project
           ),
         }));

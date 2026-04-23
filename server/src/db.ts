@@ -1,4 +1,4 @@
-import { MongoClient } from "mongodb";
+import { MongoClient, GridFSBucket } from "mongodb";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
 
@@ -21,4 +21,8 @@ export async function connectDb(): Promise<void> {
 export async function disconnectDb(): Promise<void> {
   await mongo.close();
   logger.info("mongo disconnected");
+}
+
+export function filesBucket(): GridFSBucket {
+  return new GridFSBucket(mongo.db(), { bucketName: "files" });
 }
