@@ -4,7 +4,36 @@ import type { ModelMeta, ProviderId } from "./types";
 // OpenRouter models are fetched at runtime and merged in via setOpenRouterCatalog().
 
 const HARDCODED_MODELS: ModelMeta[] = [
-  // Gemini — newest first
+  // ── Google Gemini (newest first) ─────────────────────────────────────────
+  // 3.x series — preview
+  {
+    providerId: "gemini",
+    modelId: "gemini-3.1-pro-preview",
+    displayName: "Gemini 3.1 Pro (Preview)",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 1_000_000,
+  },
+  {
+    providerId: "gemini",
+    modelId: "gemini-3-flash-preview",
+    displayName: "Gemini 3 Flash (Preview)",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 1_000_000,
+  },
+  {
+    providerId: "gemini",
+    modelId: "gemini-3.1-flash-lite-preview",
+    displayName: "Gemini 3.1 Flash Lite (Preview)",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 1_000_000,
+  },
+  // 2.5 series — stable
   {
     providerId: "gemini",
     modelId: "gemini-2.5-pro",
@@ -12,7 +41,7 @@ const HARDCODED_MODELS: ModelMeta[] = [
     supportsStructuredOutput: true,
     supportsLongContext: true,
     supportsVision: true,
-    contextWindowTokens: 2_000_000,
+    contextWindowTokens: 1_000_000,
   },
   {
     providerId: "gemini",
@@ -32,6 +61,7 @@ const HARDCODED_MODELS: ModelMeta[] = [
     supportsVision: true,
     contextWindowTokens: 1_000_000,
   },
+  // 2.0 series
   {
     providerId: "gemini",
     modelId: "gemini-2.0-flash",
@@ -46,10 +76,11 @@ const HARDCODED_MODELS: ModelMeta[] = [
     modelId: "gemini-2.0-flash-lite",
     displayName: "Gemini 2.0 Flash Lite",
     supportsStructuredOutput: true,
-    supportsLongContext: false,
+    supportsLongContext: true,
     supportsVision: true,
     contextWindowTokens: 1_000_000,
   },
+  // 1.5 series
   {
     providerId: "gemini",
     modelId: "gemini-1.5-pro",
@@ -69,7 +100,46 @@ const HARDCODED_MODELS: ModelMeta[] = [
     contextWindowTokens: 1_000_000,
   },
 
-  // OpenAI
+  // ── OpenAI (newest first) ────────────────────────────────────────────────
+  // GPT-5.4 series
+  {
+    providerId: "openai",
+    modelId: "gpt-5.4",
+    displayName: "GPT-5.4",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 1_050_000,
+  },
+  {
+    providerId: "openai",
+    modelId: "gpt-5.4-mini",
+    displayName: "GPT-5.4 mini",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 400_000,
+  },
+  {
+    providerId: "openai",
+    modelId: "gpt-5.4-nano",
+    displayName: "GPT-5.4 nano",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 400_000,
+  },
+  // GPT-5.1
+  {
+    providerId: "openai",
+    modelId: "gpt-5.1",
+    displayName: "GPT-5.1",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 400_000,
+  },
+  // GPT-5
   {
     providerId: "openai",
     modelId: "gpt-5",
@@ -88,17 +158,46 @@ const HARDCODED_MODELS: ModelMeta[] = [
     supportsVision: true,
     contextWindowTokens: 400_000,
   },
+  // o-series reasoning models
   {
     providerId: "openai",
-    modelId: "gpt-5-nano",
-    displayName: "GPT-5 nano",
+    modelId: "o4-mini",
+    displayName: "o4-mini",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 200_000,
+  },
+  {
+    providerId: "openai",
+    modelId: "o3",
+    displayName: "o3",
+    supportsStructuredOutput: true,
+    supportsLongContext: true,
+    supportsVision: true,
+    contextWindowTokens: 200_000,
+  },
+  // GPT-4o
+  {
+    providerId: "openai",
+    modelId: "gpt-4o",
+    displayName: "GPT-4o",
     supportsStructuredOutput: true,
     supportsLongContext: true,
     supportsVision: true,
     contextWindowTokens: 128_000,
   },
+  {
+    providerId: "openai",
+    modelId: "gpt-4o-mini",
+    displayName: "GPT-4o mini",
+    supportsStructuredOutput: true,
+    supportsLongContext: false,
+    supportsVision: true,
+    contextWindowTokens: 128_000,
+  },
 
-  // Anthropic
+  // ── Anthropic Claude (newest first) ─────────────────────────────────────
   {
     providerId: "anthropic",
     modelId: "claude-opus-4-7",
@@ -106,7 +205,7 @@ const HARDCODED_MODELS: ModelMeta[] = [
     supportsStructuredOutput: true,
     supportsLongContext: true,
     supportsVision: true,
-    contextWindowTokens: 200_000,
+    contextWindowTokens: 1_000_000,
   },
   {
     providerId: "anthropic",
@@ -115,7 +214,7 @@ const HARDCODED_MODELS: ModelMeta[] = [
     supportsStructuredOutput: true,
     supportsLongContext: true,
     supportsVision: true,
-    contextWindowTokens: 200_000,
+    contextWindowTokens: 1_000_000,
   },
   {
     providerId: "anthropic",
