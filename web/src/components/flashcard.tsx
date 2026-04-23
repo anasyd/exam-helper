@@ -88,8 +88,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
       : "text-yellow-600 dark:text-yellow-400";
 
   const footer = (isFront: boolean) => (
-    <div className="flex-shrink-0 border-t px-6 py-4 space-y-3">
-      {/* Centered flip button */}
+    <div className="flex-shrink-0 px-6 pt-3 pb-4 space-y-2">
       <div className="flex justify-center">
         <Button
           onClick={() => setIsFlipped((f) => !f)}
@@ -100,7 +99,6 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
           {isFront ? "See answer" : "Question"}
         </Button>
       </div>
-      {/* Skip / Next row */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           {totalAttempts > 0 ? `${score}% · ${totalAttempts} attempts` : ""}
@@ -136,10 +134,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
           style={{ backfaceVisibility: "hidden", pointerEvents: isFlipped ? "none" : "auto", minHeight: "420px" }}
         >
           <div className="flex-1 overflow-y-auto p-6 space-y-4 min-h-0">
-            <div className="flex items-center justify-between">
-              <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Question</h3>
-              <span className={`text-xs font-medium ${difficultyColor}`}>{difficultyLabel}</span>
-            </div>
+            <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-widest">Question</h3>
             <p className="text-lg leading-snug">{card.question}</p>
             <div className="space-y-2.5 pt-1">
               {shuffledOptions.map((option, index) => (
@@ -155,7 +150,7 @@ export function Flashcard({ card, onNext }: FlashcardProps) {
                       : "outline"
                   }
                   className={cn(
-                    "w-full justify-start text-left p-3 h-auto rounded-md whitespace-normal flex items-start min-h-[3rem] transition-all duration-200",
+                    "w-full justify-start text-left p-3 h-auto rounded-full whitespace-normal flex items-start min-h-[3rem] transition-all duration-200",
                     selectedOptionIndex === null
                       ? ""
                       : index === shuffledCorrectIndex
