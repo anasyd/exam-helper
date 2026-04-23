@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useFlashcardStore, Project as ProjectType } from "@/lib/store"; // Import Project type
 import { DocumentUpload } from "@/components/document-upload";
-import { FlashcardGenerator } from "@/components/flashcard-generator";
 import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
@@ -24,7 +23,6 @@ import { Loader2, CheckCircle, Lock } from "lucide-react";
 
 import {
   FileUp,
-  BookOpen,
   Brain,
   ArrowLeft,
   BookCopy,
@@ -35,6 +33,7 @@ import {
   Flame,
   Zap,
   ChevronDown,
+  SlidersHorizontal,
 } from "lucide-react";
 import { StudyContentView } from "./study-content-view";
 import { generateFlashcards } from "@/lib/ai/features/flashcards";
@@ -929,8 +928,11 @@ export function ProjectView() {
     }),
     [providers, modelRouting]
   );
-  const [activeTab, setActiveTab] = useState<string>("upload");
-  const [generatorExpanded, setGeneratorExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<string>(() => {
+    const ap = getActiveProject();
+    return ap && ap.flashcards.length > 0 ? "study" : "source";
+  });
+  const [showAllCards, setShowAllCards] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [isGeneratingStudyContent, setIsGeneratingStudyContent] =
     useState(false);
@@ -1053,7 +1055,7 @@ export function ProjectView() {
               }${allContent.flashcards?.length || 0} flashcards!`,
         }
       );
-      setActiveTab("studyContent");
+      setActiveTab("guide");
     } catch (error) {
       console.error("Failed to generate study content:", error);
       toast.error("Failed to Generate Study Content", {
@@ -1209,7 +1211,6 @@ export function ProjectView() {
             </div>
             {/* Right: stats + actions */}
             <div className="flex items-center gap-2 flex-shrink-0">
-              {/* XP and Streak — hidden on very small screens */}
               <div className="hidden sm:flex items-center gap-2 text-sm">
                 {currentStreak > 0 && (
                   <div className="flex items-center text-orange-500">
@@ -1221,249 +1222,239 @@ export function ProjectView() {
                   {activeProject.xp || 0} XP
                 </div>
               </div>
-              {activeProject.studyGuide && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setGamificationEnabled(!gamificationEnabled)}
-                  title={gamificationEnabled ? "Switch to Classic Tabbed View" : "Switch to Gamified Roadmap View"}
-                >
-                  {gamificationEnabled ? (
-                    <ListChecks className="h-4 w-4 sm:mr-1" />
-                  ) : (
-                    <LayoutDashboard className="h-4 w-4 sm:mr-1" />
-                  )}
-                  <span className="hidden sm:inline">
-                    {gamificationEnabled ? "Classic" : "Roadmap"}
-                  </span>
-                </Button>
-              )}
-              <div className="hidden sm:flex items-center gap-1">
-                <ShareProjectDialog projectId={activeProject.id} />
-                <AppSettings />
-              </div>
+              <AppSettings />
               <AuthDropdown />
             </div>
           </div>
         </div>
       </div>
       <div className="container mx-auto py-6 px-4">
-      {gamificationEnabled && activeProject.studyGuide ? (
-        <GamifiedRoadmapView
-          project={activeProject}
-          key={`roadmap-${gamificationEnabled}`} // Force re-mount when switching to roadmap
-        />
-      ) : (
-        <>
-          {" "}
-          {/* Start of Classic View Fragment */}
-          <div className="mb-8">
-            <div className="border rounded-lg p-1 flex overflow-x-auto scrollbar-none gap-1 w-full">
-              <TabButton
-                isActive={activeTab === "upload"}
-                onClick={() => setActiveTab("upload")}
-                icon={<FileUp className="h-4 w-4" />}
-                label="Upload & Process"
-              />
-              <TabButton
-                isActive={activeTab === "video"}
-                onClick={() => setActiveTab("video")}
-                icon={<VideoIcon className="h-4 w-4" />}
-                label="Lecture Video"
-                disabled={isProcessingVideo}
-              />
-              <TabButton
-                isActive={activeTab === "notes"}
-                onClick={() => setActiveTab("notes")}
-                icon={<FileTextIcon className="h-4 w-4" />}
-                label="Automated Notes"
-                disabled={
-                  isGeneratingDocumentNotes ||
-                  isGeneratingVideoNotes ||
-                  (!activeProject.pdfContent &&
-                    !activeProject.originalTranscript)
-                }
-              />
-              <TabButton
-                isActive={activeTab === "studyContent"}
-                onClick={() => setActiveTab("studyContent")}
-                icon={<BookCopy className="h-4 w-4" />}
-                label="Study Content"
-                disabled={
-                  !activeProject.studyGuide &&
-                  !isGeneratingStudyContent &&
-                  !activeProject.formattedTranscript
-                }
-              />
-              <TabButton
-                isActive={activeTab === "flashcards"}
-                onClick={() => setActiveTab("flashcards")}
-                icon={<Brain className="h-4 w-4" />}
-                label="Flashcards"
-                disabled={!activeProject.pdfContent && activeProject.flashcards.length === 0}
-              />
-            </div>
+        {/* Tab bar */}
+        <div className="mb-6">
+          <div className="border rounded-lg p-1 flex overflow-x-auto scrollbar-none gap-1 w-full">
+            <TabButton
+              isActive={activeTab === "study"}
+              onClick={() => setActiveTab("study")}
+              icon={<Brain className="h-4 w-4" />}
+              label="Study"
+            />
+            <TabButton
+              isActive={activeTab === "guide"}
+              onClick={() => setActiveTab("guide")}
+              icon={<BookCopy className="h-4 w-4" />}
+              label="Guide"
+              disabled={!activeProject.studyGuide && !isGeneratingStudyContent}
+            />
+            <TabButton
+              isActive={activeTab === "notes"}
+              onClick={() => setActiveTab("notes")}
+              icon={<FileTextIcon className="h-4 w-4" />}
+              label="Notes"
+              disabled={!activeProject.pdfContent && !activeProject.originalTranscript}
+            />
+            <TabButton
+              isActive={activeTab === "source"}
+              onClick={() => setActiveTab("source")}
+              icon={<FileUp className="h-4 w-4" />}
+              label="Source"
+            />
+            <TabButton
+              isActive={activeTab === "settings"}
+              onClick={() => setActiveTab("settings")}
+              icon={<SlidersHorizontal className="h-4 w-4" />}
+              label="Settings"
+            />
           </div>
-          <div className="max-w-3xl mx-auto" key={activeTab} style={{ animation: "fadeIn 0.18s ease" }}>
-            {activeTab === "upload" && (
-              <div className="space-y-8">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle className="flex items-center">
-                          <FileUp className="h-5 w-5 mr-2" />
-                          Upload Documents
-                        </CardTitle>
-                        <CardDescription>
-                          Upload PDF, DOCX, or TXT files to generate study
-                          content and flashcards.
-                        </CardDescription>
-                        {activeProject.documentFileName && (
-                          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                            <FileTextIcon className="h-3 w-3" />
-                            Loaded: {activeProject.documentFileName}
-                            {activeProject.documentFileId && (
-                              <a
-                                href={`${process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000"}/api/files/${activeProject.documentFileId}`}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="ml-1 underline hover:text-foreground"
-                              >
-                                (view)
-                              </a>
-                            )}
-                          </p>
-                        )}
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        {activeProject.flashcards.length} cards
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <DocumentUpload
-                      onProcessingComplete={handleDocumentProcessingComplete}
-                    />
-                  </CardContent>
-                </Card>
-                <FlashcardImportExport />
-              </div>
-            )}
+        </div>
 
-            {activeTab === "video" && (
+        {/* Tab content */}
+        <div className="max-w-3xl mx-auto" key={activeTab} style={{ animation: "fadeIn 0.18s ease" }}>
+
+          {/* ── Study ── */}
+          {activeTab === "study" && (
+            <div className="space-y-8">
+              <FlashcardSession />
+              {activeProject.flashcards.length > 0 && (
+                <div>
+                  <button
+                    className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-4 transition-colors"
+                    onClick={() => setShowAllCards(!showAllCards)}
+                  >
+                    <ChevronDown
+                      className={`h-4 w-4 transition-transform ${showAllCards ? "rotate-180" : ""}`}
+                    />
+                    {showAllCards ? "Hide" : "Show"} all cards ({activeProject.flashcards.length})
+                  </button>
+                  {showAllCards && <FlashcardList />}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Guide ── */}
+          {activeTab === "guide" && (
+            <div>
+              {isGeneratingStudyContent && (
+                <div className="flex items-center gap-3 mb-6 text-sm text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Generating study guide…
+                </div>
+              )}
+              {activeProject.studyGuide && (
+                <div className="flex justify-end mb-4">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setGamificationEnabled(!gamificationEnabled)}
+                  >
+                    {gamificationEnabled ? (
+                      <><ListChecks className="h-4 w-4 mr-1" />Study Guide</>
+                    ) : (
+                      <><LayoutDashboard className="h-4 w-4 mr-1" />Roadmap</>
+                    )}
+                  </Button>
+                </div>
+              )}
+              {gamificationEnabled && activeProject.studyGuide ? (
+                <GamifiedRoadmapView
+                  project={activeProject}
+                  key={`roadmap-${gamificationEnabled}`}
+                />
+              ) : (
+                <StudyContentView studyGuide={activeProject.studyGuide} />
+              )}
+            </div>
+          )}
+
+          {/* ── Notes ── */}
+          {activeTab === "notes" && (
+            <NotesView
+              documentNotes={activeProject.documentNotes}
+              videoNotes={activeProject.videoNotes}
+              onGenerateDocumentNotes={handleGenerateDocumentNotes}
+              onGenerateVideoNotes={handleGenerateVideoNotes}
+              isGeneratingDocumentNotes={isGeneratingDocumentNotes}
+              isGeneratingVideoNotes={isGeneratingVideoNotes}
+              hasDocumentContent={!!activeProject.pdfContent}
+              hasVideoTranscript={!!activeProject.originalTranscript}
+            />
+          )}
+
+          {/* ── Source ── */}
+          {activeTab === "source" && (
+            <div className="space-y-6">
+              {/* Document upload */}
               <Card>
                 <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <VideoIcon className="h-5 w-5 mr-2" />
-                    Lecture Video Processing
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle className="flex items-center gap-2 text-base">
+                        <FileUp className="h-4 w-4" />
+                        Document
+                      </CardTitle>
+                      <CardDescription className="mt-1">
+                        PDF, DOCX, or TXT — AI generates flashcards, notes and
+                        study guide automatically.
+                      </CardDescription>
+                      {activeProject.documentFileName && (
+                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
+                          <FileTextIcon className="h-3 w-3" />
+                          Loaded: {activeProject.documentFileName}
+                          {activeProject.documentFileId && (
+                            <a
+                              href={`${process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000"}/api/files/${activeProject.documentFileId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="ml-1 underline hover:text-foreground"
+                            >
+                              view
+                            </a>
+                          )}
+                        </p>
+                      )}
+                    </div>
+                    {isGeneratingStudyContent && (
+                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        Processing…
+                      </div>
+                    )}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <DocumentUpload
+                    onProcessingComplete={handleDocumentProcessingComplete}
+                  />
+                </CardContent>
+              </Card>
+
+              {/* Video upload */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <VideoIcon className="h-4 w-4" />
+                    Lecture Video
                   </CardTitle>
                   <CardDescription>
-                    Upload a lecture video to transcribe and process its
-                    content.
-                    {activeProject?.videoFileName &&
-                      ` Currently viewing: ${activeProject.videoFileName}`}
+                    {activeProject.videoFileName
+                      ? `Loaded: ${activeProject.videoFileName}`
+                      : "Upload a lecture video to transcribe and process."}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  {!activeProject?.formattedTranscript &&
-                    !isProcessingVideo && (
-                      <VideoUpload
-                        onUploadAndTranscribe={handleVideoUploadAndTranscribe}
-                        isProcessingVideo={isProcessingVideo}
-                      />
-                    )}
+                  {!activeProject.formattedTranscript && !isProcessingVideo && (
+                    <VideoUpload
+                      onUploadAndTranscribe={handleVideoUploadAndTranscribe}
+                      isProcessingVideo={isProcessingVideo}
+                    />
+                  )}
                   {isProcessingVideo && (
                     <div className="space-y-2 text-center p-4 border rounded-md">
                       <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
                       <p className="text-sm text-muted-foreground">
-                        Video processing in progress...
+                        Processing video…
                       </p>
-                      <Progress
-                        value={undefined}
-                        className="mt-2 h-2 animate-pulse"
-                      />
+                      <Progress value={undefined} className="mt-2 h-2 animate-pulse" />
                     </div>
                   )}
-                  {activeProject?.formattedTranscript && !isProcessingVideo && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">
-                        Formatted Transcript
-                      </h3>
-                      <pre className="whitespace-pre-wrap bg-muted p-4 rounded-md text-sm font-mono max-h-[60vh] overflow-auto">
+                  {activeProject.formattedTranscript && !isProcessingVideo && (
+                    <div className="space-y-3">
+                      <pre className="whitespace-pre-wrap bg-muted p-4 rounded-md text-sm font-mono max-h-[50vh] overflow-auto">
                         {activeProject.formattedTranscript}
                       </pre>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={clearVideoProcessingResult}
-                        className="mt-4"
                       >
-                        Upload New Video
+                        Replace video
                       </Button>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            )}
+            </div>
+          )}
 
-            {activeTab === "notes" && activeProject && (
-              <NotesView
-                documentNotes={activeProject.documentNotes}
-                videoNotes={activeProject.videoNotes}
-                onGenerateDocumentNotes={handleGenerateDocumentNotes}
-                onGenerateVideoNotes={handleGenerateVideoNotes}
-                isGeneratingDocumentNotes={isGeneratingDocumentNotes}
-                isGeneratingVideoNotes={isGeneratingVideoNotes}
-                hasDocumentContent={!!activeProject.pdfContent}
-                hasVideoTranscript={!!activeProject.originalTranscript}
-              />
-            )}
+          {/* ── Settings ── */}
+          {activeTab === "settings" && (
+            <div className="space-y-6">
+              <FlashcardImportExport />
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">Share Project</CardTitle>
+                  <CardDescription>
+                    Generate a shareable link anyone can use to view this project.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <ShareProjectDialog projectId={activeProject.id} />
+                </CardContent>
+              </Card>
+            </div>
+          )}
 
-            {activeTab === "studyContent" && (
-              <StudyContentView studyGuide={activeProject.studyGuide} />
-            )}
-
-            {activeTab === "flashcards" && (
-              <div className="space-y-6">
-                {activeProject.pdfContent && (
-                  <Card>
-                    <CardHeader
-                      className="cursor-pointer select-none pb-3"
-                      onClick={() => setGeneratorExpanded(!generatorExpanded)}
-                    >
-                      <div className="flex items-center justify-between">
-                        <CardTitle className="flex items-center text-base">
-                          <BookOpen className="h-4 w-4 mr-2" />
-                          Generate Flashcards
-                        </CardTitle>
-                        <ChevronDown
-                          className={`h-4 w-4 text-muted-foreground transition-transform ${
-                            generatorExpanded ? "rotate-180" : ""
-                          }`}
-                        />
-                      </div>
-                      {!generatorExpanded && (
-                        <CardDescription className="mt-1">
-                          Generate new cards from your uploaded document
-                        </CardDescription>
-                      )}
-                    </CardHeader>
-                    {generatorExpanded && (
-                      <CardContent className="pt-0">
-                        <FlashcardGenerator />
-                      </CardContent>
-                    )}
-                  </Card>
-                )}
-                <FlashcardSession />
-                {activeProject.flashcards.length > 0 && <FlashcardList />}
-              </div>
-            )}
-          </div>
-        </>
-      )}{" "}
-      {/* End of Conditional Rendering */}
+        </div>
       </div>
     </div>
   );
