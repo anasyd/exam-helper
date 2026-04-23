@@ -130,13 +130,13 @@ export function FlashcardSession() {
               </p>
             </div>
 
-            <Button variant="outline" className="w-full" onClick={handleReplay}>
+            <Button variant="outline" className="w-full rounded-full" onClick={handleReplay}>
               <RotateCw className="mr-2 h-4 w-4" />
               Replay session
             </Button>
 
             {hasPdfContent && hasApiKey && (
-              <div className="w-full border rounded-lg p-4 space-y-3">
+              <div className="w-full border rounded-2xl p-4 space-y-3">
                 <p className="text-sm font-medium text-center text-muted-foreground">
                   Generate more cards
                 </p>
@@ -148,13 +148,14 @@ export function FlashcardSession() {
                       variant={generateCount === n ? "default" : "outline"}
                       onClick={() => setGenerateCount(n)}
                       disabled={isGeneratingMore}
+                      className="rounded-full"
                     >
                       {n}
                     </Button>
                   ))}
                 </div>
                 <Button
-                  className="w-full"
+                  className="w-full rounded-full"
                   onClick={handleGenerateMore}
                   disabled={isGeneratingMore}
                 >
