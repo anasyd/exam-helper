@@ -88,9 +88,9 @@ npm run dev            # http://localhost:4000
 **Frontend**
 ```bash
 cd web
-echo "NEXT_PUBLIC_AUTH_URL=http://localhost:4000" > .env.local
+cp .env.example .env.local   # defaults work for local dev
 npm install
-npm run dev            # http://localhost:3000
+npm run dev                  # http://localhost:3000
 ```
 
 ---
