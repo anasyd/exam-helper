@@ -29,11 +29,12 @@ import {
   FileText,
   Edit2,
   Trash2,
-  Calendar,
   BookOpen,
   MoreHorizontal,
-  FolderOpen,
+  Clock,
 } from "lucide-react";
+import { LogoIcon } from "@/components/logo-icon";
+import { Progress } from "@/components/ui/progress";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -109,25 +110,18 @@ export function ProjectList() {
     router.push("/app/project");
   };
 
-  const formatDate = (date: Date) => {
-    // Use a fixed format that will be consistent between server and client
-    const year = date.getFullYear();
-    const month = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ][date.getMonth()];
-    const day = date.getDate();
-    return `${month} ${day}, ${year}`;
+  const formatRelativeTime = (date: Date) => {
+    const now = Date.now();
+    const diff = now - new Date(date).getTime();
+    const minutes = Math.floor(diff / 60_000);
+    const hours = Math.floor(diff / 3_600_000);
+    const days = Math.floor(diff / 86_400_000);
+    if (minutes < 1) return "just now";
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 30) return `${days}d ago`;
+    const d = new Date(date);
+    return `${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`;
   };
 
   return (
@@ -301,77 +295,90 @@ export function ProjectList() {
       {/* Project Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {projects.length === 0 ? (
-          <Card className="col-span-full p-8 text-center">
-            <div className="flex flex-col items-center justify-center space-y-4">
-              <FolderOpen className="h-12 w-12 text-gray-400" />
-              <CardTitle>No Projects Yet</CardTitle>
-              <CardDescription>
-                Create a new project to get started with organizing your
-                flashcards.
-              </CardDescription>
+          <Card className="col-span-full border-dashed">
+            <div className="flex flex-col items-center justify-center py-16 px-8 text-center space-y-4">
+              <div className="opacity-20">
+                <LogoIcon size={48} />
+              </div>
+              <div>
+                <p className="font-semibold text-lg">No projects yet</p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Upload a PDF to get started — flashcards, notes, and a study guide in seconds.
+                </p>
+              </div>
               <Button onClick={() => setIsCreateDialogOpen(true)}>
                 <Plus className="mr-2 h-4 w-4" />
-                Create Your First Project
+                Create your first project
               </Button>
             </div>
           </Card>
         ) : (
-          projects.map((project) => (
-            <Card
-              key={project.id}
-              className="overflow-hidden hover:shadow-md transition-shadow"
-            >
-              <CardHeader className="pb-3">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <CardTitle>{project.name}</CardTitle>
-                    <CardDescription className="mt-1">
-                      {project.description || "No description"}
-                    </CardDescription>
+          projects.map((project) => {
+            const total = project.flashcards.length;
+            const mastered = project.flashcards.filter((c) => c.timesCorrect > 0).length;
+            const masteryPct = total > 0 ? Math.round((mastered / total) * 100) : 0;
+            return (
+              <Card
+                key={project.id}
+                className="overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col"
+              >
+                <CardHeader className="pb-3">
+                  <div className="flex justify-between items-start">
+                    <div className="min-w-0 flex-1 pr-2">
+                      <CardTitle className="truncate">{project.name}</CardTitle>
+                      <CardDescription className="mt-1 line-clamp-2">
+                        {project.description || "No description"}
+                      </CardDescription>
+                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => openEditDialog(project)}>
+                          <Edit2 className="mr-2 h-4 w-4" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => openDeleteDialog(project)}>
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => openEditDialog(project)}>
-                        <Edit2 className="mr-2 h-4 w-4" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem
-                        onClick={() => openDeleteDialog(project)}
-                      >
-                        <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
+                </CardHeader>
 
-              <CardContent className="pb-3">
-                <div className="text-sm text-muted-foreground space-y-2">
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2" />
-                    <span>Created {formatDate(project.createdAt)}</span>
+                <CardContent className="pb-3 flex-1">
+                  <div className="text-sm text-muted-foreground space-y-2">
+                    <div className="flex items-center">
+                      <Clock className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>Updated {formatRelativeTime(project.updatedAt)}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FileText className="h-4 w-4 mr-2 flex-shrink-0" />
+                      <span>
+                        {total === 0
+                          ? "No flashcards yet"
+                          : `${mastered}/${total} cards mastered`}
+                      </span>
+                    </div>
+                    {total > 0 && (
+                      <Progress value={masteryPct} className="h-1 mt-1" />
+                    )}
                   </div>
-                  <div className="flex items-center">
-                    <FileText className="h-4 w-4 mr-2" />
-                    <span>{project.flashcards.length} flashcards</span>
-                  </div>
-                </div>
-              </CardContent>
+                </CardContent>
 
-              <CardFooter className="pt-1 gap-2">
-                <Button onClick={() => openProject(project)} className="w-full">
-                  <BookOpen className="mr-2 h-4 w-4" />
-                  Open Project
-                </Button>
-              </CardFooter>
-            </Card>
-          ))
+                <CardFooter className="pt-1">
+                  <Button onClick={() => openProject(project)} className="w-full">
+                    <BookOpen className="mr-2 h-4 w-4" />
+                    Open Project
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>

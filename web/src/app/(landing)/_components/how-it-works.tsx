@@ -1,3 +1,7 @@
+"use client";
+
+import { useInView } from "@/hooks/use-in-view";
+
 const STEPS = [
   {
     num: "01",
@@ -17,8 +21,13 @@ const STEPS = [
 ];
 
 export function HowItWorks() {
+  const { ref, inView } = useInView();
+
   return (
-    <section className="max-w-5xl mx-auto px-6 py-16 md:py-24 border-t border-[color:var(--rule)]">
+    <section
+      ref={ref as React.RefObject<HTMLElement>}
+      className="max-w-5xl mx-auto px-6 py-16 md:py-24 border-t border-[color:var(--rule)]"
+    >
       <div className="mb-14">
         <div className="label mb-3">How it works</div>
         <h2 className="display text-3xl md:text-4xl max-w-2xl">
@@ -26,8 +35,15 @@ export function HowItWorks() {
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-10">
-        {STEPS.map((s) => (
-          <div key={s.num}>
+        {STEPS.map((s, i) => (
+          <div
+            key={s.num}
+            style={{
+              opacity: inView ? 1 : 0,
+              transform: inView ? "translateY(0)" : "translateY(16px)",
+              transition: `opacity 0.5s ease ${i * 100}ms, transform 0.5s ease ${i * 100}ms`,
+            }}
+          >
             <div className="display text-5xl text-[color:var(--accent)] mb-4">
               {s.num}
             </div>

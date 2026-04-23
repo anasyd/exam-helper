@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export function Hero() {
   return (
-    <section className="max-w-6xl mx-auto px-6 pt-20 pb-24 md:pt-32 md:pb-32">
+    <section className="max-w-6xl mx-auto px-6 pt-14 pb-16 md:pt-32 md:pb-32">
       <div className="max-w-3xl">
         <div className="label mb-6">A study tool for your own documents</div>
         <h1 className="display text-5xl md:text-6xl lg:text-7xl leading-[1.03] mb-6">

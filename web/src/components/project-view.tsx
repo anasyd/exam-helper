@@ -1188,63 +1188,66 @@ export function ProjectView() {
   };
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="mr-4"
-            onClick={handleBackToProjects}
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Projects
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{activeProject.name}</h1>
-            {activeProject.description && (
-              <p className="text-muted-foreground">
-                {activeProject.description}
-              </p>
-            )}
-          </div>
-        </div>
-        <div className="flex items-center space-x-4">
-          {/* XP and Streak Display */}
-          <div className="flex items-center space-x-3">
-            {currentStreak > 0 && (
-              <div className="flex items-center text-orange-500">
-                <Flame className="h-5 w-5 mr-1" />
-                <span className="text-lg font-bold">{currentStreak}</span>
+    <div className="min-h-screen">
+      {/* Sticky header */}
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14 gap-2">
+            {/* Left: back + project name */}
+            <div className="flex items-center gap-2 min-w-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="flex-shrink-0"
+                onClick={handleBackToProjects}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                <span className="hidden sm:inline ml-1">Projects</span>
+              </Button>
+              <span className="text-muted-foreground hidden sm:inline">/</span>
+              <h1 className="font-semibold truncate text-sm sm:text-base">{activeProject.name}</h1>
+            </div>
+            {/* Right: stats + actions */}
+            <div className="flex items-center gap-2 flex-shrink-0">
+              {/* XP and Streak — hidden on very small screens */}
+              <div className="hidden sm:flex items-center gap-2 text-sm">
+                {currentStreak > 0 && (
+                  <div className="flex items-center text-orange-500">
+                    <Flame className="h-4 w-4 mr-0.5" />
+                    <span className="font-bold">{currentStreak}</span>
+                  </div>
+                )}
+                <div className="font-bold text-amber-500">
+                  {activeProject.xp || 0} XP
+                </div>
               </div>
-            )}
-            <div className="text-lg font-bold text-amber-500">
-              {activeProject.xp || 0} XP
+              {activeProject.studyGuide && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setGamificationEnabled(!gamificationEnabled)}
+                  title={gamificationEnabled ? "Switch to Classic Tabbed View" : "Switch to Gamified Roadmap View"}
+                >
+                  {gamificationEnabled ? (
+                    <ListChecks className="h-4 w-4 sm:mr-1" />
+                  ) : (
+                    <LayoutDashboard className="h-4 w-4 sm:mr-1" />
+                  )}
+                  <span className="hidden sm:inline">
+                    {gamificationEnabled ? "Classic" : "Roadmap"}
+                  </span>
+                </Button>
+              )}
+              <div className="hidden sm:flex items-center gap-1">
+                <ShareProjectDialog projectId={activeProject.id} />
+                <AppSettings />
+              </div>
+              <AuthDropdown />
             </div>
           </div>
-          {activeProject.studyGuide && (
-            <Button
-              variant="outline"
-              onClick={() => setGamificationEnabled(!gamificationEnabled)}
-              title={
-                gamificationEnabled
-                  ? "Switch to Classic Tabbed View"
-                  : "Switch to Gamified Roadmap View"
-              }
-            >
-              {gamificationEnabled ? (
-                <ListChecks className="mr-2 h-4 w-4" />
-              ) : (
-                <LayoutDashboard className="mr-2 h-4 w-4" />
-              )}
-              {gamificationEnabled ? "Classic View" : "Roadmap View"}
-            </Button>
-          )}
-          <ShareProjectDialog projectId={activeProject.id} />
-          <AppSettings />
-          <AuthDropdown />
         </div>
       </div>
+      <div className="container mx-auto py-6 px-4">
       {gamificationEnabled && activeProject.studyGuide ? (
         <GamifiedRoadmapView
           project={activeProject}
@@ -1254,8 +1257,8 @@ export function ProjectView() {
         <>
           {" "}
           {/* Start of Classic View Fragment */}
-          <div className="mb-8 flex justify-center">
-            <div className="border rounded-lg p-1 flex flex-wrap space-x-1">
+          <div className="mb-8">
+            <div className="border rounded-lg p-1 flex overflow-x-auto scrollbar-none gap-1 w-full">
               <TabButton
                 isActive={activeTab === "upload"}
                 onClick={() => setActiveTab("upload")}
@@ -1315,7 +1318,7 @@ export function ProjectView() {
               />
             </div>
           </div>
-          <div className="max-w-3xl mx-auto">
+          <div className="max-w-3xl mx-auto" key={activeTab} style={{ animation: "fadeIn 0.18s ease" }}>
             {activeTab === "upload" && (
               <div className="space-y-8">
                 <Card>
@@ -1443,6 +1446,7 @@ export function ProjectView() {
         </>
       )}{" "}
       {/* End of Conditional Rendering */}
+      </div>
     </div>
   );
 }
@@ -1466,7 +1470,7 @@ function TabButton({
     <button
       onClick={onClick}
       disabled={disabled}
-      className={`px-4 py-2 flex items-center rounded-md transition-all ${
+      className={`px-3 py-2 flex items-center rounded-md transition-all whitespace-nowrap flex-shrink-0 text-sm ${
         isActive ? "bg-primary text-primary-foreground" : "hover:bg-muted"
       } ${disabled ? "opacity-50 cursor-not-allowed" : ""}`}
     >

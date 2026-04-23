@@ -39,7 +39,7 @@ export function LandingNav() {
             href="https://github.com/anasyd/exam-helper"
             target="_blank"
             rel="noopener noreferrer"
-            className="w-8 h-8 flex items-center justify-center rounded-sm text-[color:var(--muted)] hover:text-[color:var(--ink)] transition-colors"
+            className="hidden md:flex w-8 h-8 items-center justify-center rounded-sm text-[color:var(--muted)] hover:text-[color:var(--ink)] transition-colors"
             aria-label="View on GitHub"
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
@@ -49,7 +49,7 @@ export function LandingNav() {
           <ThemeToggle />
           <Link
             href="/app"
-            className="text-sm px-4 py-2 rounded-sm bg-[color:var(--ink)] text-[color:var(--canvas)] hover:opacity-90 transition-opacity"
+            className="hidden md:inline-flex text-sm px-4 py-2 rounded-sm bg-[color:var(--ink)] text-[color:var(--canvas)] hover:opacity-90 transition-opacity"
           >
             Try it free
           </Link>

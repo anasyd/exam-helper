@@ -1,4 +1,7 @@
+"use client";
+
 import { Sparkles, Eye, Timer, Lock } from "lucide-react";
+import { useInView } from "@/hooks/use-in-view";
 
 const FEATURES = [
   {
@@ -28,8 +31,13 @@ const FEATURES = [
 ];
 
 export function Features() {
+  const { ref, inView } = useInView();
+
   return (
-    <section className="max-w-5xl mx-auto px-6 py-16 md:py-24">
+    <section
+      ref={ref as React.RefObject<HTMLElement>}
+      className="max-w-5xl mx-auto px-6 py-16 md:py-24"
+    >
       <div className="mb-14">
         <div className="label mb-3">Features</div>
         <h2 className="display text-3xl md:text-4xl max-w-2xl">
@@ -37,8 +45,16 @@ export function Features() {
         </h2>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12">
-        {FEATURES.map((f) => (
-          <div key={f.title} className="flex gap-5">
+        {FEATURES.map((f, i) => (
+          <div
+            key={f.title}
+            className="flex gap-5"
+            style={{
+              opacity: inView ? 1 : 0,
+              transform: inView ? "translateY(0)" : "translateY(16px)",
+              transition: `opacity 0.5s ease ${i * 80}ms, transform 0.5s ease ${i * 80}ms`,
+            }}
+          >
             <div className="flex-shrink-0 w-10 h-10 rounded-full border border-[color:var(--rule)] flex items-center justify-center">
               <f.icon className="w-4 h-4 text-[color:var(--ink)]" />
             </div>
