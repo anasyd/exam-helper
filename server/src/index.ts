@@ -9,6 +9,7 @@ import { requestId } from "./middleware/request-id.js";
 import { errorHandler } from "./middleware/error.js";
 import { healthRouter } from "./routes/health.js";
 import { meRouter } from "./routes/me.js";
+import { projectsRouter } from "./routes/projects.js";
 
 async function main(): Promise<void> {
   await connectDb();
@@ -26,6 +27,7 @@ async function main(): Promise<void> {
 
   app.use("/api/health", healthRouter);
   app.use("/api/me", meRouter);
+  app.use("/api/projects", projectsRouter);
 
   app.use(errorHandler);
 
