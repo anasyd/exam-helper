@@ -341,10 +341,14 @@ function FeatureOverridesSection() {
           : [];
         return (
           <div key={feature} className="border rounded p-3 space-y-2">
-            <div className="flex items-center justify-between">
+            <label
+              htmlFor={`override-${feature}`}
+              className="flex items-center justify-between cursor-pointer select-none"
+            >
               <span className="text-sm font-medium">{FEATURE_LABELS[feature]}</span>
-              <label className="text-sm flex items-center gap-2">
+              <span className="text-sm flex items-center gap-2">
                 <input
+                  id={`override-${feature}`}
                   type="checkbox"
                   checked={!!sel}
                   onChange={(e) => {
@@ -368,8 +372,8 @@ function FeatureOverridesSection() {
                   }}
                 />
                 Override
-              </label>
-            </div>
+              </span>
+            </label>
             {sel && (
               <div className="grid grid-cols-2 gap-2">
                 <select
