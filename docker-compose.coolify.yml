@@ -25,10 +25,10 @@ services:
       # Same PASSWORD_MONGOROOT identifier as mongo service → same generated value
       - MONGODB_URI=mongodb://admin:${SERVICE_PASSWORD_MONGOROOT}@mongo:27017/examhelper?authSource=admin
 
-      # ── Domains — set full https:// URLs in Coolify env panel ───────────────────
+      # ── Auto-assigned URLs (Coolify always sets SERVICE_URL_* with https://) ──────
       - SERVICE_FQDN_SERVER_4000=${SERVICE_FQDN_SERVER_4000}
-      - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-      - FRONTEND_URL=${FRONTEND_URL}
+      - BETTER_AUTH_URL=${SERVICE_URL_SERVER}
+      - FRONTEND_URL=${SERVICE_URL_WEB}
 
       # ── Manual — fill in Coolify UI after deploy ─────────────────────────────
       - REGISTRATION_MODE=${REGISTRATION_MODE:-open}
@@ -61,7 +61,7 @@ services:
     build:
       context: ./web
       args:
-        NEXT_PUBLIC_AUTH_URL: ${NEXT_PUBLIC_AUTH_URL}
+        NEXT_PUBLIC_AUTH_URL: ${SERVICE_URL_SERVER}
     environment:
       # ── Auto-assigned domain ──────────────────────────────────────────────────
       - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000}
