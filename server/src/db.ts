@@ -1,6 +1,12 @@
-import { MongoClient, GridFSBucket } from "mongodb";
+import { MongoClient, GridFSBucket, ObjectId } from "mongodb";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
+
+export { ObjectId };
+// Helper to query a user by their string ID (Better Auth stores IDs as ObjectId _id)
+export function byId(id: string): { _id: ObjectId } {
+  return { _id: new ObjectId(id) };
+}
 
 export const mongo = new MongoClient(config.MONGODB_URI);
 
@@ -48,5 +54,5 @@ export function contentCol() {
 }
 
 export function userCol() {
-  return db().collection<{ id: string; email: string; name: string; planTier?: string; planExpiresAt?: number | null; emailVerified?: boolean; createdAt?: Date; updatedAt?: Date }>("user");
+  return db().collection<{ _id: ObjectId; email: string; name: string; planTier?: string; planExpiresAt?: number | null; emailVerified?: boolean; createdAt?: Date; updatedAt?: Date }>("user");
 }

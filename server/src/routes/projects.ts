@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { db, contentCol, userCol } from "../db.js";
+import { db, contentCol, userCol, byId } from "../db.js";
 import { logger } from "../logger.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 
@@ -64,7 +64,7 @@ projectsRouter.put("/:id", async (req, res) => {
   // Check if this is a new project and enforce tier limit
   const existing = await col().findOne({ userId, id }, { projection: { _id: 1 } });
   if (!existing) {
-    const user = await userCol().findOne({ id: userId });
+    const user = await userCol().findOne(byId(userId));
     const tier = ((user?.planTier as Tier) ?? "free");
     const limit = TIER_LIMITS[tier].projects;
     if (limit !== Infinity) {

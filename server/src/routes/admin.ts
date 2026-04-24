@@ -2,9 +2,9 @@ import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
-import { userCol, db } from "../db.js";
+import { userCol, db, byId, ObjectId } from "../db.js";
 import { logger } from "../logger.js";
-import { hashPassword, generateRandomString } from "better-auth/crypto";
+import { hashPassword } from "better-auth/crypto";
 import type { Tier } from "../tiers.js";
 
 export const adminRouter = Router();
@@ -16,7 +16,7 @@ async function requireAdmin(req: Request, res: Response, next: NextFunction): Pr
     res.status(401).json({ error: "Unauthorized" });
     return;
   }
-  const dbUser = await userCol().findOne({ id: session.user.id });
+  const dbUser = await userCol().findOne(byId(session.user.id));
   if (dbUser?.planTier !== "admin") {
     res.status(403).json({ error: "Forbidden" });
     return;
@@ -29,10 +29,17 @@ adminRouter.use(requireAdmin);
 // GET /api/admin/users — list all users
 adminRouter.get("/users", async (_req, res) => {
   const users = await userCol()
-    .find({}, { projection: { _id: 0, id: 1, email: 1, name: 1, planTier: 1, createdAt: 1, emailVerified: 1 } })
+    .find({}, { projection: { email: 1, name: 1, planTier: 1, createdAt: 1, emailVerified: 1 } })
     .sort({ createdAt: -1 })
     .toArray();
-  res.json(users);
+  res.json(users.map(u => ({
+    id: u._id.toString(),
+    email: u.email,
+    name: u.name,
+    planTier: u.planTier,
+    createdAt: u.createdAt,
+    emailVerified: u.emailVerified,
+  })));
 });
 
 // POST /api/admin/users — create a new user (bypasses registration mode)
@@ -53,24 +60,23 @@ adminRouter.post("/users", async (req, res) => {
     return;
   }
 
-  const userId = generateRandomString(32, "a-z", "A-Z", "0-9");
-  const accountId = generateRandomString(32, "a-z", "A-Z", "0-9");
+  const userOid = new ObjectId();
+  const userId = userOid.toHexString();
   const hashedPassword = await hashPassword(password);
   const now = new Date();
 
   await userCol().insertOne({
-    id: userId,
+    _id: userOid,
     email,
     name,
     emailVerified: true,
     planTier: planTier as Tier,
-    planExpiresAt: null,
     createdAt: now,
     updatedAt: now,
   } as any);
 
   await db().collection("account").insertOne({
-    id: accountId,
+    _id: new ObjectId(),
     userId,
     accountId: email,
     providerId: "credential",
@@ -90,7 +96,7 @@ adminRouter.patch("/users/:id", async (req, res) => {
   if (planTier !== undefined) update.planTier = planTier;
   if (planExpiresAt !== undefined) update.planExpiresAt = planExpiresAt;
 
-  const result = await userCol().updateOne({ id: req.params.id }, { $set: update });
+  const result = await userCol().updateOne(byId(req.params.id), { $set: update });
   if (result.matchedCount === 0) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -100,7 +106,7 @@ adminRouter.patch("/users/:id", async (req, res) => {
 
 // DELETE /api/admin/users/:id — remove a user
 adminRouter.delete("/users/:id", async (req, res) => {
-  const result = await userCol().deleteOne({ id: req.params.id });
+  const result = await userCol().deleteOne(byId(req.params.id));
   if (result.deletedCount === 0) {
     res.status(404).json({ error: "User not found" });
     return;

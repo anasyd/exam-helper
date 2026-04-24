@@ -30,7 +30,8 @@ async function autoCreateAdmin(): Promise<void> {
     const body = await response.json().catch(() => ({})) as { user?: { id?: string } };
     const userId = body.user?.id;
     if (userId) {
-      await userCol().updateOne({ id: userId }, { $set: { planTier: "admin" } });
+      const { byId } = await import("./db.js");
+      await userCol().updateOne(byId(userId), { $set: { planTier: "admin" } });
     } else {
       await userCol().updateOne({ email: config.ADMIN_EMAIL.toLowerCase() }, { $set: { planTier: "admin" } });
     }

@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { userCol } from "../db.js";
+import { userCol, byId } from "../db.js";
 import { auth } from "../auth.js";
 import { logger } from "../logger.js";
 
@@ -47,7 +47,7 @@ setupRouter.post("/", async (req, res) => {
   // so matching by the raw email string can miss).
   const userId = body.user?.id;
   const result = userId
-    ? await userCol().updateOne({ id: userId }, { $set: { planTier: "admin" } })
+    ? await userCol().updateOne(byId(userId), { $set: { planTier: "admin" } })
     : await userCol().updateOne({ email: (email as string).toLowerCase() }, { $set: { planTier: "admin" } });
 
   if (result.modifiedCount === 0) {

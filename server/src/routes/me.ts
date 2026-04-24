@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
-import { db, userCol } from "../db.js";
+import { db, userCol, byId } from "../db.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 
 export const meRouter = Router();
@@ -16,7 +16,7 @@ meRouter.get("/", async (req, res) => {
   }
 
   const { id, email, emailVerified, name, image, createdAt } = session.user;
-  const dbUser = await userCol().findOne({ id });
+  const dbUser = await userCol().findOne(byId(id));
   const tier = ((dbUser?.planTier as Tier) ?? "free");
   const limits = TIER_LIMITS[tier];
 
