@@ -53,7 +53,7 @@ export default function SettingsPage() {
     }
   }, [section, session.data?.user, emailPrefs]);
 
-  async function togglePref(key: keyof typeof emailPrefs, value: boolean) {
+  async function togglePref(key: keyof NonNullable<typeof emailPrefs>, value: boolean) {
     if (!emailPrefs) return;
     setEmailPrefs({ ...emailPrefs, [key]: value });
     setPrefsLoading(true);
