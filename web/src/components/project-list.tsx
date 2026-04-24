@@ -353,7 +353,7 @@ export function ProjectList() {
               <Card
                 key={project.id}
                 onClick={() => openProject(project)}
-                className="overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer"
+                className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer"
               >
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">

@@ -403,7 +403,7 @@ function FeatureOverridesSection() {
   );
 }
 
-export function SettingsContent() {
+export function SettingsContent({ activeSection }: { activeSection?: "ai-keys" | "model-routing" | "data" }) {
   const exportAllProjects = useFlashcardStore((s) => s.exportAllProjects);
   const importProjects = useFlashcardStore((s) => s.importProjects);
   const projects = useFlashcardStore((s) => s.projects);
@@ -457,41 +457,52 @@ export function SettingsContent() {
     reader.readAsText(file);
   };
 
+  const show = (s: string) => !activeSection || activeSection === s;
+
   return (
-    <div className="space-y-10">
-      {/* AI Providers */}
-      <section>
-        <SectionLabel>AI Providers</SectionLabel>
-        <div>
-          {PROVIDER_IDS.map((id) => (
-            <ProviderCard key={id} providerId={id} />
-          ))}
-        </div>
-      </section>
+    <div className="space-y-2">
+      {show("ai-keys") && (
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold">AI Keys</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Connect your AI provider API keys. Keys are stored locally in your browser.</p>
+          </div>
+          <div>
+            {PROVIDER_IDS.map((id) => (
+              <ProviderCard key={id} providerId={id} />
+            ))}
+          </div>
+        </section>
+      )}
 
-      {/* Model Routing */}
-      <section className="space-y-6">
-        <SectionLabel>Model Routing</SectionLabel>
-        <DefaultModelPicker />
-        <FeatureOverridesSection />
-      </section>
+      {show("model-routing") && (
+        <section className="space-y-6">
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold">Model Routing</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Choose which model handles each feature.</p>
+          </div>
+          <DefaultModelPicker />
+          <FeatureOverridesSection />
+        </section>
+      )}
 
-      {/* Data */}
-      <section>
-        <SectionLabel>Data</SectionLabel>
-        <p className="text-sm text-muted-foreground mb-4">
-          Export your projects as a JSON backup or restore from a previous export.
-        </p>
-        <div className="flex gap-2 flex-wrap">
-          <Button onClick={handleExport} variant="outline" size="sm" disabled={projects.length === 0}>
-            <Download className="h-4 w-4 mr-2" /> Export projects
-          </Button>
-          <Button onClick={() => importFileInputRef.current?.click()} variant="outline" size="sm">
-            <Upload className="h-4 w-4 mr-2" /> Import projects
-          </Button>
-          <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
-        </div>
-      </section>
+      {show("data") && (
+        <section>
+          <div className="mb-6">
+            <h2 className="text-lg font-semibold">Data</h2>
+            <p className="text-sm text-muted-foreground mt-0.5">Export your projects as a JSON backup or restore from a previous export.</p>
+          </div>
+          <div className="flex gap-2 flex-wrap">
+            <Button onClick={handleExport} variant="outline" size="sm" disabled={projects.length === 0}>
+              <Download className="h-4 w-4 mr-2" /> Export projects
+            </Button>
+            <Button onClick={() => importFileInputRef.current?.click()} variant="outline" size="sm">
+              <Upload className="h-4 w-4 mr-2" /> Import projects
+            </Button>
+            <input ref={importFileInputRef} type="file" accept="application/json,.json" className="hidden" onChange={handleImportFile} />
+          </div>
+        </section>
+      )}
     </div>
   );
 }

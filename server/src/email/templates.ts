@@ -82,16 +82,45 @@ ${LOGO}
 `);
 }
 
+function markdownToEmailHtml(md: string): string {
+  const lines = md.split("\n");
+  const out: string[] = [];
+  let inList = false;
+
+  const inline = (s: string) =>
+    s
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/\*\*(.+?)\*\*/g, '<strong style="color:#f0ede6;">$1</strong>')
+      .replace(/\*(.+?)\*/g, '<em>$1</em>')
+      .replace(/\[(.+?)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" style="color:#b8854a;">$1</a>');
+
+  for (const raw of lines) {
+    const line = raw.trimEnd();
+    if (/^#{1,3}\s/.test(line)) {
+      if (inList) { out.push('</ul>'); inList = false; }
+      out.push(`<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;font-weight:600;">${inline(line.replace(/^#{1,3}\s/, ""))}</p>`);
+    } else if (/^[-*]\s/.test(line)) {
+      if (!inList) { out.push('<ul style="margin:0 0 16px;padding-left:20px;color:#c8c3b8;">'); inList = true; }
+      out.push(`<li style="margin-bottom:6px;">${inline(line.replace(/^[-*]\s/, ""))}</li>`);
+    } else if (line === "") {
+      if (inList) { out.push('</ul>'); inList = false; }
+    } else {
+      if (inList) { out.push('</ul>'); inList = false; }
+      out.push(`<p style="margin:0 0 16px;color:#c8c3b8;">${inline(line)}</p>`);
+    }
+  }
+  if (inList) out.push('</ul>');
+  return out.join("\n");
+}
+
 export function broadcastEmail(opts: {
   name?: string | null;
   message: string;
   unsubscribeUrl: string;
 }): string {
   const greeting = opts.name ? `Hi ${opts.name},` : "Hi,";
-  const bodyHtml = opts.message
-    .split(/\n\n+/)
-    .map(p => `<p style="margin:0 0 16px;color:#c8c3b8;">${p.replace(/\n/g, "<br/>")}</p>`)
-    .join("");
+  const bodyHtml = markdownToEmailHtml(opts.message);
   return wrap(`
 ${LOGO}
 <p style="margin:0 0 20px;color:#f0ede6;font-size:17px;">${greeting}</p>

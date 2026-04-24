@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ChevronLeft, Send, Users } from "lucide-react";
+import { Loader2, ChevronLeft, Send, Users, Bold, Italic, List, Link as LinkIcon, Heading2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -23,6 +23,20 @@ async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
     throw new Error(body.error ?? `${res.status}`);
   }
   return res.json() as Promise<T>;
+}
+
+function wrap(text: string, before: string, after: string, placeholder: string) {
+  const ta = document.getElementById("message-area") as HTMLTextAreaElement | null;
+  if (!ta) return text;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const sel = text.slice(start, end) || placeholder;
+  const next = text.slice(0, start) + before + sel + after + text.slice(end);
+  setTimeout(() => {
+    ta.focus();
+    ta.setSelectionRange(start + before.length, start + before.length + sel.length);
+  }, 0);
+  return next;
 }
 
 export default function AdminEmailPage() {
@@ -44,7 +58,7 @@ export default function AdminEmailPage() {
 
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
-    if (!confirm(`Send "${subject}" to ${recipientCount} verified users?`)) return;
+    if (!confirm(`Send "${subject}" to ${recipientCount} subscribed users?`)) return;
     setSending(true);
     setResult(null);
     try {
@@ -63,6 +77,9 @@ export default function AdminEmailPage() {
     }
   }
 
+  const fmt = (before: string, after: string, placeholder: string) =>
+    setMessage((m) => wrap(m, before, after, placeholder));
+
   return (
     <div className="container mx-auto py-8 max-w-2xl">
       <Link
@@ -74,24 +91,18 @@ export default function AdminEmailPage() {
 
       <div className="mb-8">
         <h1 className="text-2xl font-bold">Broadcast Email</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Send a message to all verified users
-        </p>
+        <p className="text-sm text-muted-foreground mt-1">Send a message to all subscribed users</p>
       </div>
 
       <div className="flex items-center gap-3 mb-6 text-sm text-muted-foreground flex-wrap">
         <span className="flex items-center gap-2">
           <Users className="h-4 w-4" />
-          {recipientCount === null ? (
-            "Loading…"
-          ) : (
+          {recipientCount === null ? "Loading…" : (
             <><strong className="text-foreground">{recipientCount}</strong> subscribed recipients</>
           )}
         </span>
         {unsubCount !== null && unsubCount > 0 && (
-          <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
-            {unsubCount} unsubscribed
-          </span>
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted">{unsubCount} unsubscribed</span>
         )}
       </div>
 
@@ -108,34 +119,53 @@ export default function AdminEmailPage() {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="message">Message</Label>
+        <div className="space-y-1.5">
+          <Label htmlFor="message-area">Message</Label>
+
+          {/* Formatting toolbar */}
+          <div className="flex items-center gap-0.5 rounded-t-xl border border-b-0 border-input bg-muted/40 px-2 py-1.5">
+            <button type="button" title="Bold (**text**)" onClick={() => fmt("**", "**", "bold text")}
+              className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <Bold className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Italic (*text*)" onClick={() => fmt("*", "*", "italic text")}
+              className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <Italic className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Heading (## text)" onClick={() => fmt("## ", "", "Heading")}
+              className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <Heading2 className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Bullet list (- item)" onClick={() => fmt("- ", "", "list item")}
+              className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <List className="h-3.5 w-3.5" />
+            </button>
+            <button type="button" title="Link ([text](url))"
+              onClick={() => {
+                const url = prompt("URL:");
+                if (url) fmt("[", `](${url})`, "link text");
+              }}
+              className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+              <LinkIcon className="h-3.5 w-3.5" />
+            </button>
+            <span className="ml-auto text-[11px] text-muted-foreground/60 pr-1">Markdown</span>
+          </div>
+
           <textarea
-            id="message"
-            className="w-full min-h-48 rounded-2xl border border-input bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y"
-            placeholder={"Write your message here.\n\nBlank lines create new paragraphs."}
+            id="message-area"
+            className="w-full min-h-56 rounded-b-xl border border-input bg-background px-4 py-3 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring resize-y font-mono"
+            placeholder={"Write your message here.\n\nUse **bold**, *italic*, ## headings, - bullet lists, or [links](https://example.com)."}
             value={message}
             onChange={(e) => setMessage(e.target.value)}
             required
           />
-          <p className="text-xs text-muted-foreground">Plain text — blank lines become paragraph breaks</p>
         </div>
 
-        <Button
-          type="submit"
-          className="rounded-full"
-          disabled={sending || recipientCount === 0}
-        >
+        <Button type="submit" className="rounded-full" disabled={sending || recipientCount === 0}>
           {sending ? (
-            <>
-              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Sending…
-            </>
+            <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Sending…</>
           ) : (
-            <>
-              <Send className="h-4 w-4 mr-2" />
-              Send to {recipientCount ?? "…"} users
-            </>
+            <><Send className="h-4 w-4 mr-2" />Send to {recipientCount ?? "…"} users</>
           )}
         </Button>
       </form>
