@@ -87,8 +87,8 @@ export default function PrivacyPage() {
               Your data is retained for as long as your account is active. You can delete individual
               projects (including all uploaded files and generated content) at any time from within the
               app. To delete your entire account and all associated data, contact us at{" "}
-              <a href="mailto:privacy@exam-helper.app" className="underline underline-offset-2">
-                privacy@exam-helper.app
+              <a href="mailto:me@anasyd.com" className="underline underline-offset-2">
+                me@anasyd.com
               </a>
               . We will process deletion requests within 30 days.
             </p>
@@ -101,8 +101,8 @@ export default function PrivacyPage() {
               RSA-OAEP encrypted. Database access is restricted to authenticated server processes.
               No security measure is perfect; if you discover a vulnerability please disclose it
               responsibly to{" "}
-              <a href="mailto:security@exam-helper.app" className="underline underline-offset-2">
-                security@exam-helper.app
+              <a href="mailto:me@anasyd.com" className="underline underline-offset-2">
+                me@anasyd.com
               </a>
               .
             </p>
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
             <h2 className="font-semibold text-base mb-3">8. Self-hosted instances</h2>
             <p className="text-[color:var(--muted)]">
               exam-helper is open source. If you self-host it, you operate as your own data controller.
-              This Privacy Policy applies only to the cloud instance at exam-helper.app.
+              This Privacy Policy applies only to the cloud instance at examhelper.app.
             </p>
           </section>
 
@@ -120,8 +120,8 @@ export default function PrivacyPage() {
             <h2 className="font-semibold text-base mb-3">9. Contact</h2>
             <p className="text-[color:var(--muted)]">
               Questions about this policy:{" "}
-              <a href="mailto:privacy@exam-helper.app" className="underline underline-offset-2">
-                privacy@exam-helper.app
+              <a href="mailto:me@anasyd.com" className="underline underline-offset-2">
+                me@anasyd.com
               </a>
             </p>
           </section>

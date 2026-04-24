@@ -20,7 +20,7 @@ export default function TermsPage() {
             <p className="text-[color:var(--muted)]">
               By creating an account or using exam-helper (&ldquo;the Service&rdquo;), you agree to these
               Terms of Service (&ldquo;Terms&rdquo;). If you do not agree, do not use the Service. These Terms
-              govern only the cloud-hosted instance at exam-helper.app; self-hosted deployments are
+              govern only the cloud-hosted instance at examhelper.app; self-hosted deployments are
               governed by the open-source license.
             </p>
           </section>
@@ -150,8 +150,8 @@ export default function TermsPage() {
             <h2 className="font-semibold text-base mb-3">14. Contact</h2>
             <p className="text-[color:var(--muted)]">
               Questions about these Terms:{" "}
-              <a href="mailto:legal@exam-helper.app" className="underline underline-offset-2">
-                legal@exam-helper.app
+              <a href="mailto:me@anasyd.com" className="underline underline-offset-2">
+                me@anasyd.com
               </a>
             </p>
           </section>
