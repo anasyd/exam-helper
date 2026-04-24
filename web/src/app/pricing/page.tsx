@@ -144,7 +144,7 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-5">
           {PLANS.map((plan) => {
             const isCurrent = currentTier === plan.id;
             const price = interval === "year" ? plan.yearlyPrice : plan.monthlyPrice;
