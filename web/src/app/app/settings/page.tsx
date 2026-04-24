@@ -47,9 +47,14 @@ export default function SettingsPage() {
   useEffect(() => {
     if (section === "notifications" && session.data?.user && emailPrefs === null) {
       fetch(`${BASE}/api/me/email-prefs`, { credentials: "include" })
-        .then((r) => r.json() as Promise<{ productUpdates: boolean }>)
+        .then(async (r) => {
+          if (!r.ok) throw new Error(`${r.status}`);
+          return r.json() as Promise<{ productUpdates: boolean }>;
+        })
         .then(setEmailPrefs)
-        .catch(() => null);
+        .catch((e) => {
+          toast.error(`Could not load email preferences: ${e instanceof Error ? e.message : "unknown error"}`);
+        });
     }
   }, [section, session.data?.user, emailPrefs]);
 
