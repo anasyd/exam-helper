@@ -20,9 +20,8 @@ services:
     environment:
       - NODE_ENV=production
 
-      # ── Auto-generated (Coolify generates once on first deploy, reuses forever) ─
-      # REALBASE64_64 → 64-char base64 random string (correct for JWT/crypto secrets)
-      - BETTER_AUTH_SECRET=${SERVICE_REALBASE64_64_BETTERAUTH}
+      # ── Manual secret — generate once: openssl rand -base64 32, paste in Coolify ─
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       # Same PASSWORD_MONGOROOT identifier as mongo service → same generated value
       - MONGODB_URI=mongodb://admin:${SERVICE_PASSWORD_MONGOROOT}@mongo:27017/examhelper?authSource=admin
 
