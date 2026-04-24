@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { ChevronLeft, Zap, Key, Cpu, Database, CreditCard } from "lucide-react";
+import { ChevronLeft, Zap, Key, Cpu, Database, CreditCard, Bell } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { SettingsContent } from "@/components/app-settings";
@@ -20,13 +20,14 @@ const TIER_LABELS: Record<string, string> = {
   admin: "Admin",
 };
 
-type Section = "ai-keys" | "model-routing" | "data" | "plan";
+type Section = "ai-keys" | "model-routing" | "data" | "notifications" | "plan";
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ElementType; hidden?: boolean }[] = [
-  { id: "ai-keys",       label: "AI Keys",       icon: Key },
-  { id: "model-routing", label: "Model Routing",  icon: Cpu },
-  { id: "data",          label: "Data",           icon: Database },
-  { id: "plan",          label: "Plan",           icon: CreditCard, hidden: !BILLING_ENABLED },
+  { id: "ai-keys",       label: "AI Keys",        icon: Key },
+  { id: "model-routing", label: "Model Routing",   icon: Cpu },
+  { id: "data",          label: "Data",            icon: Database },
+  { id: "notifications", label: "Notifications",   icon: Bell },
+  { id: "plan",          label: "Plan",            icon: CreditCard, hidden: !BILLING_ENABLED },
 ];
 
 export default function SettingsPage() {
@@ -34,12 +35,42 @@ export default function SettingsPage() {
   const [section, setSection] = useState<Section>("ai-keys");
   const [meData, setMeData] = useState<MeResponse | null>(null);
   const [portalLoading, setPortalLoading] = useState(false);
+  const [emailPrefs, setEmailPrefs] = useState<{ productUpdates: boolean } | null>(null);
+  const [prefsLoading, setPrefsLoading] = useState(false);
 
   useEffect(() => {
     if (session.data?.user) {
       fetchMe().then(setMeData).catch(() => null);
     }
   }, [session.data?.user]);
+
+  useEffect(() => {
+    if (section === "notifications" && session.data?.user && emailPrefs === null) {
+      fetch(`${BASE}/api/me/email-prefs`, { credentials: "include" })
+        .then((r) => r.json() as Promise<{ productUpdates: boolean }>)
+        .then(setEmailPrefs)
+        .catch(() => null);
+    }
+  }, [section, session.data?.user, emailPrefs]);
+
+  async function togglePref(key: keyof typeof emailPrefs, value: boolean) {
+    if (!emailPrefs) return;
+    setEmailPrefs({ ...emailPrefs, [key]: value });
+    setPrefsLoading(true);
+    try {
+      await fetch(`${BASE}/api/me/email-prefs`, {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ [key]: value }),
+      });
+    } catch {
+      setEmailPrefs({ ...emailPrefs, [key]: !value });
+      toast.error("Failed to save preference");
+    } finally {
+      setPrefsLoading(false);
+    }
+  }
 
   async function handleManageSubscription() {
     setPortalLoading(true);
@@ -102,6 +133,52 @@ export default function SettingsPage() {
             )}
             {section === "data" && (
               <SettingsContent activeSection="data" />
+            )}
+            {section === "notifications" && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-lg font-semibold">Notifications</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">Choose which emails you receive from us</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">Email categories</p>
+                  <div className="divide-y divide-border rounded-xl border">
+                    <div className="flex items-start justify-between gap-4 px-5 py-4">
+                      <div>
+                        <p className="text-sm font-medium">Product updates</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">News, announcements, and feature updates from exam-helper</p>
+                      </div>
+                      <button
+                        role="switch"
+                        aria-checked={emailPrefs?.productUpdates ?? false}
+                        disabled={emailPrefs === null || prefsLoading}
+                        onClick={() => emailPrefs && void togglePref("productUpdates", !emailPrefs.productUpdates)}
+                        className={cn(
+                          "relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50",
+                          emailPrefs?.productUpdates ? "bg-primary" : "bg-input",
+                        )}
+                      >
+                        <span className={cn("pointer-events-none block h-4 w-4 rounded-full bg-background shadow-lg ring-0 transition-transform", emailPrefs?.productUpdates ? "translate-x-4" : "translate-x-0")} />
+                      </button>
+                    </div>
+                    <div className="flex items-start justify-between gap-4 px-5 py-4">
+                      <div>
+                        <p className="text-sm font-medium">Account &amp; security</p>
+                        <p className="text-xs text-muted-foreground mt-0.5">Password resets, email verification, and important account alerts</p>
+                      </div>
+                      <button
+                        role="switch"
+                        aria-checked={true}
+                        disabled
+                        className="relative inline-flex h-5 w-9 shrink-0 cursor-not-allowed items-center rounded-full border-2 border-transparent bg-primary opacity-50 transition-colors"
+                      >
+                        <span className="pointer-events-none block h-4 w-4 translate-x-4 rounded-full bg-background shadow-lg ring-0 transition-transform" />
+                      </button>
+                    </div>
+                  </div>
+                  <p className="text-xs text-muted-foreground px-1 pt-1">Account &amp; security emails are always sent and cannot be turned off.</p>
+                </div>
+              </div>
             )}
             {section === "plan" && BILLING_ENABLED && meData && (
               <div className="space-y-6">

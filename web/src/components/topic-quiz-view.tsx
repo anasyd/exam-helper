@@ -62,14 +62,15 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
 
     if (correct) {
       setCelebration(true);
-      setTimeout(() => setCelebration(false), 900);
       setAnsweredIds((prev) => new Set(prev).add(currentCard.id));
       if (queue.length === 1) {
-        // Last card — don't empty queue yet (would cause blank screen)
-        // Set done after celebration completes
-        setTimeout(() => { setQuizDone(true); setPassed(true); }, 1000);
+        setTimeout(() => { setCelebration(false); setQuizDone(true); setPassed(true); }, 1400);
       } else {
-        setQueue((prev) => prev.slice(1));
+        // Delay advancing so the user sees the correct answer highlight
+        setTimeout(() => {
+          setCelebration(false);
+          setQueue((prev) => prev.slice(1));
+        }, 1400);
       }
     } else {
       setWrongShake(true);
@@ -77,13 +78,11 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
       const newLives = lives - 1;
       setLives(newLives);
       if (newLives <= 0) {
-        setTimeout(() => { setQuizDone(true); setPassed(false); }, 800);
-        return;
+        setTimeout(() => { setQuizDone(true); setPassed(false); }, 900);
       }
-      // Move wrong card to back of queue
-      setQueue((prev) => [...prev.slice(1), currentCard]);
+      // Queue advance happens when user clicks Continue (below)
     }
-  }, [isAnswered, currentCard, optionMap, lives]);
+  }, [isAnswered, currentCard, optionMap, lives, queue.length]);
 
 
   if (!cardsToPractice.length) {
@@ -228,14 +227,11 @@ export function TopicQuizView({ cardsToPractice, quizTitle, onQuizComplete }: To
           </div>
         )}
 
-        {isAnswered && !isCorrect && (
+        {isAnswered && !isCorrect && lives > 0 && (
           <Button
             className="w-full"
             onClick={() => {
-              const newLives = lives;
-              if (newLives <= 0) return;
-              setSelectedIdx(null);
-              setIsAnswered(false);
+              setQueue((prev) => [...prev.slice(1), currentCard!]);
             }}
           >
             Continue

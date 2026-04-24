@@ -52,3 +52,27 @@ meRouter.post("/on-verified", async (req, res) => {
   await userCol().updateOne(byId(session.user.id), { $set: { welcomeEmailSent: true } });
   res.json({ ok: true });
 });
+
+// GET /api/me/email-prefs — return email notification preferences
+meRouter.get("/email-prefs", async (req, res) => {
+  const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
+  if (!session?.user) { res.status(401).json({}); return; }
+  const dbUser = await userCol().findOne(byId(session.user.id));
+  res.json({
+    productUpdates: !(dbUser as any)?.emailUnsubscribed,
+  });
+});
+
+// PATCH /api/me/email-prefs — update email notification preferences
+meRouter.patch("/email-prefs", async (req, res) => {
+  const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
+  if (!session?.user) { res.status(401).json({}); return; }
+  const { productUpdates } = req.body ?? {};
+  if (typeof productUpdates === "boolean") {
+    const update = productUpdates
+      ? { $set: { emailUnsubscribed: false }, $unset: { emailUnsubscribedAt: "" } }
+      : { $set: { emailUnsubscribed: true, emailUnsubscribedAt: new Date() } };
+    await userCol().updateOne(byId(session.user.id), update as any);
+  }
+  res.json({ ok: true });
+});

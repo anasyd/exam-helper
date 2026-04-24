@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,6 +35,19 @@ function wrap(text: string, before: string, after: string, placeholder: string) 
   setTimeout(() => {
     ta.focus();
     ta.setSelectionRange(start + before.length, start + before.length + sel.length);
+  }, 0);
+  return next;
+}
+
+function insertAt(text: string, token: string): string {
+  const ta = document.getElementById("message-area") as HTMLTextAreaElement | null;
+  if (!ta) return text + token;
+  const start = ta.selectionStart;
+  const end = ta.selectionEnd;
+  const next = text.slice(0, start) + token + text.slice(end);
+  setTimeout(() => {
+    ta.focus();
+    ta.setSelectionRange(start + token.length, start + token.length);
   }, 0);
   return next;
 }
@@ -79,6 +92,8 @@ export default function AdminEmailPage() {
 
   const fmt = (before: string, after: string, placeholder: string) =>
     setMessage((m) => wrap(m, before, after, placeholder));
+  const ins = (token: string) =>
+    setMessage((m) => insertAt(m, token));
 
   return (
     <div className="container mx-auto py-8 max-w-2xl">
@@ -148,6 +163,15 @@ export default function AdminEmailPage() {
               className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
               <LinkIcon className="h-3.5 w-3.5" />
             </button>
+            <span className="mx-1.5 h-4 w-px bg-border shrink-0" />
+            <button type="button" title="Insert recipient's name" onClick={() => ins("{{name}}")}
+              className="px-2 py-1 rounded hover:bg-muted transition-colors text-[11px] text-muted-foreground hover:text-foreground font-mono">
+              {"{{name}}"}
+            </button>
+            <button type="button" title="Insert recipient's email" onClick={() => ins("{{email}}")}
+              className="px-2 py-1 rounded hover:bg-muted transition-colors text-[11px] text-muted-foreground hover:text-foreground font-mono">
+              {"{{email}}"}
+            </button>
             <span className="ml-auto text-[11px] text-muted-foreground/60 pr-1">Markdown</span>
           </div>
 
@@ -161,7 +185,7 @@ export default function AdminEmailPage() {
           />
         </div>
 
-        <Button type="submit" className="rounded-full" disabled={sending || recipientCount === 0}>
+        <Button type="submit" className="rounded-full" disabled={sending || recipientCount === null || recipientCount === 0}>
           {sending ? (
             <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Sending…</>
           ) : (

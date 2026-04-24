@@ -11,8 +11,50 @@ env:
   WEB_IMAGE: ghcr.io/${{ github.repository_owner }}/exam-helper-web
 
 jobs:
+  detect-changes:
+    name: Detect changed services
+    runs-on: ubuntu-latest
+    outputs:
+      server_changed: ${{ steps.diff.outputs.server_changed }}
+      web_changed: ${{ steps.diff.outputs.web_changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Detect which services changed since last tag
+        id: diff
+        run: |
+          CURRENT_TAG="${{ github.ref_name }}"
+          PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${CURRENT_TAG}$" | head -1)
+
+          if [ -z "$PREV_TAG" ]; then
+            echo "No previous tag — building both services"
+            echo "server_changed=true" >> "$GITHUB_OUTPUT"
+            echo "web_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "Diffing ${PREV_TAG}..${CURRENT_TAG}"
+          CHANGED=$(git diff --name-only "${PREV_TAG}" "${CURRENT_TAG}")
+          echo "$CHANGED"
+
+          if echo "$CHANGED" | grep -q "^server/"; then
+            echo "server_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "server_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
+          if echo "$CHANGED" | grep -q "^web/"; then
+            echo "web_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "web_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   build-server:
     name: Build & push server image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.server_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -50,6 +92,8 @@ jobs:
 
   build-web:
     name: Build & push web image
+    needs: detect-changes
+    if: needs.detect-changes.outputs.web_changed == 'true'
     runs-on: ubuntu-latest
     permissions:
       contents: read

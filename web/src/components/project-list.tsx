@@ -350,41 +350,17 @@ export function ProjectList() {
             const mastered = project.flashcards.filter((c) => c.timesCorrect > 0).length;
             const masteryPct = total > 0 ? Math.round((mastered / total) * 100) : 0;
             return (
+              <div key={project.id} className="relative">
               <Card
-                key={project.id}
                 onClick={() => openProject(project)}
-                className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer"
+                className="overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 flex flex-col cursor-pointer h-full"
               >
                 <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <div className="min-w-0 flex-1 overflow-hidden pr-2">
-                      <CardTitle className="truncate">{project.name}</CardTitle>
-                      <CardDescription className="mt-1 line-clamp-2">
-                        {project.description || "No description"}
-                      </CardDescription>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8 flex-shrink-0"
-                          onClick={(e) => e.stopPropagation()}
-                        >
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => openEditDialog(project)}>
-                          <Edit2 className="mr-2 h-4 w-4" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => openDeleteDialog(project)}>
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          Delete
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                  <div className="min-w-0 pr-10">
+                    <CardTitle className="truncate">{project.name}</CardTitle>
+                    <CardDescription className="mt-1 line-clamp-2">
+                      {project.description || "No description"}
+                    </CardDescription>
                   </div>
                 </CardHeader>
 
@@ -408,6 +384,29 @@ export function ProjectList() {
                   </div>
                 </CardContent>
               </Card>
+              <div
+                className="absolute top-4 right-4 z-10"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <MoreHorizontal className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem onClick={() => openEditDialog(project)}>
+                      <Edit2 className="mr-2 h-4 w-4" />
+                      Edit
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => openDeleteDialog(project)}>
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+              </div>
             );
           })
         )}

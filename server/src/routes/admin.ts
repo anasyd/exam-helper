@@ -140,12 +140,15 @@ adminRouter.post("/email/broadcast", async (req, res) => {
   for (const user of users) {
     const userId = user._id.toHexString();
     try {
+      const personalizedMessage = message.trim()
+        .replace(/\{\{name\}\}/gi, (user.name as string | null) ?? "there")
+        .replace(/\{\{email\}\}/gi, user.email as string);
       await sendEmail({
         to: user.email as string,
         subject: subject.trim(),
         html: broadcastEmail({
           name: user.name as string,
-          message: message.trim(),
+          message: personalizedMessage,
           unsubscribeUrl: buildUnsubscribeUrl(userId),
         }),
       });
