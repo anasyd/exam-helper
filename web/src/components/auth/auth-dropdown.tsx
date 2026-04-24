@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -13,8 +13,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Settings, User, FolderOpen, LogOut } from "lucide-react";
+import { Settings, User, FolderOpen, LogOut, ShieldCheck } from "lucide-react";
 import { AppSettings } from "@/components/app-settings";
+import { fetchMe } from "@/lib/api/me";
 
 function initialsFrom(name: string | null | undefined, email: string): string {
   const source = (name ?? email).trim();
@@ -29,6 +30,13 @@ export function AuthDropdown() {
   const session = useSession();
   const router = useRouter();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [planTier, setPlanTier] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (session.data?.user) {
+      fetchMe().then(d => setPlanTier(d.planTier)).catch(() => null);
+    }
+  }, [session.data?.user]);
 
   if (session.isPending) {
     return <div className="w-24 h-9" aria-hidden="true" />;
@@ -66,8 +74,15 @@ export function AuthDropdown() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-56">
         <div className="px-2 py-2">
-          <div className="text-sm font-medium truncate">
-            {user.name ?? user.email}
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-medium truncate">
+              {user.name ?? user.email}
+            </span>
+            {planTier === "admin" && (
+              <span className="text-[10px] font-semibold uppercase tracking-wide bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300 px-1.5 py-0.5 rounded">
+                Admin
+              </span>
+            )}
           </div>
           <div className="text-xs text-muted-foreground truncate">
             {user.email}
@@ -86,6 +101,14 @@ export function AuthDropdown() {
             My projects
           </Link>
         </DropdownMenuItem>
+        {planTier === "admin" && (
+          <DropdownMenuItem asChild>
+            <Link href="/admin/users" className="flex items-center">
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Admin panel
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
           <Settings className="mr-2 h-4 w-4" />
