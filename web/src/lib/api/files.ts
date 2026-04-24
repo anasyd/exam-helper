@@ -5,6 +5,14 @@ export interface UploadedFile {
   fileName: string;
 }
 
+export interface ProjectFile {
+  fileId: string;
+  fileName: string;
+  size: number;
+  uploadedAt: string;
+  contentType: string;
+}
+
 export class TierError extends Error {
   constructor(
     public readonly code: "FILE_TOO_LARGE" | "PDF_LIMIT",
@@ -35,6 +43,32 @@ export async function uploadFile(file: File, projectId?: string): Promise<Upload
   return res.json() as Promise<UploadedFile>;
 }
 
-export function getFileUrl(fileId: string): string {
-  return `${BASE}/api/files/${fileId}`;
+export async function listProjectFiles(projectId: string): Promise<ProjectFile[]> {
+  const res = await fetch(`${BASE}/api/projects/${projectId}/files`, {
+    credentials: "include",
+  });
+  if (!res.ok) return [];
+  return res.json() as Promise<ProjectFile[]>;
+}
+
+export async function downloadFile(fileId: string, fileName: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/files/${fileId}`, { credentials: "include" });
+  if (!res.ok) throw new Error("Download failed");
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+export async function deleteFile(fileId: string): Promise<void> {
+  const res = await fetch(`${BASE}/api/files/${fileId}`, {
+    method: "DELETE",
+    credentials: "include",
+  });
+  if (!res.ok) throw new Error("Delete failed");
 }

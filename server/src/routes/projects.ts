@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { db, contentCol, userCol, byId } from "../db.js";
+import { db, contentCol, userCol, byId, filesBucket } from "../db.js";
 import { logger } from "../logger.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 
@@ -167,4 +167,23 @@ projectsRouter.post("/batch", async (req, res) => {
   ]);
   logger.info({ userId, upserted: result.upsertedCount + result.modifiedCount }, "batch upsert");
   res.json({ ok: true, upserted: result.upsertedCount + result.modifiedCount });
+});
+
+// GET /api/projects/:id/files — list all GridFS files belonging to this user+project
+projectsRouter.get("/:id/files", async (req, res) => {
+  const { userId } = req as unknown as AuthedRequest;
+  const bucket = filesBucket();
+  const files = await bucket
+    .find({ "metadata.userId": userId, "metadata.projectId": req.params.id })
+    .sort({ uploadDate: -1 })
+    .toArray();
+  res.json(
+    files.map((f) => ({
+      fileId: f._id.toString(),
+      fileName: f.filename,
+      size: f.length,
+      uploadedAt: (f.uploadDate as Date).toISOString(),
+      contentType: (f.metadata?.contentType as string | undefined) ?? "application/octet-stream",
+    })),
+  );
 });

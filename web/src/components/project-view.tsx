@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFlashcardStore, Project as ProjectType } from "@/lib/store"; // Import Project type
 import { DocumentUpload } from "@/components/document-upload";
+import { ProjectFileList } from "@/components/project-file-list";
 import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
@@ -779,6 +780,7 @@ export function ProjectView() {
   const [isGeneratingDocumentNotes, setIsGeneratingDocumentNotes] =
     useState(false);
   const [isGeneratingVideoNotes, setIsGeneratingVideoNotes] = useState(false);
+  const [fileRefreshKey, setFileRefreshKey] = useState(0);
   const activeProject = getActiveProject();
 
   useEffect(() => {
@@ -802,6 +804,7 @@ export function ProjectView() {
   };
 
   const handleDocumentProcessingComplete = async (documentText: string, fileName: string) => {
+    setFileRefreshKey((k) => k + 1);
     const defaultProviderId = modelRouting.default.providerId;
     if (!providers[defaultProviderId].apiKey) {
       toast.error("Missing API Key", {
@@ -1181,22 +1184,11 @@ export function ProjectView() {
                         PDF, DOCX, or TXT — AI generates flashcards, notes and
                         study guide automatically.
                       </CardDescription>
-                      {activeProject.documentFileName && (
-                        <p className="text-xs text-muted-foreground mt-2 flex items-center gap-1">
-                          <FileTextIcon className="h-3 w-3" />
-                          Loaded: {activeProject.documentFileName}
-                          {activeProject.documentFileId && (
-                            <a
-                              href={`${process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000"}/api/files/${activeProject.documentFileId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="ml-1 underline hover:text-foreground"
-                            >
-                              view
-                            </a>
-                          )}
-                        </p>
-                      )}
+                      <ProjectFileList
+                        projectId={activeProject.id}
+                        refreshKey={fileRefreshKey}
+                        onDelete={() => setFileRefreshKey((k) => k + 1)}
+                      />
                     </div>
                     {isGeneratingStudyContent && (
                       <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
