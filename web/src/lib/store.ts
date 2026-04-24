@@ -840,14 +840,40 @@ export const useFlashcardStore = create<FlashcardState>()(
         return { success: false, error: "Not implemented for brevity" };
       },
       exportAllProjects: () => {
-        return "[]";
+        return JSON.stringify(get().projects, null, 2);
       },
       importProjects: (jsonData) => {
-        return {
-          success: false,
-          count: 0,
-          error: "Not implemented for brevity",
-        };
+        try {
+          const parsed: unknown = JSON.parse(jsonData);
+          const incoming = Array.isArray(parsed) ? parsed : (parsed as any)?.project ? [(parsed as any).project] : null;
+          if (!incoming) return { success: false, count: 0, error: "Expected a JSON array of projects." };
+
+          const now = new Date();
+          const existing = get().projects;
+          const existingIds = new Set(existing.map((p) => p.id));
+
+          const toAdd = (incoming as any[])
+            .filter((p) => p && typeof p.id === "string" && typeof p.name === "string")
+            .map((p) => ({
+              ...p,
+              createdAt: p.createdAt ? new Date(p.createdAt) : now,
+              updatedAt: now,
+              cardsSeenThisSession: [],
+              sessionComplete: false,
+              flashcards: (p.flashcards ?? []).map((c: any) => ({
+                ...c,
+                lastSeen: c.lastSeen ? new Date(c.lastSeen) : null,
+              })),
+            }))
+            .filter((p) => !existingIds.has(p.id));
+
+          if (toAdd.length === 0) return { success: true, count: 0 };
+
+          set((state) => ({ projects: [...state.projects, ...toAdd] }));
+          return { success: true, count: toAdd.length };
+        } catch (err) {
+          return { success: false, count: 0, error: err instanceof Error ? err.message : "Invalid JSON." };
+        }
       },
 
       createShareableLink: (projectId) => null,

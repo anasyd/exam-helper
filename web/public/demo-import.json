@@ -1,0 +1,392 @@
+[
+  {
+    "id": "demo-intro-to-qc",
+    "name": "Introduction to Quantum Computing",
+    "description": "Lecture notes — MIT 8.370x week 1",
+    "documentFileName": "mit-8370x-week1.pdf",
+    "pdfContent": "Quantum computing uses qubits, which can exist in superpositions of 0 and 1. Unlike classical bits that are deterministically 0 or 1, qubits leverage quantum mechanical phenomena like superposition and entanglement. The Bloch sphere is a geometric representation of a qubit's state. Quantum gates such as Hadamard, CNOT, and Pauli gates manipulate qubit states to perform computations. Shor's algorithm demonstrates exponential speedup over classical factoring algorithms, threatening RSA cryptography. Grover's algorithm provides quadratic speedup for unstructured search problems. Quantum entanglement allows correlated measurements across separated qubits, forming the basis of quantum teleportation and quantum key distribution.",
+    "processedHashes": [],
+    "cardsSeenThisSession": [],
+    "sessionComplete": false,
+    "xp": 130,
+    "flashcards": [
+      {
+        "id": "demo-card-1",
+        "question": "What is a qubit?",
+        "answer": "A quantum bit that can exist in a superposition of 0 and 1 simultaneously.",
+        "explanation": "A qubit is the fundamental unit of quantum information, described by |ψ⟩ = α|0⟩ + β|1⟩ where |α|² + |β|² = 1. Unlike a classical bit which always holds a definite value, a qubit genuinely occupies both states simultaneously until measured — at which point it collapses to |0⟩ with probability |α|² or |1⟩ with probability |β|². This probabilistic, superposed nature is what enables quantum parallelism.",
+        "options": [
+          "A classical bit flipped quickly",
+          "A quantum bit in superposition of 0 and 1",
+          "A type of quantum gate",
+          "A measurement error"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 1,
+        "lastSeen": null,
+        "timesCorrect": 2,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-2",
+        "question": "What does the Hadamard gate do?",
+        "answer": "Creates an equal superposition of |0⟩ and |1⟩ from a basis state.",
+        "explanation": "The Hadamard gate maps |0⟩ → (|0⟩+|1⟩)/√2 and |1⟩ → (|0⟩−|1⟩)/√2, creating a perfectly equal 50/50 superposition. Applying it twice returns the qubit to its original state (H² = I), making it its own inverse. It cannot entangle qubits on its own — that requires a two-qubit gate like CNOT. It is the most common gate for initialising qubits into superposition at the start of a quantum algorithm.",
+        "options": [
+          "Entangles two qubits",
+          "Measures the qubit state",
+          "Creates superposition from a basis state",
+          "Corrects quantum errors"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 1,
+        "timesIncorrect": 1
+      },
+      {
+        "id": "demo-card-3",
+        "question": "Which algorithm threatens RSA cryptography?",
+        "answer": "Shor's algorithm — efficient integer factoring on a quantum computer.",
+        "explanation": "Shor's algorithm (1994) factors large integers in polynomial time O(n³) on a quantum computer, versus sub-exponential time for the best classical algorithm. RSA relies on the assumption that factoring the product of two large primes is computationally infeasible — Shor's breaks that assumption entirely. Grover's algorithm does not target factoring, and QFT alone is just a subroutine. Deutsch-Jozsa solves a different, contrived problem.",
+        "options": [
+          "Grover's algorithm",
+          "Shor's algorithm",
+          "The quantum Fourier transform alone",
+          "Deutsch-Jozsa algorithm"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-4",
+        "question": "What is quantum entanglement?",
+        "answer": "A correlation between qubits such that measuring one instantly determines the state of the other.",
+        "explanation": "Entanglement is a uniquely quantum correlation with no classical analogue. When two qubits are entangled their joint state cannot be described independently — the state is non-separable. Measuring one qubit instantly determines the correlated outcome of the other, regardless of distance. This is not faster-than-light communication (outcomes are random and cannot be controlled to send information). Entanglement is the resource behind quantum teleportation, superdense coding, and QKD.",
+        "options": [
+          "Two qubits held in separate registers",
+          "A form of decoherence",
+          "A correlation that links measurement outcomes across qubits",
+          "The act of copying a qubit state"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-card-5",
+        "question": "What speedup does Grover's algorithm provide?",
+        "answer": "Quadratic speedup over classical unstructured search.",
+        "explanation": "Grover's algorithm finds a target item in an unsorted database of N entries using O(√N) oracle queries, versus O(N) classically — a quadratic speedup. It works by repeatedly applying an oracle (phase flip on the target) followed by a diffusion operator (inversion about the mean), amplifying the target's probability amplitude each iteration. This speedup is provably optimal for unstructured search. It also halves the effective bit-security of symmetric encryption.",
+        "options": [
+          "Exponential over any classical algorithm",
+          "Quadratic speedup over classical search",
+          "Linear speedup in all cases",
+          "No speedup — only a theoretical construct"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0
+      },
+      {
+        "id": "demo-mcq-q1-t1",
+        "question": "How many states can a classical bit represent at once?",
+        "answer": "Exactly one — either 0 or 1.",
+        "explanation": "A classical bit is always in a single definite state — 0 or 1 — corresponding to a discrete voltage level. This is in stark contrast to a qubit, which can exist in a superposition of both values simultaneously. The 'analog voltage' option is a common confusion: analog signals encode a continuum of values but are not in quantum superposition and do not exhibit quantum interference or probabilistic collapse.",
+        "options": [
+          "Two simultaneously",
+          "Exactly one — either 0 or 1",
+          "Infinitely many via analog voltage",
+          "It depends on the hardware"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 1,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Qubits and Superposition",
+        "sourceTopicTitle": "Bit vs qubit"
+      },
+      {
+        "id": "demo-mcq-q1-t1-b",
+        "question": "A qubit in the |+⟩ state is measured. What are the probabilities of outcomes?",
+        "answer": "50% |0⟩ and 50% |1⟩.",
+        "explanation": "The |+⟩ state is (|0⟩ + |1⟩)/√2, produced by applying a Hadamard gate to |0⟩. The Born rule gives probabilities as squared amplitudes: P(|0⟩) = |1/√2|² = 1/2 and P(|1⟩) = 1/2. Once measured, the superposition collapses irreversibly to the observed outcome — so a subsequent measurement would yield the same result. The equal probabilities confirm |+⟩ is a maximally mixed superposition.",
+        "options": [
+          "100% |0⟩",
+          "100% |1⟩",
+          "50% |0⟩ and 50% |1⟩",
+          "The result is always |0⟩ after the first measurement"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Qubits and Superposition",
+        "sourceTopicTitle": "Bit vs qubit"
+      },
+      {
+        "id": "demo-mcq-q1-t2",
+        "question": "What does a point on the surface of the Bloch sphere represent?",
+        "answer": "A pure qubit state.",
+        "explanation": "The Bloch sphere is a unit sphere whose surface represents all possible pure single-qubit states — states with maximum coherence, fully specified by two angles (θ, φ). The north pole is |0⟩, the south pole is |1⟩, and the equator holds equal superpositions. Points inside the sphere represent mixed states arising from decoherence or partial information. A classical probability distribution maps only to the two poles, not to an arbitrary surface point.",
+        "options": [
+          "A mixed quantum state",
+          "A pure qubit state",
+          "A classical probability distribution",
+          "An entangled two-qubit system"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Qubits and Superposition",
+        "sourceTopicTitle": "The Bloch sphere"
+      },
+      {
+        "id": "demo-mcq-q2-t1",
+        "question": "Which gate is its own inverse?",
+        "answer": "The Hadamard gate (H² = I).",
+        "explanation": "A unitary gate that equals its own inverse is called involutory (U² = I). The Hadamard satisfies H² = I: applying H to |0⟩ gives |+⟩, and applying it again returns |0⟩. The Pauli gates X, Y, Z also share this property. In contrast, the S gate requires its conjugate transpose S† and T requires T† to undo. CNOT is also involutory but it is a two-qubit gate, so it is not the best single-qubit answer here.",
+        "options": [
+          "CNOT",
+          "Phase gate S",
+          "The Hadamard gate",
+          "Toffoli gate"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Single-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q2-t1-b",
+        "question": "What does the Pauli-X gate do?",
+        "answer": "Flips |0⟩ to |1⟩ and |1⟩ to |0⟩ (quantum NOT gate).",
+        "explanation": "The Pauli-X gate is the quantum analogue of a classical NOT gate, represented by the matrix [[0,1],[1,0]]. It swaps the amplitudes of |0⟩ and |1⟩: X|0⟩ = |1⟩ and X|1⟩ = |0⟩. Like all quantum gates it is unitary and reversible (X² = I). It is commonly used to flip a qubit from the default |0⟩ state to |1⟩ for circuit initialisation. Applying a phase of π/2 is the job of the S gate, not X.",
+        "options": [
+          "Applies a phase of π/2",
+          "Flips |0⟩ to |1⟩ and |1⟩ to |0⟩",
+          "Creates a Bell state",
+          "Measures the qubit in the Z basis"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 1,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Single-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q2-t2-a",
+        "question": "What does the CNOT gate do to the target qubit when the control qubit is |0⟩?",
+        "answer": "Nothing — the target qubit is unchanged.",
+        "explanation": "CNOT (Controlled-NOT) applies an X gate to the target only when the control qubit is |1⟩. When the control is |0⟩, the gate acts as the identity — the target is untouched. This conditional behaviour mirrors a classical XOR gate. It is the standard way to generate entanglement: applying H then CNOT to |00⟩ produces the Bell state (|00⟩+|11⟩)/√2. CNOT does not create superposition on its own; it only entangles.",
+        "options": [
+          "Flips the target qubit",
+          "Nothing — the target qubit is unchanged",
+          "Puts both qubits in superposition",
+          "Applies a phase of π"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Two-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q2-t2-b",
+        "question": "Which gate set is considered universal for quantum computation?",
+        "answer": "Single-qubit gates plus CNOT.",
+        "explanation": "A gate set is universal if it can approximate any n-qubit unitary to arbitrary precision. Arbitrary single-qubit gates combined with CNOT achieve this, analogous to how NAND alone is universal classically. A compact practical universal set is {H, T, CNOT}. Pauli gates alone cannot generate entanglement. The Toffoli gate is universal for reversible classical computation but not for full quantum computation. SWAP and Hadamard together are not sufficient.",
+        "options": [
+          "Pauli gates alone",
+          "Single-qubit gates plus CNOT",
+          "Toffoli gate alone",
+          "SWAP and Hadamard only"
+        ],
+        "correctOptionIndex": 1,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Quantum Gates",
+        "sourceTopicTitle": "Two-qubit gates"
+      },
+      {
+        "id": "demo-mcq-q3-t1-a",
+        "question": "What is the time complexity of Shor's algorithm for factoring an n-bit integer?",
+        "answer": "O(n³) — polynomial in the number of bits.",
+        "explanation": "Shor's algorithm factors an n-bit integer in O(n³) gate operations — polynomial time, making it tractable for arbitrarily large numbers on a sufficiently powerful quantum computer. The best classical algorithm (General Number Field Sieve) runs in sub-exponential time O(exp(n^(1/3)(log n)^(2/3))), which grows far faster. O(√n) is the query complexity of Grover's algorithm, not Shor's. The exponential O(2ⁿ) would be naïve brute-force trial division.",
+        "options": [
+          "O(2ⁿ) — exponential",
+          "O(n log n) — nearly linear",
+          "O(n³) — polynomial in the number of bits",
+          "O(√n) — sub-linear"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Shor's algorithm"
+      },
+      {
+        "id": "demo-mcq-q3-t1-b",
+        "question": "Which quantum subroutine is at the heart of Shor's algorithm?",
+        "answer": "The Quantum Fourier Transform (QFT).",
+        "explanation": "Shor's algorithm reduces factoring to finding the period r of f(x) = aˣ mod N. The QFT efficiently extracts this period from a superposition of function evaluations in O(n²) gates — exponentially faster than the classical DFT at O(n·2ⁿ). Without the QFT, the period-finding step would offer no quantum advantage. Grover's oracle and amplitude amplification belong to an entirely different algorithm and do not help with period finding.",
+        "options": [
+          "Grover's oracle",
+          "Amplitude amplification",
+          "The Quantum Fourier Transform (QFT)",
+          "Phase estimation alone"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 3,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Shor's algorithm"
+      },
+      {
+        "id": "demo-mcq-q3-t2-a",
+        "question": "How many oracle queries does Grover's algorithm need to find one item in an unsorted list of N items?",
+        "answer": "O(√N) queries.",
+        "explanation": "Grover's algorithm uses O(√N) oracle queries by iterating the Grover diffusion operator approximately π√N/4 times. Each iteration amplifies the target state's amplitude by O(1/√N), so after O(√N) iterations the target dominates and a measurement succeeds with high probability. Classical search requires O(N) queries on average. O(log N) is not achievable for unstructured search — there is no structure to exploit for binary-search-style shortcuts.",
+        "options": [
+          "O(N) — same as classical",
+          "O(log N) — logarithmic",
+          "O(N²) — quadratic",
+          "O(√N) — square root of N"
+        ],
+        "correctOptionIndex": 3,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Grover's algorithm"
+      },
+      {
+        "id": "demo-mcq-q3-t2-b",
+        "question": "What kind of speedup does Grover's algorithm achieve over the best classical search?",
+        "answer": "Quadratic speedup.",
+        "explanation": "Grover's algorithm reduces O(N) classical queries to O(√N) quantum queries — a quadratic speedup. This is less dramatic than Shor's exponential speedup but is provably optimal: no quantum algorithm can search an unstructured database with fewer than O(√N) queries. 'Exponential' is a common wrong answer because it conflates Grover with Shor. The practical implication for cryptography is that AES-256 provides roughly 128-bit quantum security, prompting NIST to recommend 256-bit keys.",
+        "options": [
+          "Exponential speedup",
+          "Linear speedup",
+          "Quadratic speedup",
+          "No speedup — it is equivalent"
+        ],
+        "correctOptionIndex": 2,
+        "difficulty": 2,
+        "lastSeen": null,
+        "timesCorrect": 0,
+        "timesIncorrect": 0,
+        "sourceSectionTitle": "Landmark Algorithms",
+        "sourceTopicTitle": "Grover's algorithm"
+      }
+    ],
+    "documentNotes": "# Introduction to Quantum Computing\n\nQuantum computing harnesses quantum mechanical phenomena — superposition, entanglement, and interference — to perform computations that are intractable for classical computers. While a classical computer processes bits (0 or 1), a quantum computer processes **qubits** that can exist in combinations of both states simultaneously.\n\nThe field sits at the intersection of physics, mathematics, and computer science. Practical quantum computers are still maturing, but near-term devices (NISQ — Noisy Intermediate-Scale Quantum) already demonstrate quantum advantage on specific tasks.\n\n---\n\n## Qubits\n\nA **qubit** (quantum bit) is the fundamental unit of quantum information.\n\n### State representation\n\nA qubit state is written as a linear combination:\n\n> |ψ⟩ = α|0⟩ + β|1⟩\n\nwhere α and β are complex amplitudes satisfying **|α|² + |β|² = 1**. When measured, the qubit collapses to:\n- |0⟩ with probability |α|²\n- |1⟩ with probability |β|²\n\nThis is the **Born rule** — the fundamental postulate linking amplitudes to measurement outcomes.\n\n### The Bloch Sphere\n\nAny pure qubit state maps to a point on the surface of the **Bloch sphere**, a unit sphere in 3D space:\n- North pole → |0⟩\n- South pole → |1⟩\n- Equator → equal superpositions (e.g. |+⟩ = (|0⟩ + |1⟩)/√2)\n\nQuantum gates correspond to **rotations** of this sphere. The Bloch sphere only represents a single qubit; multi-qubit systems require the full density matrix formalism.\n\n### Physical implementations\n\nQubits can be realised using:\n- **Superconducting circuits** (IBM, Google) — Josephson junctions cooled near absolute zero\n- **Trapped ions** (IonQ, Quantinuum) — individual atoms held by electromagnetic fields\n- **Photonics** — polarisation of single photons\n- **Spin qubits** — electron spin states in semiconductor quantum dots\n- **Topological qubits** (research stage) — non-Abelian anyons for inherent error protection\n\n---\n\n## Quantum Gates\n\nQuantum gates are **unitary transformations** — they are reversible and preserve the total probability (norm) of the state vector. Every quantum gate has an inverse.\n\n### Single-qubit gates\n\n| Gate | Symbol | Effect |\n|------|--------|--------|\n| Pauli-X | X | Bit flip: |0⟩↔|1⟩ (quantum NOT) |\n| Pauli-Y | Y | Bit + phase flip |\n| Pauli-Z | Z | Phase flip: |1⟩ → −|1⟩ |\n| Hadamard | H | Creates equal superposition from basis state |\n| S gate | S | Phase rotation by π/2 |\n| T gate | T | Phase rotation by π/4 |\n\n**Hadamard** is particularly important:\n> H|0⟩ = |+⟩ = (|0⟩ + |1⟩)/√2\n> H|1⟩ = |−⟩ = (|0⟩ − |1⟩)/√2\n\nApplying H twice returns the original state (H² = I), making it its own inverse.\n\n### Two-qubit gates\n\n**CNOT (Controlled-NOT)** — the canonical entangling gate:\n- Control qubit |1⟩ → flips the target qubit\n- Control qubit |0⟩ → target unchanged\n- Together with single-qubit gates, CNOT forms a **universal gate set**\n\n**SWAP gate** — exchanges the states of two qubits.\n\n**Toffoli (CCNOT)** — three-qubit gate; flips target only if both controls are |1⟩. Important for reversible classical computation and quantum error correction.\n\n### Universality\n\nA gate set is **universal** if it can approximate any unitary to arbitrary precision. The set {H, T, CNOT} is universal for quantum computation — analogous to how {NAND} is universal classically.\n\n---\n\n## Quantum Circuits\n\nQuantum algorithms are expressed as **quantum circuits**: sequences of gates applied to qubits, read left to right.\n\n### Circuit conventions\n- Horizontal wires represent qubits (initialised to |0⟩)\n- Boxes on wires represent single-qubit gates\n- Vertical connections between wires represent multi-qubit gates\n- Measurement collapses a qubit to a classical bit (shown as a meter symbol)\n\n### The Quantum Fourier Transform (QFT)\n\nThe QFT is the quantum analogue of the Discrete Fourier Transform. It maps:\n> |j⟩ → (1/√N) Σ e^(2πijk/N) |k⟩\n\nThe QFT runs in **O(n²)** gate operations on n qubits, compared to O(n·2ⁿ) classically. It is the key subroutine in Shor's algorithm and phase estimation.\n\n### Circuit depth and width\n- **Width** = number of qubits\n- **Depth** = longest path through the circuit (determines runtime)\n- Shallow circuits are preferred on NISQ hardware where errors accumulate with depth\n\n---\n\n## Key Algorithms\n\n### Shor's Algorithm (1994)\n\n**Problem:** Factor an integer N into its prime components.\n\n**Classical best:** General Number Field Sieve runs in sub-exponential time O(exp(n^(1/3))).\n\n**Quantum speedup:** Shor's algorithm runs in **O(n³)** polynomial time, an exponential speedup.\n\n**How it works:**\n1. Reduce factoring to finding the **period r** of the function f(x) = aˣ mod N\n2. Use the **Quantum Fourier Transform** to find r efficiently\n3. Use classical post-processing to extract factors from r\n\n**Impact:** Breaks **RSA encryption** (which relies on the hardness of factoring). Motivates post-quantum cryptography standards (NIST PQC — lattice-based, hash-based schemes).\n\n**Current status:** Demonstrated on small numbers (e.g. 15 = 3×5, 21 = 3×7). Cryptographically relevant factoring requires ~4000 logical qubits with error correction — beyond current hardware.\n\n---\n\n### Grover's Algorithm (1996)\n\n**Problem:** Search an unsorted database of N items for a marked element.\n\n**Classical:** O(N) queries on average.\n\n**Quantum:** O(√N) queries — **quadratic speedup**.\n\n**How it works:**\n1. Initialise all N states in equal superposition with Hadamard gates\n2. Apply the **oracle** (marks the target with a phase flip)\n3. Apply the **diffusion operator** (inversion about the mean — amplifies the marked amplitude)\n4. Repeat ~π√N/4 times\n5. Measure to find the target with high probability\n\n**Applications:**\n- Database search\n- Speeding up NP-complete problem solvers\n- Breaking symmetric-key cryptography (halves effective key length)\n\n**Note:** Grover's speedup is provably **optimal** — no quantum algorithm can do better than O(√N) for unstructured search.\n\n---\n\n### Other Notable Algorithms\n\n| Algorithm | Speedup | Application |\n|-----------|---------|-------------|\n| Deutsch-Jozsa | Exponential | Distinguishes constant vs balanced functions |\n| Bernstein-Vazirani | Polynomial | Recovers hidden bit string |\n| Simon's | Exponential | Hidden subgroup problem |\n| HHL | Exponential* | Linear systems of equations |\n| QAOA | Heuristic | Combinatorial optimisation |\n| VQE | Heuristic | Quantum chemistry simulation |\n\n*HHL's exponential speedup comes with important caveats on input/output access.\n\n---\n\n## Entanglement\n\nEntanglement is a correlation between qubits with no classical analogue. Entangled qubits cannot be described independently — the joint state is **not separable**.\n\n### Bell States\n\nThe four maximally entangled two-qubit states (Bell basis):\n\n> |Φ+⟩ = (|00⟩ + |11⟩)/√2\n> |Φ−⟩ = (|00⟩ − |11⟩)/√2\n> |Ψ+⟩ = (|01⟩ + |10⟩)/√2\n> |Ψ−⟩ = (|01⟩ − |10⟩)/√2\n\nMeasuring one qubit of |Φ+⟩ instantly determines the other — regardless of the distance between them. This is not faster-than-light communication (no information is transmitted), as the outcomes are random.\n\n### Quantum Teleportation\n\nTransfers an unknown qubit state from Alice to Bob using:\n- 1 shared Bell pair (entanglement)\n- 2 classical bits of communication\n\nThe quantum state is destroyed at Alice's end and recreated at Bob's. Teleportation does not clone the state (no-cloning theorem).\n\n### Quantum Key Distribution (QKD)\n\n**BB84 protocol** uses quantum states to distribute cryptographic keys with information-theoretic security:\n- Any eavesdropping disturbs the quantum states in a detectable way\n- Security guaranteed by physics, not computational hardness\n\nQKD is already commercially deployed (China's quantum satellite network, European QKD infrastructure).\n\n---\n\n## Decoherence and Noise\n\nReal qubits interact with their environment, causing **decoherence** — the loss of quantum information into the environment.\n\n### Key timescales\n- **T1 (relaxation time):** Time for a qubit to decay from |1⟩ to |0⟩\n- **T2 (dephasing time):** Time before phase coherence is lost\n\nSuperconducting qubits currently achieve T2 ~ 100–500 µs. Gate operations must complete well within T2.\n\n### Error types\n- **Bit-flip errors:** |0⟩ ↔ |1⟩ (like classical bit errors)\n- **Phase-flip errors:** |+⟩ ↔ |−⟩ (unique to quantum)\n- **Depolarising noise:** random Pauli errors\n\n---\n\n## Quantum Error Correction\n\nClassical error correction (e.g. repetition codes) cannot be directly applied to qubits because:\n1. **No-cloning theorem:** Quantum states cannot be copied\n2. Measurement collapses superposition\n\n### Quantum error correcting codes\n\n**Shor code (1995):** The first quantum error correcting code. Encodes 1 logical qubit into 9 physical qubits, correcting any single-qubit error.\n\n**Stabiliser codes:** A large family including the 7-qubit Steane code and the 5-qubit perfect code (minimum qubits to correct 1 error).\n\n**Surface code:** The leading practical candidate. Encodes 1 logical qubit in a 2D grid of physical qubits. Threshold error rate ~1% — achievable with current hardware. Requires ~1000 physical qubits per logical qubit.\n\n### Fault-tolerant quantum computing\n\nThe **threshold theorem** states: if physical error rates are below a threshold (~1%), arbitrarily long computations can be performed reliably using quantum error correction. This is the path to large-scale quantum computing.\n\n---\n\n## Quantum Complexity\n\n### Complexity classes\n- **BQP** (Bounded-error Quantum Polynomial time): Problems efficiently solvable by a quantum computer\n- **P ⊆ BPP ⊆ BQP ⊆ PSPACE**\n- Factoring ∈ BQP (Shor's algorithm)\n- It is believed (not proven) that BQP ≠ BPP — quantum computers are strictly more powerful\n\n### Quantum supremacy / advantage\n- **Google (2019):** Sycamore processor solved a random circuit sampling problem in 200 seconds (claimed ~10,000 years classically)\n- **USTC (2020–2021):** Jiuzhang photonic processor — Gaussian boson sampling\n- These demonstrations used tasks tailored to quantum hardware, not practically useful problems\n\n---\n\n## Summary\n\n| Concept | Key idea |\n|---------|----------|\n| Qubit | Superposition of 0 and 1; measured probabilistically |\n| Quantum gate | Unitary transformation; reversible |\n| Entanglement | Non-separable multi-qubit correlations |\n| Shor's algorithm | Exponential speedup for factoring; breaks RSA |\n| Grover's algorithm | Quadratic speedup for unstructured search |\n| Decoherence | Environmental noise destroying quantum information |\n| Error correction | Surface codes protect logical qubits at ~1000:1 overhead |\n| BQP | Complexity class of efficient quantum computation |",
+    "studyGuide": {
+      "title": "Introduction to Quantum Computing",
+      "sections": [
+        {
+          "title": "Qubits and Superposition",
+          "summary": "The fundamental units of quantum information and how they differ from classical bits.",
+          "content": "A qubit is the quantum analogue of a classical bit. While a classical bit can be either 0 or 1, a qubit can exist in a superposition of both states simultaneously. This is described mathematically as α|0⟩ + β|1⟩, where |α|² + |β|² = 1. When measured, the qubit collapses to |0⟩ with probability |α|² or to |1⟩ with probability |β|².",
+          "isCompleted": false,
+          "xpAwardedOnCompletion": 100,
+          "topics": [
+            {
+              "title": "Bit vs qubit",
+              "summary": "A qubit can represent |0⟩, |1⟩, or any superposition of the two.",
+              "content": "Classical bits are deterministic — a 0 is a 0. A qubit is probabilistic until measured. This is not mere ignorance about the state; the qubit genuinely exists in multiple states at once (superposition). Measuring collapses the wave function.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 30
+            },
+            {
+              "title": "The Bloch sphere",
+              "summary": "A geometric representation of a single qubit state.",
+              "content": "The Bloch sphere is a unit sphere where each point on the surface represents a pure qubit state. The north pole is |0⟩, the south pole is |1⟩. Quantum gates correspond to rotations of the sphere.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 30
+            }
+          ]
+        },
+        {
+          "title": "Quantum Gates",
+          "summary": "Unitary operations that manipulate qubit states.",
+          "content": "Quantum gates are the building blocks of quantum circuits. Unlike classical gates, all quantum gates are reversible (unitary). They can be represented as unitary matrices acting on qubit state vectors.",
+          "isCompleted": false,
+          "xpAwardedOnCompletion": 150,
+          "topics": [
+            {
+              "title": "Single-qubit gates",
+              "summary": "Hadamard, Pauli X/Y/Z, phase gates.",
+              "content": "The Hadamard gate H puts a qubit into equal superposition. Pauli-X is the quantum NOT gate. Pauli-Y and Z introduce phase shifts. The S and T gates apply π/2 and π/4 phase rotations respectively.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 40
+            },
+            {
+              "title": "Two-qubit gates",
+              "summary": "CNOT as the canonical entangling gate.",
+              "content": "The CNOT (controlled-NOT) gate flips the target qubit if the control qubit is |1⟩. Together with single-qubit gates, CNOT forms a universal gate set. The Toffoli gate is a three-qubit gate useful for reversible classical computation.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 40
+            }
+          ]
+        },
+        {
+          "title": "Landmark Algorithms",
+          "summary": "Two algorithms that demonstrate quantum speedup.",
+          "content": "Quantum algorithms exploit superposition and interference to solve certain problems exponentially faster than classical computers. The two most celebrated examples are Shor's factoring algorithm and Grover's search algorithm.",
+          "isCompleted": false,
+          "xpAwardedOnCompletion": 200,
+          "topics": [
+            {
+              "title": "Shor's algorithm",
+              "summary": "Polynomial-time integer factoring on a quantum computer.",
+              "content": "Shor's algorithm (1994) factors an n-bit integer in O(n³) time, exponentially faster than the best known classical algorithm. It uses the quantum Fourier transform to find the period of a function, from which the factors can be derived. This breaks RSA encryption.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 60
+            },
+            {
+              "title": "Grover's algorithm",
+              "summary": "Quadratic speedup for unstructured search.",
+              "content": "Grover's algorithm (1996) searches an unsorted database of N items in O(√N) operations, compared to O(N) classically. While not exponential, this quadratic speedup has practical applications in optimization and cryptanalysis.",
+              "isCompleted": false,
+              "mcqsGenerated": true,
+              "xpAwardedOnCompletion": 60
+            }
+          ]
+        }
+      ]
+    },
+    "createdAt": "2026-04-24T05:05:46.416Z",
+    "updatedAt": "2026-04-24T05:05:46.417Z"
+  }
+]
