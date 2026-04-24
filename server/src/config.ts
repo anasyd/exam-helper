@@ -13,15 +13,15 @@ const schema = z.object({
   BETTER_AUTH_URL: z.string().url(),
   FRONTEND_URL: z.string().url(),
 
-  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
-  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  GOOGLE_CLIENT_ID: z.preprocess(v => v || undefined, z.string().min(1).optional()),
+  GOOGLE_CLIENT_SECRET: z.preprocess(v => v || undefined, z.string().min(1).optional()),
 
-  RESEND_API_KEY: z.string().startsWith("re_").optional(),
-  RESEND_FROM_EMAIL: z.string().email().optional(),
+  RESEND_API_KEY: z.preprocess(v => v || undefined, z.string().startsWith("re_").optional()),
+  RESEND_FROM_EMAIL: z.preprocess(v => v || undefined, z.string().email().optional()),
 
   REGISTRATION_MODE: z.enum(["open", "invite-only"]).default("open"),
-  ADMIN_EMAIL: z.string().email().optional(),
-  ADMIN_PASSWORD: z.string().min(8).optional(),
+  ADMIN_EMAIL: z.preprocess(v => v || undefined, z.string().email().optional()),
+  ADMIN_PASSWORD: z.preprocess(v => v || undefined, z.string().min(8).optional()),
 
   // Stripe — all optional; billing is disabled when STRIPE_SECRET_KEY is absent
   STRIPE_SECRET_KEY: z.string().startsWith("sk_").optional(),
