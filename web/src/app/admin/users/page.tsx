@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, ChevronLeft } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronLeft, Mail } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -146,6 +146,13 @@ export default function AdminUsersPage() {
           <h1 className="text-2xl font-bold">User Management</h1>
           <p className="text-sm text-muted-foreground mt-1">Admin panel — manage accounts and plan tiers</p>
         </div>
+        <div className="flex items-center gap-2">
+          <Link href="/admin/email">
+            <Button variant="outline" className="rounded-full">
+              <Mail className="h-4 w-4 mr-2" />
+              Broadcast email
+            </Button>
+          </Link>
         <Dialog open={createOpen} onOpenChange={setCreateOpen}>
           <DialogTrigger asChild>
             <Button className="rounded-full">
@@ -189,6 +196,7 @@ export default function AdminUsersPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {loading ? (

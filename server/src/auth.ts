@@ -21,6 +21,7 @@ export const auth = betterAuth({
   user: {
     additionalFields: {
       planTier: { type: "string", defaultValue: "free", required: false },
+      welcomeEmailSent: { type: "boolean", defaultValue: false, required: false },
     },
   },
 
@@ -51,14 +52,16 @@ export const auth = betterAuth({
         sendOnSignUp: true,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }: { user: { email: string; name: string }; url: string }) => {
-          // Override callbackURL so after verification the browser goes to the
-          // frontend, not the server root (which has no handler and 404s).
-          const verifyUrl = new URL(url);
-          verifyUrl.searchParams.set("callbackURL", `${config.FRONTEND_URL}/app`);
+          // Send user to a frontend confirm page first so they click a button
+          // before the token is consumed — the page then calls Better Auth with
+          // the correct callbackURL pointing to /verified (animation page).
+          const parsedUrl = new URL(url);
+          const token = parsedUrl.searchParams.get("token") ?? "";
+          const confirmUrl = `${config.FRONTEND_URL}/confirm-email?token=${encodeURIComponent(token)}`;
           await sendEmail({
             to: user.email,
             subject: "Verify your exam-helper email",
-            html: verificationEmail({ name: user.name, verifyUrl: verifyUrl.toString() }),
+            html: verificationEmail({ name: user.name, verifyUrl: confirmUrl }),
           });
         },
       }
