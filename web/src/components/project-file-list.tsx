@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { FileTextIcon, Download, Trash2, Loader2, Eye, X } from "lucide-react";
+import { FileTextIcon, Download, Trash2, Loader2, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
@@ -65,7 +65,13 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
       if (!res.ok) throw new Error("Failed to load file");
       const blob = await res.blob();
       const blobUrl = URL.createObjectURL(blob);
-      setViewer({ file, blobUrl });
+      if (file.contentType === "application/pdf") {
+        window.open(blobUrl, "_blank");
+        // Delay revoke slightly so the new tab has time to load
+        setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      } else {
+        setViewer({ file, blobUrl });
+      }
     } catch {
       toast.error("Could not open file");
     } finally {
@@ -144,15 +150,15 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 shrink-0"
-                title="View"
+                className="h-8 w-8 shrink-0"
+                title={file.contentType === "application/pdf" ? "Open PDF" : "View"}
                 disabled={viewingId === file.fileId}
                 onClick={() => void handleView(file)}
               >
                 {viewingId === file.fileId ? (
-                  <Loader2 className="h-3 w-3 animate-spin" />
+                  <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  <Eye className="h-3 w-3" />
+                  <Eye className="h-4 w-4" />
                 )}
               </Button>
             )}
@@ -160,60 +166,45 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0"
+              className="h-8 w-8 shrink-0"
               title="Download"
               disabled={downloadingId === file.fileId}
               onClick={() => void handleDownload(file)}
             >
               {downloadingId === file.fileId ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Download className="h-3 w-3" />
+                <Download className="h-4 w-4" />
               )}
             </Button>
 
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
+              className="h-8 w-8 shrink-0 text-destructive hover:text-destructive"
               title="Delete"
               disabled={deletingId === file.fileId}
               onClick={() => void handleDelete(file)}
             >
               {deletingId === file.fileId ? (
-                <Loader2 className="h-3 w-3 animate-spin" />
+                <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Trash2 className="h-3 w-3" />
+                <Trash2 className="h-4 w-4" />
               )}
             </Button>
           </div>
         ))}
       </div>
 
-      {/* File viewer dialog */}
+      {/* File viewer dialog (images and text only — PDFs open in new tab) */}
       <Dialog open={!!viewer} onOpenChange={(open) => !open && handleCloseViewer()}>
         <DialogContent className="max-w-4xl w-full h-[85vh] flex flex-col p-0 gap-0">
-          <DialogHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
-            <DialogTitle className="text-sm font-medium truncate pr-4">
+          <DialogHeader className="px-4 py-3 border-b">
+            <DialogTitle className="text-sm font-medium truncate pr-8">
               {viewer?.file.fileName}
             </DialogTitle>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 shrink-0"
-              onClick={handleCloseViewer}
-            >
-              <X className="h-4 w-4" />
-            </Button>
           </DialogHeader>
           <div className="flex-1 overflow-hidden">
-            {viewer && viewer.file.contentType === "application/pdf" && (
-              <iframe
-                src={viewer.blobUrl}
-                className="w-full h-full border-0"
-                title={viewer.file.fileName}
-              />
-            )}
             {viewer && viewer.file.contentType.startsWith("image/") && (
               <div className="w-full h-full flex items-center justify-center p-4 overflow-auto">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
