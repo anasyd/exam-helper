@@ -51,10 +51,14 @@ export const auth = betterAuth({
         sendOnSignUp: true,
         autoSignInAfterVerification: true,
         sendVerificationEmail: async ({ user, url }: { user: { email: string; name: string }; url: string }) => {
+          // Override callbackURL so after verification the browser goes to the
+          // frontend, not the server root (which has no handler and 404s).
+          const verifyUrl = new URL(url);
+          verifyUrl.searchParams.set("callbackURL", `${config.FRONTEND_URL}/app`);
           await sendEmail({
             to: user.email,
             subject: "Verify your exam-helper email",
-            html: verificationEmail({ name: user.name, verifyUrl: url }),
+            html: verificationEmail({ name: user.name, verifyUrl: verifyUrl.toString() }),
           });
         },
       }
