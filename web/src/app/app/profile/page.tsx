@@ -32,7 +32,7 @@ export default function ProfilePage() {
   async function handleManageSubscription() {
     setPortalLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/stripe/portal`, {
+      const res = await fetch(`${BASE}/api/billing/portal`, {
         method: "POST",
         credentials: "include",
       });

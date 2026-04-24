@@ -827,17 +827,76 @@ export const useFlashcardStore = create<FlashcardState>()(
         return project ? JSON.stringify(project.flashcards) : "[]";
       },
       importFlashcards: (jsonData, projectId) => {
-        return {
-          success: false,
-          count: 0,
-          error: "Not implemented for brevity",
-        };
+        try {
+          const targetId = projectId ?? get().activeProjectId;
+          if (!targetId) return { success: false, count: 0, error: "No active project" };
+          const parsed: unknown = JSON.parse(jsonData);
+          const cards = Array.isArray(parsed) ? parsed : null;
+          if (!cards) return { success: false, count: 0, error: "Expected a JSON array of flashcards" };
+          const valid = (cards as unknown[])
+            .filter((c): c is Record<string, unknown> =>
+              typeof c === "object" && c !== null &&
+              typeof (c as Record<string, unknown>).question === "string" &&
+              typeof (c as Record<string, unknown>).answer === "string"
+            )
+            .map((c) => ({
+              id: typeof c.id === "string" ? c.id : crypto.randomUUID(),
+              question: c.question as string,
+              answer: c.answer as string,
+              explanation: typeof c.explanation === "string" ? c.explanation : undefined,
+              options: Array.isArray(c.options) ? c.options as string[] : [c.answer as string],
+              correctOptionIndex: typeof c.correctOptionIndex === "number" ? c.correctOptionIndex : 0,
+              difficulty: typeof c.difficulty === "number" ? c.difficulty : 1,
+              lastSeen: null,
+              timesCorrect: 0,
+              timesIncorrect: 0,
+            }));
+          if (valid.length === 0) return { success: false, count: 0, error: "No valid flashcards found in file" };
+          set((state) => ({
+            projects: state.projects.map((p) =>
+              p.id === targetId
+                ? { ...p, flashcards: [...p.flashcards, ...valid], updatedAt: new Date() }
+                : p
+            ),
+          }));
+          return { success: true, count: valid.length };
+        } catch (err) {
+          return { success: false, count: 0, error: err instanceof Error ? err.message : "Invalid JSON" };
+        }
       },
       exportProject: (projectId) => {
-        return null;
+        const project = get().projects.find((p) => p.id === (projectId ?? get().activeProjectId));
+        return project ? JSON.stringify(project, null, 2) : null;
       },
       importProject: (jsonData) => {
-        return { success: false, error: "Not implemented for brevity" };
+        try {
+          const parsed: unknown = JSON.parse(jsonData);
+          const p = parsed as Record<string, unknown>;
+          if (!p || typeof p.id !== "string" || typeof p.name !== "string")
+            return { success: false, error: "Invalid project format" };
+          if (get().projects.some((existing) => existing.id === p.id))
+            return { success: false, error: "Project already exists" };
+          const now = new Date();
+          set((state) => ({
+            projects: [
+              ...state.projects,
+              {
+                ...p,
+                createdAt: p.createdAt ? new Date(p.createdAt as string) : now,
+                updatedAt: now,
+                cardsSeenThisSession: [],
+                sessionComplete: false,
+                flashcards: ((p.flashcards as unknown[]) ?? []).map((c: unknown) => {
+                  const card = c as Record<string, unknown>;
+                  return { ...card, lastSeen: card.lastSeen ? new Date(card.lastSeen as string) : null };
+                }),
+              } as unknown as Project,
+            ],
+          }));
+          return { success: true };
+        } catch (err) {
+          return { success: false, error: err instanceof Error ? err.message : "Invalid JSON" };
+        }
       },
       exportAllProjects: () => {
         return JSON.stringify(get().projects, null, 2);
@@ -876,11 +935,62 @@ export const useFlashcardStore = create<FlashcardState>()(
         }
       },
 
-      createShareableLink: (projectId) => null,
-      importFromShareableLink: (shareLink) => ({
-        success: false,
-        error: "Not implemented",
-      }),
+      createShareableLink: (projectId) => {
+        const project = get().projects.find((p) => p.id === projectId);
+        if (!project) return null;
+        const shareId = createShareableProject({
+          name: project.name,
+          description: project.description,
+          createdAt: project.createdAt.toISOString(),
+          flashcards: project.flashcards.map((f) => ({
+            question: f.question,
+            answer: f.answer,
+            options: f.options,
+            correctOptionIndex: f.correctOptionIndex,
+          })),
+        });
+        if (!shareId) return null;
+        return `${window.location.origin}/app?share=${shareId}`;
+      },
+      importFromShareableLink: (shareLink) => {
+        try {
+          const url = new URL(shareLink);
+          const shareId = url.searchParams.get("share");
+          if (!shareId) return { success: false, error: "Invalid share link" };
+          const shared = getSharedProject(shareId);
+          if (!shared) return { success: false, error: "Project not found or link has expired" };
+          const newId = crypto.randomUUID();
+          const now = new Date();
+          set((state) => ({
+            projects: [
+              ...state.projects,
+              {
+                id: newId,
+                name: shared.name,
+                description: shared.description,
+                createdAt: now,
+                updatedAt: now,
+                pdfContent: null,
+                processedHashes: [],
+                cardsSeenThisSession: [],
+                sessionComplete: false,
+                studyGuide: null,
+                flashcards: shared.flashcards.map((f) => ({
+                  ...f,
+                  id: crypto.randomUUID(),
+                  difficulty: 1,
+                  lastSeen: null,
+                  timesCorrect: 0,
+                  timesIncorrect: 0,
+                })),
+              } as Project,
+            ],
+          }));
+          return { success: true, newProjectId: newId };
+        } catch (err) {
+          return { success: false, error: err instanceof Error ? err.message : "Failed to import project" };
+        }
+      },
 
       setVideoProcessingResult: (
         fileName,
