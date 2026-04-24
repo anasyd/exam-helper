@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000";
 const SETUP_CACHE_COOKIE = "setup-done";
 const SETUP_CACHE_TTL = 5 * 60; // 5 minutes in seconds
-const SESSION_COOKIE = "better-auth.session_token";
+// Better Auth prefixes cookies with __Secure- when useSecureCookies is enabled (production)
+const SESSION_COOKIES = ["__Secure-better-auth.session_token", "better-auth.session_token"];
 
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
@@ -20,7 +21,7 @@ export async function middleware(req: NextRequest) {
 
   // Protect /app/* — unauthenticated users go to sign-in
   if (pathname.startsWith("/app")) {
-    const sessionCookie = req.cookies.get(SESSION_COOKIE);
+    const sessionCookie = SESSION_COOKIES.some(name => req.cookies.get(name));
     if (!sessionCookie) {
       return NextResponse.redirect(new URL("/sign-in", req.url));
     }
