@@ -5,8 +5,9 @@ services:
     volumes:
       - mongo-data:/data/db
     environment:
+      # SERVICE_PASSWORD_MONGOROOT — auto-generated once, reused by server via same identifier
       MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+      MONGO_INITDB_ROOT_PASSWORD: ${SERVICE_PASSWORD_MONGOROOT}
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
       interval: 10s
@@ -18,17 +19,31 @@ services:
     image: ghcr.io/anasyd/exam-helper-server:latest
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=${MONGODB_URI:-mongodb://admin:${MONGO_ROOT_PASSWORD:-changeme}@mongo:27017/examhelper?authSource=admin}
-      - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
-      - BETTER_AUTH_URL=${SERVICE_FQDN_SERVER_4000}
-      - FRONTEND_URL=${SERVICE_FQDN_WEB_3000}
+
+      # ── Auto-generated (Coolify generates once on first deploy, reuses forever) ─
+      # REALBASE64_64 → 64-char base64 random string (correct for JWT/crypto secrets)
+      - BETTER_AUTH_SECRET=${SERVICE_REALBASE64_64_BETTERAUTH}
+      # Same PASSWORD_MONGOROOT identifier as mongo service → same generated value
+      - MONGODB_URI=mongodb://admin:${SERVICE_PASSWORD_MONGOROOT}@mongo:27017/examhelper?authSource=admin
+
+      # ── Auto-assigned domains (Coolify proxies the port; value includes https://) ─
+      - SERVICE_FQDN_SERVER_4000
+      - BETTER_AUTH_URL=${SERVICE_FQDN_SERVER}
+      - FRONTEND_URL=${SERVICE_FQDN_WEB}
+
+      # ── Manual — fill in Coolify UI after deploy ─────────────────────────────
       - REGISTRATION_MODE=${REGISTRATION_MODE:-open}
-      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - RESEND_API_KEY=${RESEND_API_KEY:-}
-      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+
+      # Google OAuth (optional)
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+
+      # Resend email (optional)
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
+
     depends_on:
       mongo:
         condition: service_healthy
@@ -46,7 +61,13 @@ services:
   web:
     image: ghcr.io/anasyd/exam-helper-web:latest
     environment:
-      - NEXT_PUBLIC_AUTH_URL=${SERVICE_FQDN_SERVER_4000}
+      # ── Auto-assigned domain ──────────────────────────────────────────────────
+      - SERVICE_FQDN_WEB_3000
+      - NEXT_PUBLIC_AUTH_URL=${SERVICE_FQDN_SERVER}
+
+      # ── Manual — set to "stripe" or "lemonsqueezy" to enable billing UI ──────
+      - NEXT_PUBLIC_BILLING_PROVIDER=${NEXT_PUBLIC_BILLING_PROVIDER}
+
     depends_on:
       server:
         condition: service_healthy

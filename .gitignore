@@ -49,3 +49,6 @@ server/.env.local
 !server/.env.example
 !web/.env.example
 test.md
+
+# private deployment overrides (personal billing vars etc.)
+docker-compose.*.anasyd.yml
