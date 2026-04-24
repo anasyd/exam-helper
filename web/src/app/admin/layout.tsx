@@ -1,9 +1,9 @@
-import { AppNav } from "@/components/app-nav";
+import { LandingNav } from "@/app/(landing)/_components/landing-nav";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   return (
     <>
-      <AppNav />
+      <LandingNav />
       {children}
     </>
   );

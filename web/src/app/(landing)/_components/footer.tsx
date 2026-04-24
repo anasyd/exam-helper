@@ -52,7 +52,10 @@ export function Footer() {
       </div>
       <div className="mt-12 pt-6 border-t border-[color:var(--rule)] flex items-center justify-between text-xs text-[color:var(--muted)]">
         <span>© 2026 exam-helper</span>
-        <span>Made with restraint.</span>
+        <div className="flex items-center gap-4">
+          <Link href="/privacy" className="hover:underline">Privacy</Link>
+          <Link href="/terms" className="hover:underline">Terms</Link>
+        </div>
       </div>
     </footer>
   );

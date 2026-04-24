@@ -16,7 +16,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      className="w-8 h-8 flex items-center justify-center rounded-sm text-[color:var(--muted)] hover:text-[color:var(--ink)] transition-colors"
+      className="w-8 h-8 flex items-center justify-center rounded-sm text-[color:var(--nav-icon)] hover:text-[color:var(--nav-ink)] transition-colors"
       aria-label="Toggle theme"
     >
       {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -43,7 +43,7 @@ export function LandingNav() {
             href="https://github.com/anasyd/exam-helper"
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden md:flex w-8 h-8 items-center justify-center rounded-sm text-[color:var(--muted)] hover:text-[color:var(--ink)] transition-colors"
+            className="hidden md:flex w-8 h-8 items-center justify-center rounded-sm text-[color:var(--nav-icon)] hover:text-[color:var(--nav-ink)] transition-colors"
             aria-label="View on GitHub"
           >
             <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
@@ -54,7 +54,7 @@ export function LandingNav() {
           {!isLoggedIn && (
             <Link
               href="/app"
-              className="hidden md:inline-flex text-sm px-4 py-2 rounded-sm bg-[color:var(--ink)] text-[color:var(--canvas)] hover:opacity-90 transition-opacity"
+              className="hidden md:inline-flex text-sm px-4 py-2 rounded-sm bg-[color:var(--nav-ink)] text-[color:var(--nav-canvas)] hover:opacity-90 transition-opacity"
             >
               Try it free
             </Link>

@@ -10,6 +10,7 @@ import { useSession } from "@/lib/auth/client";
 import { fetchMe, type MeResponse } from "@/lib/api/me";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
+import { LandingNav } from "@/app/(landing)/_components/landing-nav";
 
 const BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000";
 
@@ -103,6 +104,8 @@ export default function PricingPage() {
   const yearlyDiscount = Math.round((1 - (55 / (6 * 12))) * 100);
 
   return (
+    <>
+    <LandingNav />
     <div className="min-h-screen px-4 py-16">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-12">
@@ -158,7 +161,7 @@ export default function PricingPage() {
                 }`}
               >
                 {isPopular && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-1.5 bg-background">
+                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-1.5 bg-[color:var(--canvas)]">
                     <span className="text-[11px] font-semibold uppercase tracking-wide bg-[color:var(--ink)] text-[color:var(--canvas)] px-3 py-1 rounded-full whitespace-nowrap inline-block">
                       Most popular
                     </span>
@@ -220,5 +223,6 @@ export default function PricingPage() {
         </p>
       </div>
     </div>
+    </>
   );
 }
