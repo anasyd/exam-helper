@@ -27,7 +27,7 @@ services:
       - MONGODB_URI=mongodb://admin:${SERVICE_PASSWORD_MONGOROOT}@mongo:27017/examhelper?authSource=admin
 
       # ── Auto-assigned domains (Coolify proxies the port; value includes https://) ─
-      - SERVICE_FQDN_SERVER_4000
+      - SERVICE_FQDN_SERVER_4000=${SERVICE_FQDN_SERVER_4000}
       - BETTER_AUTH_URL=${SERVICE_FQDN_SERVER}
       - FRONTEND_URL=${SERVICE_FQDN_WEB}
 
@@ -59,11 +59,13 @@ services:
       retries: 3
 
   web:
-    image: ghcr.io/anasyd/exam-helper-web:latest
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_AUTH_URL: ${SERVICE_FQDN_SERVER}
     environment:
       # ── Auto-assigned domain ──────────────────────────────────────────────────
-      - SERVICE_FQDN_WEB_3000
-      - NEXT_PUBLIC_AUTH_URL=${SERVICE_FQDN_SERVER}
+      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000}
 
       # ── Manual — set to "stripe" or "lemonsqueezy" to enable billing UI ──────
       - NEXT_PUBLIC_BILLING_PROVIDER=${NEXT_PUBLIC_BILLING_PROVIDER}
