@@ -89,8 +89,12 @@ interface FlashcardState {
   currentStreak: number; // Added for global study streak
   lastStudiedDate: string | null; // YYYY-MM-DD format. Added for streak calculation
   demoSeedAttempted: boolean; // Have we already attempted to seed the built-in demo project?
+  serverGenConsentGiven: boolean; // User has acknowledged the API key transmission disclosure
+  activeJobIds: Record<string, string>; // projectId → active jobId (persisted so users can return to in-progress jobs)
 
   setDemoSeedAttempted: (value: boolean) => void;
+  setServerGenConsentGiven: (value: boolean) => void;
+  setActiveJobId: (projectId: string, jobId: string | null) => void;
 
   // Project management
   createProject: (name: string, description: string) => string;
@@ -220,9 +224,22 @@ export const useFlashcardStore = create<FlashcardState>()(
       currentStreak: 0,
       lastStudiedDate: null,
       demoSeedAttempted: false,
+      serverGenConsentGiven: false,
+      activeJobIds: {},
       openRouterCustomModels: [],
 
       setDemoSeedAttempted: (value) => set({ demoSeedAttempted: value }),
+      setServerGenConsentGiven: (value) => set({ serverGenConsentGiven: value }),
+      setActiveJobId: (projectId, jobId) =>
+        set((state) => {
+          const next = { ...state.activeJobIds };
+          if (jobId === null) {
+            delete next[projectId];
+          } else {
+            next[projectId] = jobId;
+          }
+          return { activeJobIds: next };
+        }),
 
       createProject: (name, description) => {
         const id = crypto.randomUUID();
@@ -1206,6 +1223,8 @@ export const useFlashcardStore = create<FlashcardState>()(
         lastStudiedDate: state.lastStudiedDate,
         gamificationEnabled: state.gamificationEnabled,
         demoSeedAttempted: state.demoSeedAttempted,
+        serverGenConsentGiven: state.serverGenConsentGiven,
+        activeJobIds: state.activeJobIds,
       }),
       storage: createJSONStorage(() => localStorage),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand persist callbacks hand back untyped data

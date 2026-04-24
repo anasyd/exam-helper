@@ -34,6 +34,8 @@ export async function connectDb(): Promise<void> {
     { userId: 1, projectId: 1 },
     { unique: true, background: true },
   );
+  await db().collection("jobs").createIndex({ userId: 1, status: 1, createdAt: 1 }, { background: true });
+  await db().collection("jobs").createIndex({ userId: 1, projectId: 1 }, { background: true });
   logger.info(
     { uri: config.MONGODB_URI.replace(/\/\/[^@]+@/, "//***@"), db: DB_NAME },
     "mongo connected",
@@ -51,6 +53,10 @@ export function filesBucket(): GridFSBucket {
 
 export function contentCol() {
   return db().collection("projectContent");
+}
+
+export function jobsCol() {
+  return db().collection("jobs");
 }
 
 export function userCol() {

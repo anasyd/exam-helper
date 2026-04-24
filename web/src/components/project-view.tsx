@@ -47,6 +47,10 @@ import { NotesView } from "./notes-view";
 import { toast } from "sonner";
 import { TopicQuizView } from "@/components/topic-quiz-view";
 import { Flashcard, useFlashcardStore as _storeRef } from "@/lib/store";
+import { ServerGenDisclosure } from "@/components/server-gen-disclosure";
+import { JobStatusBanner } from "@/components/job-status-banner";
+import { submitJob, type Job } from "@/lib/api/jobs";
+import { ServerIcon } from "lucide-react";
 
 // Lazy-loads pdfContent from server if not in memory (excluded from localStorage)
 async function ensurePdfContent(project: { id: string; pdfContent?: string | null }): Promise<string | null> {
@@ -781,7 +785,13 @@ export function ProjectView() {
     useState(false);
   const [isGeneratingVideoNotes, setIsGeneratingVideoNotes] = useState(false);
   const [fileRefreshKey, setFileRefreshKey] = useState(0);
+  const [showDisclosure, setShowDisclosure] = useState(false);
+  const serverGenConsentGiven = useFlashcardStore((s) => s.serverGenConsentGiven);
+  const setServerGenConsentGiven = useFlashcardStore((s) => s.setServerGenConsentGiven);
+  const activeJobIds = useFlashcardStore((s) => s.activeJobIds);
+  const setActiveJobId = useFlashcardStore((s) => s.setActiveJobId);
   const activeProject = getActiveProject();
+  const serverJobId = activeProject ? (activeJobIds[activeProject.id] ?? null) : null;
 
   useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- new rule in eslint-plugin-react-hooks@7 (Next 16 upgrade); refactor deferred
@@ -908,6 +918,76 @@ export function ProjectView() {
       setIsGeneratingStudyContent(false);
       useFlashcardStore.getState().setIsProcessing(false);
     }
+  };
+
+  const handleServerGenStart = () => {
+    if (!serverGenConsentGiven) {
+      setShowDisclosure(true);
+    } else {
+      void doSubmitServerJob();
+    }
+  };
+
+  const doSubmitServerJob = async () => {
+    if (!activeProject) return;
+    const pdfContent = await ensurePdfContent(activeProject);
+    if (!pdfContent) {
+      toast.error("No document content", { description: "Upload a document first." });
+      return;
+    }
+    const defaultProviderId = modelRouting.default.providerId;
+    const apiKey = providers[defaultProviderId].apiKey;
+    if (!apiKey) {
+      toast.error("No API key", { description: `Configure a ${defaultProviderId} API key in Settings.` });
+      return;
+    }
+    const modelSel = modelRouting.overrides["study-guide"] ?? modelRouting.default;
+    try {
+      const jobId = await submitJob({
+        projectId: activeProject.id,
+        providerId: defaultProviderId,
+        modelId: modelSel.modelId,
+        apiKey,
+        pdfContent,
+        flags: { generateStudyGuide: true, generateNotes: true, generateFlashcards: true, flashcardCount: 15 },
+      });
+      setActiveJobId(activeProject.id, jobId);
+      toast.success("Job submitted!", {
+        description: "You can close this tab. Results will be ready when you return.",
+      });
+    } catch (err) {
+      toast.error("Failed to submit job", {
+        description: err instanceof Error ? err.message : "Unknown error",
+      });
+    }
+  };
+
+  const handleJobComplete = (job: Job) => {
+    if (!job.result || !activeProject) return;
+    const store = useFlashcardStore.getState();
+    if (job.result.studyGuide) {
+      if (activeProject.studyGuide) {
+        store.mergeStudyGuide(job.result.studyGuide);
+      } else {
+        store.setStudyGuide(job.result.studyGuide);
+      }
+    }
+    if (job.result.notes) {
+      if (activeProject.documentNotes) {
+        store.appendDocumentNotes(job.result.notes);
+      } else {
+        store.setDocumentNotes(job.result.notes);
+      }
+    }
+    if (job.result.flashcards?.length) {
+      store.addFlashcards(job.result.flashcards, null);
+    }
+    // Clear the job ID so banner auto-dismisses after a few seconds
+    setTimeout(() => setActiveJobId(activeProject.id, null), 4000);
+    toast.success("Background generation complete!", {
+      description: "Study content has been applied to your project.",
+    });
+    switchTab("guide");
   };
 
   const handleGenerateDocumentNotes = async () => {
@@ -1171,6 +1251,15 @@ export function ProjectView() {
           {/* ── Source ── */}
           {activeTab === "source" && (
             <div className="space-y-6">
+              {/* Job status banner */}
+              {serverJobId && (
+                <JobStatusBanner
+                  jobId={serverJobId}
+                  onComplete={handleJobComplete}
+                  onDismiss={() => activeProject && setActiveJobId(activeProject.id, null)}
+                />
+              )}
+
               {/* Document upload */}
               <Card>
                 <CardHeader>
@@ -1190,12 +1279,25 @@ export function ProjectView() {
                         onDelete={() => setFileRefreshKey((k) => k + 1)}
                       />
                     </div>
-                    {isGeneratingStudyContent && (
-                      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        Processing…
-                      </div>
-                    )}
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      {isGeneratingStudyContent && (
+                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Processing…
+                        </div>
+                      )}
+                      {activeProject.pdfContent && !serverJobId && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="text-xs gap-1.5"
+                          onClick={handleServerGenStart}
+                        >
+                          <ServerIcon className="h-3.5 w-3.5" />
+                          Generate in background
+                        </Button>
+                      )}
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -1274,6 +1376,16 @@ export function ProjectView() {
 
         </div>
       </div>
+
+      <ServerGenDisclosure
+        open={showDisclosure}
+        onAccept={() => {
+          setShowDisclosure(false);
+          setServerGenConsentGiven(true);
+          void doSubmitServerJob();
+        }}
+        onCancel={() => setShowDisclosure(false)}
+      />
     </div>
   );
 }

@@ -15,6 +15,9 @@ import { statsRouter } from "./routes/stats.js";
 import { setupRouter } from "./routes/setup.js";
 import { adminRouter } from "./routes/admin.js";
 import { demoRouter } from "./routes/demo.js";
+import { jobsRouter } from "./routes/jobs.js";
+import { initKeys } from "./crypto.js";
+import { startWorker } from "./worker.js";
 // stripe is dynamically imported only when STRIPE_SECRET_KEY is set — avoids crash on startup
 
 async function autoCreateAdmin(): Promise<void> {
@@ -45,6 +48,8 @@ async function autoCreateAdmin(): Promise<void> {
 
 async function main(): Promise<void> {
   await connectDb();
+  initKeys();
+  startWorker();
 
   await autoCreateAdmin();
 
@@ -83,6 +88,7 @@ async function main(): Promise<void> {
   app.use("/api/files", filesRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/demo", demoRouter);
+  app.use("/api/jobs", jobsRouter);
 
   app.use(errorHandler);
 
