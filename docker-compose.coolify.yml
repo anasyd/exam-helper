@@ -75,4 +75,4 @@ services:
         condition: service_healthy
 
 volumes:
-  mongo-data:
+  mongo-data: {}
