@@ -14,6 +14,7 @@ import { filesRouter } from "./routes/files.js";
 import { statsRouter } from "./routes/stats.js";
 import { setupRouter } from "./routes/setup.js";
 import { adminRouter } from "./routes/admin.js";
+import { demoRouter } from "./routes/demo.js";
 // stripe is dynamically imported only when STRIPE_SECRET_KEY is set — avoids crash on startup
 
 async function autoCreateAdmin(): Promise<void> {
@@ -74,6 +75,7 @@ async function main(): Promise<void> {
   app.use("/api/projects", projectsRouter);
   app.use("/api/files", filesRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/demo", demoRouter);
 
   app.use(errorHandler);
 
