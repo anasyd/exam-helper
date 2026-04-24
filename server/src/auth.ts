@@ -60,6 +60,15 @@ export const auth = betterAuth({
       }
     : undefined,
 
+  account: {
+    accountLinking: {
+      enabled: true,
+      // Google is trusted: signing in with Google auto-links to an existing
+      // email/password account (e.g. the admin account created via setup wizard)
+      trustedProviders: ["google", "email-password"],
+    },
+  },
+
   socialProviders: {
     ...(config.GOOGLE_CLIENT_ID && config.GOOGLE_CLIENT_SECRET
       ? {
