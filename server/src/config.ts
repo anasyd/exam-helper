@@ -22,6 +22,14 @@ const schema = z.object({
   REGISTRATION_MODE: z.enum(["open", "invite-only"]).default("open"),
   ADMIN_EMAIL: z.string().email().optional(),
   ADMIN_PASSWORD: z.string().min(8).optional(),
+
+  // Stripe — all optional; billing is disabled when STRIPE_SECRET_KEY is absent
+  STRIPE_SECRET_KEY: z.string().startsWith("sk_").optional(),
+  STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(),
+  STRIPE_STUDENT_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_STUDENT_YEARLY_PRICE_ID: z.string().optional(),
+  STRIPE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
+  STRIPE_PRO_YEARLY_PRICE_ID: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

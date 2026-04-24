@@ -14,6 +14,7 @@ import { filesRouter } from "./routes/files.js";
 import { statsRouter } from "./routes/stats.js";
 import { setupRouter } from "./routes/setup.js";
 import { adminRouter } from "./routes/admin.js";
+import { stripeRouter, webhookHandler } from "./routes/stripe.js";
 
 async function autoCreateAdmin(): Promise<void> {
   const { config } = await import("./config.js");
@@ -55,6 +56,11 @@ async function main(): Promise<void> {
   // Better Auth's handler must come BEFORE express.json() — it parses request bodies itself.
   app.all("/api/auth/*", toNodeHandler(auth));
 
+  // Stripe webhook needs raw body — mount before express.json()
+  if (config.STRIPE_SECRET_KEY) {
+    app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), webhookHandler);
+  }
+
   // Projects can include large PDF text blobs; files router uses multer (no JSON limit needed there)
   app.use("/api/projects", express.json({ limit: "20mb" }));
   app.use(express.json({ limit: "64kb" }));
@@ -66,6 +72,9 @@ async function main(): Promise<void> {
   app.use("/api/projects", projectsRouter);
   app.use("/api/files", filesRouter);
   app.use("/api/admin", adminRouter);
+  if (config.STRIPE_SECRET_KEY) {
+    app.use("/api/stripe", stripeRouter);
+  }
 
   app.use(errorHandler);
 

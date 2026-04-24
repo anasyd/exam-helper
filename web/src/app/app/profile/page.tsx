@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -10,12 +10,44 @@ import { ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { fetchMe, type MeResponse } from "@/lib/api/me";
+import { BILLING_ENABLED } from "@/lib/billing";
+
+const BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000";
 
 export default function ProfilePage() {
   const session = useRequireAuth();
   const router = useRouter();
   const [name, setName] = useState("");
   const [saving, setSaving] = useState(false);
+  const [meData, setMeData] = useState<MeResponse | null>(null);
+  const [portalLoading, setPortalLoading] = useState(false);
+
+  useEffect(() => {
+    if (session.data?.user) {
+      fetchMe().then(setMeData).catch(() => null);
+    }
+  }, [session.data?.user]);
+
+  async function handleManageSubscription() {
+    setPortalLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/stripe/portal`, {
+        method: "POST",
+        credentials: "include",
+      });
+      const data = await res.json() as { url?: string; error?: string };
+      if (!res.ok || !data.url) {
+        toast.error(data.error ?? "Couldn't open billing portal");
+        return;
+      }
+      window.location.href = data.url;
+    } catch {
+      toast.error("Couldn't open billing portal");
+    } finally {
+      setPortalLoading(false);
+    }
+  }
 
   if (session.isPending || !session.data?.user) {
     return (
@@ -90,6 +122,34 @@ export default function ProfilePage() {
           {saving ? "Saving…" : "Save"}
         </Button>
       </form>
+
+      {BILLING_ENABLED && meData && (
+        <div className="pt-6 border-t space-y-3">
+          <div>
+            <p className="text-sm font-medium capitalize">{meData.planTier} plan</p>
+            <p className="text-xs text-muted-foreground">
+              {meData.usage.projects} of{" "}
+              {meData.usage.limits.projects === Infinity
+                ? "unlimited"
+                : meData.usage.limits.projects}{" "}
+              projects used
+            </p>
+          </div>
+          {meData.planTier === "free" ? (
+            <Button variant="outline" asChild>
+              <Link href="/pricing">Upgrade plan</Link>
+            </Button>
+          ) : (
+            <Button
+              variant="outline"
+              onClick={() => void handleManageSubscription()}
+              disabled={portalLoading}
+            >
+              {portalLoading ? "Opening…" : "Manage subscription"}
+            </Button>
+          )}
+        </div>
+      )}
 
       <div className="pt-6 border-t">
         <Button type="button" variant="outline" onClick={handleSignOut}>

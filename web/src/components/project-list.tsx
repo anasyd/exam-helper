@@ -44,6 +44,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Label } from "./ui/label";
 import { AuthDropdown } from "@/components/auth/auth-dropdown";
+import { BILLING_ENABLED } from "@/lib/billing";
 
 export function ProjectList() {
   const router = useRouter();
@@ -224,7 +225,13 @@ export function ProjectList() {
           <Progress value={(projectCount / projectLimit) * 100} className="h-1.5" />
           {atLimit && (
             <p className="text-xs text-destructive">
-              Project limit reached. Upgrade your plan to create more projects.
+              Project limit reached.{" "}
+              {BILLING_ENABLED && (
+                <Link href="/pricing" className="underline underline-offset-2">
+                  Upgrade your plan
+                </Link>
+              )}
+              {!BILLING_ENABLED && "Delete a project to make room."}
             </p>
           )}
         </div>
