@@ -161,11 +161,15 @@ export function ProjectList() {
 
               <div className="space-y-4 py-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Project Name</Label>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="name">Project Name</Label>
+                    <span className="text-xs text-muted-foreground">{formData.name.length}/50</span>
+                  </div>
                   <Input
                     id="name"
                     placeholder="Enter project name"
                     value={formData.name}
+                    maxLength={50}
                     onChange={(e) =>
                       setFormData({ ...formData, name: e.target.value })
                     }
@@ -237,11 +241,15 @@ export function ProjectList() {
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">Project Name</Label>
+              <div className="flex items-center justify-between">
+                <Label htmlFor="edit-name">Project Name</Label>
+                <span className="text-xs text-muted-foreground">{formData.name.length}/50</span>
+              </div>
               <Input
                 id="edit-name"
                 placeholder="Enter project name"
                 value={formData.name}
+                maxLength={50}
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
@@ -349,7 +357,7 @@ export function ProjectList() {
               >
                 <CardHeader className="pb-3">
                   <div className="flex justify-between items-start">
-                    <div className="min-w-0 flex-1 pr-2">
+                    <div className="min-w-0 flex-1 overflow-hidden pr-2">
                       <CardTitle className="truncate">{project.name}</CardTitle>
                       <CardDescription className="mt-1 line-clamp-2">
                         {project.description || "No description"}
