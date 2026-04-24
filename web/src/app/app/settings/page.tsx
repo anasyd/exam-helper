@@ -84,7 +84,7 @@ export default function SettingsPage() {
                   <Zap className="h-3.5 w-3.5" /> Upgrade plan
                 </Link>
               </Button>
-            ) : (
+            ) : meData.planTier !== "admin" ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -93,7 +93,7 @@ export default function SettingsPage() {
               >
                 {portalLoading ? "Opening…" : "Manage subscription"}
               </Button>
-            )}
+            ) : null}
           </div>
         </section>
       )}

@@ -139,7 +139,7 @@ export default function ProfilePage() {
             <Button variant="outline" asChild>
               <Link href="/pricing">Upgrade plan</Link>
             </Button>
-          ) : (
+          ) : meData.planTier !== "admin" ? (
             <Button
               variant="outline"
               onClick={() => void handleManageSubscription()}
@@ -147,7 +147,7 @@ export default function ProfilePage() {
             >
               {portalLoading ? "Opening…" : "Manage subscription"}
             </Button>
-          )}
+          ) : null}
         </div>
       )}
 

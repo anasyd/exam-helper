@@ -46,10 +46,10 @@ export async function handleCheckout(req: Request, res: Response): Promise<void>
 
 export async function handlePortal(req: Request, res: Response): Promise<void> {
   const { userId } = req as unknown as AuthedRequest;
-  const user = await userCol().findOne(byId(userId));
+  const user = await userCol().findOne({ id: userId } as never);
   const customerId = (user as Record<string, unknown>)?.stripeCustomerId as string | undefined;
   if (!customerId) {
-    res.status(400).json({ error: "No active subscription" });
+    res.status(400).json({ error: "No active subscription found. Subscribe first." });
     return;
   }
 
