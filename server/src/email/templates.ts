@@ -53,17 +53,26 @@ export function welcomeEmail(opts: {
   return wrap(`
 ${LOGO}
 <h1 style="font-size:28px;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#f0ede6;">Welcome to exam-helper</h1>
-<p style="margin:0 0 12px;color:#f0ede6;">${greeting}</p>
+<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;">${greeting}</p>
 <p style="margin:0 0 20px;color:#c8c3b8;">Your account is active. Here's what you can do right now:</p>
 <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;width:100%;">
-  <tr><td style="padding:8px 0;color:#c8c3b8;border-bottom:1px solid #2c2a26;">📄 Upload a PDF and generate flashcards, study guides, and a roadmap</td></tr>
-  <tr><td style="padding:8px 0;color:#c8c3b8;border-bottom:1px solid #2c2a26;">🤖 Bring your own AI key — Gemini, OpenAI, Claude, or OpenRouter</td></tr>
-  <tr><td style="padding:8px 0;color:#c8c3b8;">📱 Study anywhere — progress syncs across all your devices</td></tr>
+  <tr>
+    <td style="width:10px;vertical-align:middle;"><div style="width:6px;height:6px;background:#b8854a;border-radius:50%;"></div></td>
+    <td style="padding:10px 0 10px 12px;color:#c8c3b8;border-bottom:1px solid #2c2a26;">Upload a PDF and generate flashcards, study guides, and a roadmap</td>
+  </tr>
+  <tr>
+    <td style="width:10px;vertical-align:middle;"><div style="width:6px;height:6px;background:#b8854a;border-radius:50%;"></div></td>
+    <td style="padding:10px 0 10px 12px;color:#c8c3b8;border-bottom:1px solid #2c2a26;">Bring your own AI key — Gemini, OpenAI, Claude, or OpenRouter</td>
+  </tr>
+  <tr>
+    <td style="width:10px;vertical-align:middle;"><div style="width:6px;height:6px;background:#b8854a;border-radius:50%;"></div></td>
+    <td style="padding:10px 0 10px 12px;color:#c8c3b8;">Study anywhere — progress syncs across all your devices</td>
+  </tr>
 </table>
 <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
   <tr>
-    <td style="border-radius:2px;background-color:#b8854a;">
-      <a href="${opts.appUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:2px;">Get started →</a>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.appUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">Get started →</a>
     </td>
   </tr>
 </table>
@@ -76,6 +85,7 @@ ${LOGO}
 export function broadcastEmail(opts: {
   name?: string | null;
   message: string;
+  unsubscribeUrl: string;
 }): string {
   const greeting = opts.name ? `Hi ${opts.name},` : "Hi,";
   const bodyHtml = opts.message
@@ -84,10 +94,11 @@ export function broadcastEmail(opts: {
     .join("");
   return wrap(`
 ${LOGO}
-<p style="margin:0 0 20px;color:#f0ede6;">${greeting}</p>
+<p style="margin:0 0 20px;color:#f0ede6;font-size:17px;">${greeting}</p>
 ${bodyHtml}
 <div style="border-top:1px solid #2c2a26;padding-top:20px;font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#55534e;">
-  You're receiving this because you have an account on exam-helper.
+  You're receiving this because you have an account on exam-helper. &nbsp;
+  <a href="${opts.unsubscribeUrl}" style="color:#908e89;">Unsubscribe</a>
 </div>
 `);
 }
@@ -100,12 +111,12 @@ export function verificationEmail(opts: {
   return wrap(`
 ${LOGO}
 <h1 style="font-size:28px;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#f0ede6;">Verify your email</h1>
-<p style="margin:0 0 12px;color:#f0ede6;">${greeting}</p>
+<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;">${greeting}</p>
 <p style="margin:0 0 28px;color:#c8c3b8;">Thanks for signing up. Click the button below to verify your email address — the link is good for 24 hours.</p>
 <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
   <tr>
-    <td style="border-radius:2px;background-color:#b8854a;">
-      <a href="${opts.verifyUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:2px;">Verify email →</a>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.verifyUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">Verify email →</a>
     </td>
   </tr>
 </table>
@@ -127,12 +138,12 @@ export function resetPasswordEmail(opts: {
   return wrap(`
 ${LOGO}
 <h1 style="font-size:28px;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#f0ede6;">Reset your password</h1>
-<p style="margin:0 0 12px;color:#f0ede6;">${greeting}</p>
+<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;">${greeting}</p>
 <p style="margin:0 0 28px;color:#c8c3b8;">We received a request to reset your password. Click the button below to pick a new one — the link expires in 1 hour.</p>
 <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
   <tr>
-    <td style="border-radius:2px;background-color:#b8854a;">
-      <a href="${opts.resetUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:2px;">Reset password →</a>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.resetUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">Reset password →</a>
     </td>
   </tr>
 </table>

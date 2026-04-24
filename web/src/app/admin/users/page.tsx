@@ -41,6 +41,7 @@ interface AdminUser {
   planTier: string;
   createdAt: string;
   emailVerified: boolean;
+  emailUnsubscribed: boolean;
 }
 
 async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
@@ -218,7 +219,12 @@ export default function AdminUsersPage() {
             {users.map((user) => (
               <TableRow key={user.id}>
                 <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                <TableCell className="text-muted-foreground">
+                  {user.email}
+                  {user.emailUnsubscribed && (
+                    <span className="ml-2 text-xs text-muted-foreground/60">(unsubscribed)</span>
+                  )}
+                </TableCell>
                 <TableCell>
                   <Select
                     value={user.planTier}

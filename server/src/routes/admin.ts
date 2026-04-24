@@ -9,6 +9,7 @@ import type { Tier } from "../tiers.js";
 import { config } from "../config.js";
 import { sendEmail } from "../email/resend.js";
 import { broadcastEmail } from "../email/templates.js";
+import { buildUnsubscribeUrl } from "./email-prefs.js";
 
 export const adminRouter = Router();
 
@@ -32,7 +33,7 @@ adminRouter.use(requireAdmin);
 // GET /api/admin/users — list all users
 adminRouter.get("/users", async (_req, res) => {
   const users = await userCol()
-    .find({}, { projection: { email: 1, name: 1, planTier: 1, createdAt: 1, emailVerified: 1 } })
+    .find({}, { projection: { email: 1, name: 1, planTier: 1, createdAt: 1, emailVerified: 1, emailUnsubscribed: 1 } })
     .sort({ createdAt: -1 })
     .toArray();
   res.json(users.map(u => ({
@@ -42,6 +43,7 @@ adminRouter.get("/users", async (_req, res) => {
     planTier: u.planTier,
     createdAt: u.createdAt,
     emailVerified: u.emailVerified,
+    emailUnsubscribed: !!(u as any).emailUnsubscribed,
   })));
 });
 
@@ -131,16 +133,21 @@ adminRouter.post("/email/broadcast", async (req, res) => {
   }
 
   const users = await userCol()
-    .find({ emailVerified: true }, { projection: { email: 1, name: 1 } })
+    .find({ emailVerified: true, emailUnsubscribed: { $ne: true } }, { projection: { email: 1, name: 1 } })
     .toArray();
 
   let sent = 0;
   for (const user of users) {
+    const userId = user._id.toHexString();
     try {
       await sendEmail({
         to: user.email as string,
         subject: subject.trim(),
-        html: broadcastEmail({ name: user.name as string, message: message.trim() }),
+        html: broadcastEmail({
+          name: user.name as string,
+          message: message.trim(),
+          unsubscribeUrl: buildUnsubscribeUrl(userId),
+        }),
       });
       sent++;
     } catch (err) {
@@ -152,8 +159,10 @@ adminRouter.post("/email/broadcast", async (req, res) => {
   res.json({ ok: true, sent, total: users.length });
 });
 
-// GET /api/admin/email/recipients — count of verified users (broadcast preview)
+// GET /api/admin/email/recipients — count of subscribed verified users
 adminRouter.get("/email/recipients", async (_req, res) => {
-  const count = await userCol().countDocuments({ emailVerified: true });
-  res.json({ count });
+  const total = await userCol().countDocuments({ emailVerified: true });
+  const subscribed = await userCol().countDocuments({ emailVerified: true, emailUnsubscribed: { $ne: true } });
+  const unsubscribed = total - subscribed;
+  res.json({ count: subscribed, total, unsubscribed });
 });

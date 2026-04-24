@@ -14,6 +14,7 @@ import { filesRouter } from "./routes/files.js";
 import { statsRouter } from "./routes/stats.js";
 import { setupRouter } from "./routes/setup.js";
 import { adminRouter } from "./routes/admin.js";
+import { emailPrefsRouter } from "./routes/email-prefs.js";
 import { demoRouter } from "./routes/demo.js";
 import { jobsRouter } from "./routes/jobs.js";
 import { initKeys } from "./crypto.js";
@@ -87,6 +88,7 @@ async function main(): Promise<void> {
   app.use("/api/projects", projectsRouter);
   app.use("/api/files", filesRouter);
   app.use("/api/admin", adminRouter);
+  app.use("/api/email", emailPrefsRouter);
   app.use("/api/demo", demoRouter);
   app.use("/api/jobs", jobsRouter);
 

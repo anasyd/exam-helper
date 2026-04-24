@@ -28,14 +28,15 @@ async function adminFetch<T>(path: string, init?: RequestInit): Promise<T> {
 export default function AdminEmailPage() {
   const router = useRouter();
   const [recipientCount, setRecipientCount] = useState<number | null>(null);
+  const [unsubCount, setUnsubCount] = useState<number | null>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ sent: number; total: number } | null>(null);
 
   useEffect(() => {
-    adminFetch<{ count: number }>("/api/admin/email/recipients")
-      .then((d) => setRecipientCount(d.count))
+    adminFetch<{ count: number; unsubscribed: number }>("/api/admin/email/recipients")
+      .then((d) => { setRecipientCount(d.count); setUnsubCount(d.unsubscribed); })
       .catch((e) => {
         if (e instanceof Error && e.message === "forbidden") router.replace("/");
       });
@@ -78,12 +79,19 @@ export default function AdminEmailPage() {
         </p>
       </div>
 
-      <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
-        <Users className="h-4 w-4" />
-        {recipientCount === null ? (
-          <span>Loading recipients…</span>
-        ) : (
-          <span><strong className="text-foreground">{recipientCount}</strong> verified users will receive this</span>
+      <div className="flex items-center gap-3 mb-6 text-sm text-muted-foreground flex-wrap">
+        <span className="flex items-center gap-2">
+          <Users className="h-4 w-4" />
+          {recipientCount === null ? (
+            "Loading…"
+          ) : (
+            <><strong className="text-foreground">{recipientCount}</strong> subscribed recipients</>
+          )}
+        </span>
+        {unsubCount !== null && unsubCount > 0 && (
+          <span className="text-xs px-2 py-0.5 rounded-full bg-muted">
+            {unsubCount} unsubscribed
+          </span>
         )}
       </div>
 
