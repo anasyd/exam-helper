@@ -150,8 +150,8 @@ export default function TermsPage() {
             <h2 className="font-semibold text-base mb-3">14. Contact</h2>
             <p className="text-[color:var(--muted)]">
               Questions about these Terms:{" "}
-              <a href="mailto:me@anasyd.com" className="underline underline-offset-2">
-                me@anasyd.com
+              <a href="mailto:legal@examhelper.app" className="underline underline-offset-2">
+                legal@examhelper.app
               </a>
             </p>
           </section>
