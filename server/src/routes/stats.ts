@@ -1,12 +1,12 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { mongo } from "../db.js";
+import { db } from "../db.js";
 
 export const statsRouter = Router();
 statsRouter.use(requireAuth);
 
 function col() {
-  return mongo.db().collection<{ userId: string; currentStreak: number; lastStudiedDate: string | null; updatedAt: Date }>("userStats");
+  return db().collection<{ userId: string; currentStreak: number; lastStudiedDate: string | null; updatedAt: Date }>("userStats");
 }
 
 statsRouter.get("/", async (req, res) => {

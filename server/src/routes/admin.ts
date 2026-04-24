@@ -2,7 +2,7 @@ import { Router } from "express";
 import type { Request, Response, NextFunction } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
-import { userCol, mongo } from "../db.js";
+import { userCol, db } from "../db.js";
 import { logger } from "../logger.js";
 import { hashPassword, generateRandomString } from "better-auth/crypto";
 import type { Tier } from "../tiers.js";
@@ -69,7 +69,7 @@ adminRouter.post("/users", async (req, res) => {
     updatedAt: now,
   } as any);
 
-  await mongo.db().collection("account").insertOne({
+  await db().collection("account").insertOne({
     id: accountId,
     userId,
     accountId: email,

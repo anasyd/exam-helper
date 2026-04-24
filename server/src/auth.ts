@@ -1,6 +1,6 @@
 import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
-import { mongo, userCol } from "./db.js";
+import { mongo, db, userCol } from "./db.js";
 import { config } from "./config.js";
 import { sendEmail } from "./email/resend.js";
 import { verificationEmail, resetPasswordEmail } from "./email/templates.js";
@@ -12,7 +12,7 @@ async function isInviteOnly(): Promise<boolean> {
 }
 
 export const auth = betterAuth({
-  database: mongodbAdapter(mongo.db()),
+  database: mongodbAdapter(db()),
   baseURL: config.BETTER_AUTH_URL,
   secret: config.BETTER_AUTH_SECRET,
 

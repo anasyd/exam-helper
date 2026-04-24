@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
-import { mongo, userCol } from "../db.js";
+import { db, userCol } from "../db.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 
 export const meRouter = Router();
@@ -20,7 +20,7 @@ meRouter.get("/", async (req, res) => {
   const tier = ((dbUser?.planTier as Tier) ?? "free");
   const limits = TIER_LIMITS[tier];
 
-  const projectCount = await mongo.db().collection("projects").countDocuments({ userId: id });
+  const projectCount = await db().collection("projects").countDocuments({ userId: id });
 
   res.json({
     user: { id, email, emailVerified, name, image, createdAt },

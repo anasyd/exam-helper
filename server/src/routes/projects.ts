@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { mongo, contentCol, userCol } from "../db.js";
+import { db, contentCol, userCol } from "../db.js";
 import { logger } from "../logger.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 
@@ -8,7 +8,7 @@ export const projectsRouter = Router();
 projectsRouter.use(requireAuth);
 
 function col() {
-  return mongo.db().collection("projects");
+  return db().collection("projects");
 }
 
 const CONTENT_FIELDS = ["pdfContent", "originalTranscript", "formattedTranscript"] as const;
