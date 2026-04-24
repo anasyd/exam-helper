@@ -133,7 +133,7 @@ adminRouter.post("/email/broadcast", async (req, res) => {
   }
 
   const users = await userCol()
-    .find({ emailVerified: true, emailUnsubscribed: { $ne: true } }, { projection: { email: 1, name: 1 } })
+    .find({ emailUnsubscribed: { $ne: true } }, { projection: { email: 1, name: 1 } })
     .toArray();
 
   let sent = 0;
@@ -162,10 +162,10 @@ adminRouter.post("/email/broadcast", async (req, res) => {
   res.json({ ok: true, sent, total: users.length });
 });
 
-// GET /api/admin/email/recipients — count of subscribed verified users
+// GET /api/admin/email/recipients — count of subscribed users
 adminRouter.get("/email/recipients", async (_req, res) => {
-  const total = await userCol().countDocuments({ emailVerified: true });
-  const subscribed = await userCol().countDocuments({ emailVerified: true, emailUnsubscribed: { $ne: true } });
+  const total = await userCol().countDocuments({});
+  const subscribed = await userCol().countDocuments({ emailUnsubscribed: { $ne: true } });
   const unsubscribed = total - subscribed;
   res.json({ count: subscribed, total, unsubscribed });
 });

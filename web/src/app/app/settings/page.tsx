@@ -58,12 +58,13 @@ export default function SettingsPage() {
     setEmailPrefs({ ...emailPrefs, [key]: value });
     setPrefsLoading(true);
     try {
-      await fetch(`${BASE}/api/me/email-prefs`, {
+      const res = await fetch(`${BASE}/api/me/email-prefs`, {
         method: "PATCH",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [key]: value }),
       });
+      if (!res.ok) throw new Error(`${res.status}`);
     } catch {
       setEmailPrefs({ ...emailPrefs, [key]: !value });
       toast.error("Failed to save preference");

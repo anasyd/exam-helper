@@ -65,7 +65,12 @@ export default function AdminEmailPage() {
     adminFetch<{ count: number; unsubscribed: number }>("/api/admin/email/recipients")
       .then((d) => { setRecipientCount(d.count); setUnsubCount(d.unsubscribed); })
       .catch((e) => {
-        if (e instanceof Error && e.message === "forbidden") router.replace("/");
+        if (e instanceof Error && e.message === "forbidden") {
+          router.replace("/");
+        } else {
+          toast.error(e instanceof Error ? e.message : "Failed to load recipients");
+          setRecipientCount(0);
+        }
       });
   }, [router]);
 

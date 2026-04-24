@@ -35,11 +35,11 @@ async function autoCreateAdmin(): Promise<void> {
   if (response.ok) {
     const body = await response.json().catch(() => ({})) as { user?: { id?: string } };
     const userId = body.user?.id;
+    const { byId } = await import("./db.js");
     if (userId) {
-      const { byId } = await import("./db.js");
-      await userCol().updateOne(byId(userId), { $set: { planTier: "admin" } });
+      await userCol().updateOne(byId(userId), { $set: { planTier: "admin", emailVerified: true } });
     } else {
-      await userCol().updateOne({ email: config.ADMIN_EMAIL.toLowerCase() }, { $set: { planTier: "admin" } });
+      await userCol().updateOne({ email: config.ADMIN_EMAIL.toLowerCase() }, { $set: { planTier: "admin", emailVerified: true } });
     }
     logger.info({ email: config.ADMIN_EMAIL }, "auto-created admin account");
   } else {
