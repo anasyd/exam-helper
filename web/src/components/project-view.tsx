@@ -9,7 +9,6 @@ import { FlashcardSession } from "@/components/flashcard-session";
 import { FlashcardList } from "@/components/flashcard-list";
 import { FlashcardImportExport } from "@/components/flashcard-import-export";
 import { ShareProjectDialog } from "@/components/share-project-dialog";
-import { AuthDropdown } from "@/components/auth/auth-dropdown";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -1114,8 +1113,8 @@ export function ProjectView() {
 
   return (
     <div className="min-h-screen">
-      {/* Sticky header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      {/* Sticky project breadcrumb bar — sits below the global app nav */}
+      <div className="sticky top-14 z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-14 gap-2">
             {/* Left: back + project name */}
@@ -1131,20 +1130,17 @@ export function ProjectView() {
               <span className="text-muted-foreground hidden sm:inline">/</span>
               <h1 className="font-semibold truncate text-sm sm:text-base">{activeProject.name}</h1>
             </div>
-            {/* Right: stats + actions */}
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <div className="hidden sm:flex items-center gap-2 text-sm">
-                {currentStreak > 0 && (
-                  <div className="flex items-center text-orange-500">
-                    <Flame className="h-4 w-4 mr-0.5" />
-                    <span className="font-bold">{currentStreak}</span>
-                  </div>
-                )}
-                <div className="font-bold text-amber-500">
-                  {activeProject.xp || 0} XP
+            {/* Right: stats */}
+            <div className="flex items-center gap-2 flex-shrink-0 text-sm">
+              {currentStreak > 0 && (
+                <div className="flex items-center text-orange-500">
+                  <Flame className="h-4 w-4 mr-0.5" />
+                  <span className="font-bold">{currentStreak}</span>
                 </div>
+              )}
+              <div className="font-bold text-amber-500">
+                {activeProject.xp || 0} XP
               </div>
-              <AuthDropdown />
             </div>
           </div>
         </div>

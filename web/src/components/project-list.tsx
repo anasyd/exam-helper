@@ -32,7 +32,6 @@ import {
   Trash2,
   MoreHorizontal,
   Clock,
-  ChevronLeft,
 } from "lucide-react";
 import { LogoIcon } from "@/components/logo-icon";
 import { Progress } from "@/components/ui/progress";
@@ -43,7 +42,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Label } from "./ui/label";
-import { AuthDropdown } from "@/components/auth/auth-dropdown";
 import { BILLING_ENABLED } from "@/lib/billing";
 
 export function ProjectList() {
@@ -139,12 +137,6 @@ export function ProjectList() {
 
   return (
     <div className="container mx-auto py-8">
-      <Link
-        href="/"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-6"
-      >
-        <ChevronLeft className="h-4 w-4" /> Home
-      </Link>
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">My Projects</h1>
 
@@ -211,7 +203,6 @@ export function ProjectList() {
             </DialogContent>
           </Dialog>
 
-          <AuthDropdown />
         </div>
       </div>
 

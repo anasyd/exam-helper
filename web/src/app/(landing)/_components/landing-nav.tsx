@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import { Sun, Moon } from "lucide-react";
 import { AuthDropdown } from "@/components/auth/auth-dropdown";
 import { LogoIcon } from "@/components/logo-icon";
+import { useSession } from "@/lib/auth/client";
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -24,6 +25,9 @@ function ThemeToggle() {
 }
 
 export function LandingNav() {
+  const { data: session } = useSession();
+  const isLoggedIn = !!session?.user;
+
   return (
     <nav className="sticky top-0 z-50 backdrop-blur-md border-b border-[color:var(--rule)]" style={{ backgroundColor: "var(--nav-bg)" }}>
       <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
@@ -47,12 +51,14 @@ export function LandingNav() {
             </svg>
           </a>
           <ThemeToggle />
-          <Link
-            href="/app"
-            className="hidden md:inline-flex text-sm px-4 py-2 rounded-sm bg-[color:var(--ink)] text-[color:var(--canvas)] hover:opacity-90 transition-opacity"
-          >
-            Try it free
-          </Link>
+          {!isLoggedIn && (
+            <Link
+              href="/app"
+              className="hidden md:inline-flex text-sm px-4 py-2 rounded-sm bg-[color:var(--ink)] text-[color:var(--canvas)] hover:opacity-90 transition-opacity"
+            >
+              Try it free
+            </Link>
+          )}
           <AuthDropdown />
         </div>
       </div>

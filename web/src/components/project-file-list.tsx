@@ -1,12 +1,15 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { FileTextIcon, Download, Trash2, Loader2 } from "lucide-react";
+import { FileTextIcon, Download, Trash2, Loader2, Eye, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { useSession } from "@/lib/auth/client";
 import { listProjectFiles, downloadFile, deleteFile, type ProjectFile } from "@/lib/api/files";
 import { useFlashcardStore } from "@/lib/store";
+
+const BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? "";
 
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -14,11 +17,14 @@ function formatBytes(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+interface ViewerState {
+  file: ProjectFile;
+  blobUrl: string;
+}
+
 interface Props {
   projectId: string;
-  /** Called after a file is deleted so the parent can refresh state */
   onDelete?: (fileId: string) => void;
-  /** Bump this to force a re-fetch (e.g., after a new upload) */
   refreshKey?: number;
 }
 
@@ -28,6 +34,8 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
   const [loading, setLoading] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
+  const [viewingId, setViewingId] = useState<string | null>(null);
+  const [viewer, setViewer] = useState<ViewerState | null>(null);
 
   const load = useCallback(async () => {
     if (!session?.user) return;
@@ -43,6 +51,32 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
   useEffect(() => {
     void load();
   }, [load, refreshKey]);
+
+  // Revoke blob URL when viewer closes
+  useEffect(() => {
+    if (!viewer) return;
+    return () => URL.revokeObjectURL(viewer.blobUrl);
+  }, [viewer]);
+
+  async function handleView(file: ProjectFile) {
+    setViewingId(file.fileId);
+    try {
+      const res = await fetch(`${BASE}/api/files/${file.fileId}`, { credentials: "include" });
+      if (!res.ok) throw new Error("Failed to load file");
+      const blob = await res.blob();
+      const blobUrl = URL.createObjectURL(blob);
+      setViewer({ file, blobUrl });
+    } catch {
+      toast.error("Could not open file");
+    } finally {
+      setViewingId(null);
+    }
+  }
+
+  function handleCloseViewer() {
+    if (viewer) URL.revokeObjectURL(viewer.blobUrl);
+    setViewer(null);
+  }
 
   async function handleDownload(file: ProjectFile) {
     setDownloadingId(file.fileId);
@@ -60,7 +94,6 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
     try {
       await deleteFile(file.fileId);
       setFiles((prev) => prev.filter((f) => f.fileId !== file.fileId));
-      // If this was the project's tracked documentFileId, clear it from the store
       const project = useFlashcardStore.getState().projects.find((p) => p.id === projectId);
       if (project?.documentFileId === file.fileId) {
         useFlashcardStore.getState().updateProject(projectId, {
@@ -77,6 +110,11 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
     }
   }
 
+  const isViewable = (file: ProjectFile) =>
+    file.contentType === "application/pdf" ||
+    file.contentType.startsWith("image/") ||
+    file.contentType === "text/plain";
+
   if (!session?.user) return null;
 
   if (loading) {
@@ -91,45 +129,132 @@ export function ProjectFileList({ projectId, onDelete, refreshKey }: Props) {
   if (files.length === 0) return null;
 
   return (
-    <div className="mt-3 space-y-1">
-      {files.map((file) => (
-        <div
-          key={file.fileId}
-          className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
-        >
-          <FileTextIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
-          <span className="flex-1 truncate font-medium">{file.fileName}</span>
-          <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0"
-            title="Download"
-            disabled={downloadingId === file.fileId}
-            onClick={() => void handleDownload(file)}
+    <>
+      <div className="mt-3 space-y-1">
+        {files.map((file) => (
+          <div
+            key={file.fileId}
+            className="flex items-center gap-2 rounded-md border px-3 py-2 text-sm"
           >
-            {downloadingId === file.fileId ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Download className="h-3 w-3" />
+            <FileTextIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+            <span className="flex-1 truncate font-medium">{file.fileName}</span>
+            <span className="shrink-0 text-xs text-muted-foreground">{formatBytes(file.size)}</span>
+
+            {isViewable(file) && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0"
+                title="View"
+                disabled={viewingId === file.fileId}
+                onClick={() => void handleView(file)}
+              >
+                {viewingId === file.fileId ? (
+                  <Loader2 className="h-3 w-3 animate-spin" />
+                ) : (
+                  <Eye className="h-3 w-3" />
+                )}
+              </Button>
             )}
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
-            title="Delete"
-            disabled={deletingId === file.fileId}
-            onClick={() => void handleDelete(file)}
-          >
-            {deletingId === file.fileId ? (
-              <Loader2 className="h-3 w-3 animate-spin" />
-            ) : (
-              <Trash2 className="h-3 w-3" />
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0"
+              title="Download"
+              disabled={downloadingId === file.fileId}
+              onClick={() => void handleDownload(file)}
+            >
+              {downloadingId === file.fileId ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Download className="h-3 w-3" />
+              )}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6 shrink-0 text-destructive hover:text-destructive"
+              title="Delete"
+              disabled={deletingId === file.fileId}
+              onClick={() => void handleDelete(file)}
+            >
+              {deletingId === file.fileId ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <Trash2 className="h-3 w-3" />
+              )}
+            </Button>
+          </div>
+        ))}
+      </div>
+
+      {/* File viewer dialog */}
+      <Dialog open={!!viewer} onOpenChange={(open) => !open && handleCloseViewer()}>
+        <DialogContent className="max-w-4xl w-full h-[85vh] flex flex-col p-0 gap-0">
+          <DialogHeader className="px-4 py-3 border-b flex-row items-center justify-between space-y-0">
+            <DialogTitle className="text-sm font-medium truncate pr-4">
+              {viewer?.file.fileName}
+            </DialogTitle>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 shrink-0"
+              onClick={handleCloseViewer}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            {viewer && viewer.file.contentType === "application/pdf" && (
+              <iframe
+                src={viewer.blobUrl}
+                className="w-full h-full border-0"
+                title={viewer.file.fileName}
+              />
             )}
-          </Button>
-        </div>
-      ))}
-    </div>
+            {viewer && viewer.file.contentType.startsWith("image/") && (
+              <div className="w-full h-full flex items-center justify-center p-4 overflow-auto">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={viewer.blobUrl}
+                  alt={viewer.file.fileName}
+                  className="max-w-full max-h-full object-contain"
+                />
+              </div>
+            )}
+            {viewer && viewer.file.contentType === "text/plain" && (
+              <TextFileViewer blobUrl={viewer.blobUrl} />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
+
+function TextFileViewer({ blobUrl }: { blobUrl: string }) {
+  const [text, setText] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(blobUrl)
+      .then((r) => r.text())
+      .then(setText)
+      .catch(() => setText("Could not load file content."));
+  }, [blobUrl]);
+
+  if (text === null) {
+    return (
+      <div className="flex items-center justify-center h-full text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+      </div>
+    );
+  }
+
+  return (
+    <pre className="w-full h-full overflow-auto p-4 text-sm font-mono whitespace-pre-wrap">
+      {text}
+    </pre>
   );
 }

@@ -144,7 +144,7 @@ export default function PricingPage() {
         </div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-5">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-8">
           {PLANS.map((plan) => {
             const isCurrent = currentTier === plan.id;
             const price = interval === "year" ? plan.yearlyPrice : plan.monthlyPrice;
@@ -153,8 +153,10 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.id}
-                className={`relative rounded-2xl border p-6 flex flex-col gap-5 ${
-                  isPopular ? "border-[color:var(--ink)] shadow-lg" : ""
+                className={`relative rounded-2xl border flex flex-col gap-5 ${
+                  isPopular
+                    ? "border-[color:var(--ink)] shadow-lg pt-10 pb-6 px-6"
+                    : "p-6"
                 }`}
               >
                 {isPopular && (
