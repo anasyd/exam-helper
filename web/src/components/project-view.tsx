@@ -1088,7 +1088,7 @@ export function ProjectView() {
               onClick={() => switchTab("notes")}
               icon={<FileTextIcon className="h-4 w-4" />}
               label="Notes"
-              disabled={!activeProject.pdfContent && !activeProject.originalTranscript}
+              disabled={!activeProject.documentFileId && !activeProject.pdfContent && !activeProject.originalTranscript}
             />
             <TabButton
               isActive={activeTab === "source"}
