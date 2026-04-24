@@ -20,15 +20,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
   Tabs,
   TabsContent,
   TabsList,
@@ -36,7 +27,6 @@ import {
 } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import {
-  Settings,
   ExternalLink,
   Upload,
   Download,
@@ -426,24 +416,13 @@ function FeatureOverridesSection() {
   );
 }
 
-interface AppSettingsProps {
-  open?: boolean;
-  onOpenChange?: (open: boolean) => void;
-}
-
-export function AppSettings({ open: externalOpen, onOpenChange: externalOnOpenChange }: AppSettingsProps = {}) {
+export function SettingsContent() {
   const exportAllProjects = useFlashcardStore((s) => s.exportAllProjects);
   const importProjects = useFlashcardStore((s) => s.importProjects);
   const projects = useFlashcardStore((s) => s.projects);
   const refreshOpenRouterCatalog = useFlashcardStore((s) => s.refreshOpenRouterCatalog);
   const openRouterCatalog = useFlashcardStore((s) => s.openRouterCatalog);
 
-  const [internalOpen, setInternalOpen] = useState(false);
-  const isDialogOpen = externalOpen ?? internalOpen;
-  const setIsDialogOpen = (v: boolean) => {
-    setInternalOpen(v);
-    externalOnOpenChange?.(v);
-  };
   const importFileInputRef = useRef<HTMLInputElement>(null);
 
   // Kick off OpenRouter catalog fetch once, silently
@@ -515,80 +494,60 @@ export function AppSettings({ open: externalOpen, onOpenChange: externalOnOpenCh
   };
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-      {externalOpen === undefined && (
-        <DialogTrigger asChild>
-          <Button variant="outline" size="icon" aria-label="Settings">
-            <Settings className="h-4 w-4" />
+    <>
+      <Tabs defaultValue="providers" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="providers">Providers</TabsTrigger>
+          <TabsTrigger value="models">Models</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="providers" className="space-y-4 pt-4">
+          {PROVIDER_IDS.map((id) => (
+            <ProviderCard key={id} providerId={id} />
+          ))}
+        </TabsContent>
+
+        <TabsContent value="models" className="space-y-4 pt-4">
+          <DefaultModelPicker />
+          <Separator />
+          <FeatureOverridesSection />
+        </TabsContent>
+      </Tabs>
+
+      <Separator className="my-4" />
+
+      <div className="space-y-3">
+        <h3 className="font-semibold">Project Data Management</h3>
+        <p className="text-sm text-muted-foreground">
+          Export all projects to a backup file or import previously-exported projects.
+        </p>
+        <div className="flex gap-2 flex-wrap">
+          <Button
+            onClick={handleExport}
+            variant="outline"
+            size="sm"
+            disabled={projects.length === 0}
+            className="rounded-full"
+          >
+            <Download className="h-4 w-4 mr-2" /> Export all projects
           </Button>
-        </DialogTrigger>
-      )}
-      <DialogContent className="sm:max-w-[640px] max-h-[85vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Application Settings</DialogTitle>
-          <DialogDescription>
-            Configure AI providers, per-feature models, and project data.
-          </DialogDescription>
-        </DialogHeader>
-
-        <Tabs defaultValue="providers" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="providers">Providers</TabsTrigger>
-            <TabsTrigger value="models">Models</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="providers" className="space-y-4 pt-4">
-            {PROVIDER_IDS.map((id) => (
-              <ProviderCard key={id} providerId={id} />
-            ))}
-          </TabsContent>
-
-          <TabsContent value="models" className="space-y-4 pt-4">
-            <DefaultModelPicker />
-            <Separator />
-            <FeatureOverridesSection />
-          </TabsContent>
-        </Tabs>
-
-        <Separator className="my-4" />
-
-        <div className="space-y-3">
-          <h3 className="font-semibold">Project Data Management</h3>
-          <p className="text-sm text-muted-foreground">
-            Export all projects to a backup file or import previously-exported projects.
-          </p>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              onClick={handleExport}
-              variant="outline"
-              size="sm"
-              disabled={projects.length === 0}
-              className="rounded-full"
-            >
-              <Download className="h-4 w-4 mr-2" /> Export all projects
-            </Button>
-            <Button
-              onClick={() => importFileInputRef.current?.click()}
-              variant="outline"
-              size="sm"
-              className="rounded-full"
-            >
-              <Upload className="h-4 w-4 mr-2" /> Import projects
-            </Button>
-            <input
-              ref={importFileInputRef}
-              type="file"
-              accept="application/json,.json"
-              className="hidden"
-              onChange={handleImportFile}
-            />
-          </div>
+          <Button
+            onClick={() => importFileInputRef.current?.click()}
+            variant="outline"
+            size="sm"
+            className="rounded-full"
+          >
+            <Upload className="h-4 w-4 mr-2" /> Import projects
+          </Button>
+          <input
+            ref={importFileInputRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={handleImportFile}
+          />
         </div>
-
-        <DialogFooter>
-          <Button onClick={() => setIsDialogOpen(false)} className="rounded-full">Close</Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </>
   );
 }

@@ -14,7 +14,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Settings, User, FolderOpen, LogOut, ShieldCheck } from "lucide-react";
-import { AppSettings } from "@/components/app-settings";
 import { fetchMe } from "@/lib/api/me";
 
 function initialsFrom(name: string | null | undefined, email: string): string {
@@ -29,7 +28,6 @@ function initialsFrom(name: string | null | undefined, email: string): string {
 export function AuthDropdown() {
   const session = useSession();
   const router = useRouter();
-  const [settingsOpen, setSettingsOpen] = useState(false);
   const [planTier, setPlanTier] = useState<string | null>(null);
 
   useEffect(() => {
@@ -61,7 +59,6 @@ export function AuthDropdown() {
 
   return (
     <>
-      <AppSettings open={settingsOpen} onOpenChange={setSettingsOpen} />
       <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
@@ -110,9 +107,11 @@ export function AuthDropdown() {
           </DropdownMenuItem>
         )}
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={() => setSettingsOpen(true)}>
-          <Settings className="mr-2 h-4 w-4" />
-          Settings
+        <DropdownMenuItem asChild>
+          <Link href="/app/settings" className="flex items-center">
+            <Settings className="mr-2 h-4 w-4" />
+            Settings
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem onSelect={() => void handleSignOut()}>
