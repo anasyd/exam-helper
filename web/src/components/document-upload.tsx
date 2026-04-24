@@ -10,7 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { FileUp, Loader2, File as FileIcon, X } from "lucide-react";
 import { toast } from "sonner";
 import mammoth from "mammoth";
-import { uploadFile } from "@/lib/api/files";
+import { uploadFile, TierError } from "@/lib/api/files";
 
 const ACCEPTED_FILE_TYPES = {
   "application/pdf": ".pdf",
@@ -21,9 +21,10 @@ const ACCEPTED_FILE_TYPES = {
 
 interface PdfUploadProps {
   onProcessingComplete: (text: string, fileName: string) => void;
+  projectId?: string;
 }
 
-export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
+export function DocumentUpload({ onProcessingComplete, projectId }: PdfUploadProps) {
   const [files, setFiles] = useState<File[]>([]);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [processProgress, setProcessProgress] = useState<number>(0);
@@ -109,14 +110,21 @@ export function DocumentUpload({ onProcessingComplete }: PdfUploadProps) {
         const filesToUpload = [...files];
         void (async () => {
           try {
-            // Upload the first file (primary source); subsequent ones are appended text
             const first = filesToUpload[0];
             if (first) {
-              const { fileId } = await uploadFile(first);
+              const { fileId } = await uploadFile(first, projectId);
               setDocumentFileId(fileId);
             }
           } catch (e) {
-            console.warn("[document-upload] server file upload failed:", e);
+            if (e instanceof TierError) {
+              if (e.code === "FILE_TOO_LARGE") {
+                toast.error(`File too large for your plan`, { description: `Your plan allows up to ${e.detail.limitMb} MB per file.` });
+              } else if (e.code === "PDF_LIMIT") {
+                toast.error(`PDF limit reached`, { description: `Your plan allows ${e.detail.limit} PDF${e.detail.limit === 1 ? "" : "s"} per project.` });
+              }
+            } else {
+              console.warn("[document-upload] server file upload failed:", e);
+            }
           }
         })();
       }

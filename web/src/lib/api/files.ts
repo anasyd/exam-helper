@@ -5,9 +5,19 @@ export interface UploadedFile {
   fileName: string;
 }
 
-export async function uploadFile(file: File): Promise<UploadedFile> {
+export class TierError extends Error {
+  constructor(
+    public readonly code: "FILE_TOO_LARGE" | "PDF_LIMIT",
+    public readonly detail: { limitMb?: number; limit?: number }
+  ) {
+    super(code);
+  }
+}
+
+export async function uploadFile(file: File, projectId?: string): Promise<UploadedFile> {
   const form = new FormData();
   form.append("file", file);
+  if (projectId) form.append("projectId", projectId);
 
   const res = await fetch(`${BASE}/api/files/upload`, {
     method: "POST",
@@ -16,8 +26,10 @@ export async function uploadFile(file: File): Promise<UploadedFile> {
   });
 
   if (!res.ok) {
-    const text = await res.text().catch(() => res.statusText);
-    throw new Error(`Upload failed: ${res.status} ${text}`);
+    const body = await res.json().catch(() => ({})) as Record<string, unknown>;
+    if (body.code === "FILE_TOO_LARGE") throw new TierError("FILE_TOO_LARGE", { limitMb: body.limitMb as number });
+    if (body.code === "PDF_LIMIT") throw new TierError("PDF_LIMIT", { limit: body.limit as number });
+    throw new Error(`Upload failed: ${res.status}`);
   }
 
   return res.json() as Promise<UploadedFile>;

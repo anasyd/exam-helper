@@ -1,0 +1,47 @@
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  server:
+    image: ghcr.io/anasyd/exam-helper-server:latest
+    restart: unless-stopped
+    depends_on:
+      mongo:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      MONGODB_URI: ${MONGODB_URI:-mongodb://admin:${MONGO_ROOT_PASSWORD:-changeme}@mongo:27017/examhelper?authSource=admin}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?required}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:4000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      REGISTRATION_MODE: ${REGISTRATION_MODE:-invite-only}
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      PORT: 4000
+    ports:
+      - "${SERVER_PORT:-4000}:4000"
+
+  web:
+    image: ghcr.io/anasyd/exam-helper-web:latest
+    restart: unless-stopped
+    depends_on:
+      - server
+    environment:
+      NEXT_PUBLIC_AUTH_URL: ${NEXT_PUBLIC_AUTH_URL:-http://localhost:4000}
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+
+volumes:
+  mongo-data:

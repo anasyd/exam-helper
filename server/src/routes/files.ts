@@ -2,15 +2,17 @@ import { Router } from "express";
 import multer from "multer";
 import { ObjectId } from "mongodb";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { filesBucket } from "../db.js";
+import { filesBucket, userCol } from "../db.js";
 import { logger } from "../logger.js";
+import { TIER_LIMITS, type Tier } from "../tiers.js";
 
 export const filesRouter = Router();
 filesRouter.use(requireAuth);
 
+// Max multer limit is the largest allowed tier (pro: 50 MB); per-tier checks happen in handler
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB per file
+  limits: { fileSize: 50 * 1024 * 1024 },
   fileFilter: (_req, file, cb) => {
     const allowed = [
       "application/pdf",
@@ -33,9 +35,35 @@ filesRouter.post("/upload", upload.single("file"), async (req, res) => {
     return;
   }
 
+  const projectId = req.body?.projectId as string | undefined;
+
+  // Resolve tier limits
+  const user = await userCol().findOne({ id: userId });
+  const tier = ((user?.planTier as Tier) ?? "free");
+  const limits = TIER_LIMITS[tier];
+
+  // Size check
+  const maxBytes = limits.maxFileSizeMb * 1024 * 1024;
+  if (req.file.size > maxBytes) {
+    res.status(413).json({ code: "FILE_TOO_LARGE", limitMb: limits.maxFileSizeMb });
+    return;
+  }
+
+  // Per-project PDF count check (only for PDFs associated with a project)
+  if (projectId && req.file.mimetype === "application/pdf") {
+    const bucket = filesBucket();
+    const existingFiles = await bucket
+      .find({ "metadata.userId": userId, "metadata.projectId": projectId })
+      .toArray();
+    if (existingFiles.length >= limits.pdfsPerProject) {
+      res.status(403).json({ code: "PDF_LIMIT", limit: limits.pdfsPerProject });
+      return;
+    }
+  }
+
   const bucket = filesBucket();
   const uploadStream = bucket.openUploadStream(req.file.originalname, {
-    metadata: { userId, contentType: req.file.mimetype },
+    metadata: { userId, projectId: projectId ?? null, contentType: req.file.mimetype },
   });
 
   uploadStream.end(req.file.buffer);
@@ -75,14 +103,8 @@ filesRouter.get("/:id", async (req, res) => {
   }
 
   const file = files[0]!;
-  res.setHeader(
-    "Content-Type",
-    (file.metadata?.contentType as string) ?? "application/octet-stream",
-  );
-  res.setHeader(
-    "Content-Disposition",
-    `inline; filename="${encodeURIComponent(file.filename)}"`,
-  );
+  res.setHeader("Content-Type", (file.metadata?.contentType as string) ?? "application/octet-stream");
+  res.setHeader("Content-Disposition", `inline; filename="${encodeURIComponent(file.filename)}"`);
 
   bucket.openDownloadStream(id).pipe(res);
 });

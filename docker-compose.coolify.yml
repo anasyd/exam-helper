@@ -1,16 +1,37 @@
 services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD:-changeme}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
   server:
     image: ghcr.io/anasyd/exam-helper-server:latest
     environment:
       - NODE_ENV=production
-      - MONGODB_URI=${MONGODB_URI}
+      - MONGODB_URI=${MONGODB_URI:-mongodb://admin:${MONGO_ROOT_PASSWORD:-changeme}@mongo:27017/examhelper?authSource=admin}
       - BETTER_AUTH_SECRET=${SERVICE_PASSWORD_64_BETTERAUTH}
       - BETTER_AUTH_URL=${SERVICE_FQDN_SERVER_4000}
       - FRONTEND_URL=${SERVICE_FQDN_WEB_3000}
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
-      - RESEND_API_KEY=${RESEND_API_KEY}
-      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
+      - REGISTRATION_MODE=${REGISTRATION_MODE:-open}
+      - ADMIN_EMAIL=${ADMIN_EMAIL:-}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-}
+    depends_on:
+      mongo:
+        condition: service_healthy
     healthcheck:
       test:
         - CMD
@@ -29,3 +50,6 @@ services:
     depends_on:
       server:
         condition: service_healthy
+
+volumes:
+  mongo-data:

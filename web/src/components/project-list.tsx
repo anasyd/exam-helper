@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useFlashcardStore, Project } from "@/lib/store";
+import { useSession } from "@/lib/auth/client";
+import { fetchMe, type MeResponse } from "@/lib/api/me";
 import {
   Card,
   CardContent,
@@ -52,20 +54,32 @@ export function ProjectList() {
     deleteProject,
     setActiveProject,
   } = useFlashcardStore();
+  const { data: session } = useSession();
+  const [meData, setMeData] = useState<MeResponse | null>(null);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchMe().then(setMeData).catch(() => {});
+    }
+  }, [session?.user]);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
   const [formData, setFormData] = useState({ name: "", description: "" });
 
+  const projectLimit = meData?.usage.limits.projects ?? Infinity;
+  const projectCount = meData?.usage.projects ?? projects.length;
+  const atLimit = projectLimit !== Infinity && projectCount >= projectLimit;
+
   const handleCreateProject = () => {
     if (!formData.name.trim()) return;
+    if (atLimit) return;
 
     createProject(formData.name, formData.description);
     setFormData({ name: "", description: "" });
     setIsCreateDialogOpen(false);
 
-    // Navigate to the project page automatically
     router.push("/app/project");
   };
 
@@ -130,7 +144,7 @@ export function ProjectList() {
       >
         <ChevronLeft className="h-4 w-4" /> Home
       </Link>
-      <div className="flex justify-between items-center mb-8">
+      <div className="flex justify-between items-center mb-4">
         <h1 className="text-3xl font-bold">My Projects</h1>
 
         <div className="flex items-center gap-2">
@@ -139,7 +153,7 @@ export function ProjectList() {
             onOpenChange={setIsCreateDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button>
+              <Button disabled={atLimit} title={atLimit ? `Project limit reached (${projectLimit})` : undefined}>
                 <Plus className="mr-2 h-4 w-4" />
                 New Project
               </Button>
@@ -199,6 +213,22 @@ export function ProjectList() {
           <AuthDropdown />
         </div>
       </div>
+
+      {/* Usage bar — only shown when logged in and plan info available */}
+      {meData && projectLimit !== Infinity && (
+        <div className="mb-8 space-y-1">
+          <div className="flex justify-between text-xs text-muted-foreground">
+            <span>{projectCount} / {projectLimit} projects</span>
+            <span className="capitalize">{meData.planTier} plan</span>
+          </div>
+          <Progress value={(projectCount / projectLimit) * 100} className="h-1.5" />
+          {atLimit && (
+            <p className="text-xs text-destructive">
+              Project limit reached. Upgrade your plan to create more projects.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Edit Project Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>

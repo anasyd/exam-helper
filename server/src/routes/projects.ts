@@ -1,7 +1,8 @@
 import { Router } from "express";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { mongo } from "../db.js";
+import { mongo, contentCol, userCol } from "../db.js";
 import { logger } from "../logger.js";
+import { TIER_LIMITS, type Tier } from "../tiers.js";
 
 export const projectsRouter = Router();
 projectsRouter.use(requireAuth);
@@ -10,12 +11,10 @@ function col() {
   return mongo.db().collection("projects");
 }
 
-// Fields excluded from list responses to keep payloads small
-const LIST_EXCLUDE = {
-  pdfContent: 0,
-  originalTranscript: 0,
-  formattedTranscript: 0,
-};
+const CONTENT_FIELDS = ["pdfContent", "originalTranscript", "formattedTranscript"] as const;
+type ContentField = (typeof CONTENT_FIELDS)[number];
+
+const LIST_EXCLUDE = { pdfContent: 0, originalTranscript: 0, formattedTranscript: 0 };
 
 // GET /api/projects — list all projects (summary, no large text blobs)
 projectsRouter.get("/", async (req, res) => {
@@ -27,18 +26,18 @@ projectsRouter.get("/", async (req, res) => {
   res.json(projects);
 });
 
-// GET /api/projects/:id — full project including content
+// GET /api/projects/:id — full project merged with content
 projectsRouter.get("/:id", async (req, res) => {
   const { userId } = req as unknown as AuthedRequest;
-  const project = await col().findOne(
-    { userId, id: req.params.id },
-    { projection: { _id: 0 } },
-  );
+  const [project, content] = await Promise.all([
+    col().findOne({ userId, id: req.params.id }, { projection: { _id: 0 } }),
+    contentCol().findOne({ userId, projectId: req.params.id }, { projection: { _id: 0, userId: 0, projectId: 0, updatedAt: 0 } }),
+  ]);
   if (!project) {
     res.status(404).json({ error: "Not found" });
     return;
   }
-  res.json(project);
+  res.json({ ...project, ...content });
 });
 
 // PUT /api/projects/:id — upsert (create or update)
@@ -46,7 +45,6 @@ projectsRouter.put("/:id", async (req, res) => {
   const { userId } = req as unknown as AuthedRequest;
   const { id } = req.params;
 
-  // Strip ephemeral fields and internal fields before saving
   const {
     cardsSeenThisSession: _csts,
     sessionComplete: _sc,
@@ -54,18 +52,51 @@ projectsRouter.put("/:id", async (req, res) => {
     ...projectData
   } = req.body;
 
-  const doc = {
-    ...projectData,
-    id,
-    userId,
-    updatedAt: new Date(),
-  };
+  // Separate content fields from project metadata
+  const contentData: Partial<Record<ContentField, string | null>> = {};
+  for (const field of CONTENT_FIELDS) {
+    if (field in projectData) {
+      contentData[field] = projectData[field] as string | null;
+      delete projectData[field];
+    }
+  }
 
-  await col().updateOne(
-    { userId, id },
-    { $set: doc, $setOnInsert: { createdAt: doc.createdAt ?? new Date() } },
-    { upsert: true },
-  );
+  // Check if this is a new project and enforce tier limit
+  const existing = await col().findOne({ userId, id }, { projection: { _id: 1 } });
+  if (!existing) {
+    const user = await userCol().findOne({ id: userId });
+    const tier = ((user?.planTier as Tier) ?? "free");
+    const limit = TIER_LIMITS[tier].projects;
+    if (limit !== Infinity) {
+      const count = await col().countDocuments({ userId });
+      if (count >= limit) {
+        res.status(403).json({ code: "PROJECT_LIMIT", limit });
+        return;
+      }
+    }
+  }
+
+  const doc = { ...projectData, id, userId, updatedAt: new Date() };
+
+  const ops: Promise<unknown>[] = [
+    col().updateOne(
+      { userId, id },
+      { $set: doc, $setOnInsert: { createdAt: doc.createdAt ?? new Date() } },
+      { upsert: true },
+    ),
+  ];
+
+  if (Object.keys(contentData).length > 0) {
+    ops.push(
+      contentCol().updateOne(
+        { userId, projectId: id },
+        { $set: { ...contentData, userId, projectId: id, updatedAt: new Date() } },
+        { upsert: true },
+      ),
+    );
+  }
+
+  await Promise.all(ops);
 
   logger.debug({ userId, projectId: id }, "project upserted");
   res.json({ ok: true });
@@ -74,7 +105,10 @@ projectsRouter.put("/:id", async (req, res) => {
 // DELETE /api/projects/:id
 projectsRouter.delete("/:id", async (req, res) => {
   const { userId } = req as unknown as AuthedRequest;
-  const result = await col().deleteOne({ userId, id: req.params.id });
+  const [result] = await Promise.all([
+    col().deleteOne({ userId, id: req.params.id }),
+    contentCol().deleteOne({ userId, projectId: req.params.id }),
+  ]);
   if (result.deletedCount === 0) {
     res.status(404).json({ error: "Not found" });
     return;
@@ -92,9 +126,19 @@ projectsRouter.post("/batch", async (req, res) => {
     return;
   }
 
-  const ops = projects.map((p: any) => {
+  const projectOps = [];
+  const contentOps = [];
+
+  for (const p of projects as any[]) {
     const { cardsSeenThisSession: _c, sessionComplete: _s, _id: _i, ...data } = p;
-    return {
+    const contentData: Partial<Record<ContentField, string | null>> = {};
+    for (const field of CONTENT_FIELDS) {
+      if (field in data) {
+        contentData[field] = data[field] as string | null;
+        delete data[field];
+      }
+    }
+    projectOps.push({
       updateOne: {
         filter: { userId, id: data.id },
         update: {
@@ -103,10 +147,22 @@ projectsRouter.post("/batch", async (req, res) => {
         },
         upsert: true,
       },
-    };
-  });
+    });
+    if (Object.keys(contentData).length > 0) {
+      contentOps.push({
+        updateOne: {
+          filter: { userId, projectId: data.id },
+          update: { $set: { ...contentData, userId, projectId: data.id, updatedAt: new Date() } },
+          upsert: true,
+        },
+      });
+    }
+  }
 
-  const result = await col().bulkWrite(ops);
+  const [result] = await Promise.all([
+    col().bulkWrite(projectOps),
+    contentOps.length > 0 ? contentCol().bulkWrite(contentOps) : Promise.resolve(null),
+  ]);
   logger.info({ userId, upserted: result.upsertedCount + result.modifiedCount }, "batch upsert");
   res.json({ ok: true, upserted: result.upsertedCount + result.modifiedCount });
 });

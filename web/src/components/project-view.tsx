@@ -32,6 +32,7 @@ import {
   ChevronDown,
   SlidersHorizontal,
 } from "lucide-react";
+import { fetchProject } from "@/lib/api/projects";
 import { generateFlashcards } from "@/lib/ai/features/flashcards";
 import { generateAutomatedNotes } from "@/lib/ai/features/notes";
 import {
@@ -44,7 +45,21 @@ import { VideoUpload } from "./video-upload";
 import { NotesView } from "./notes-view";
 import { toast } from "sonner";
 import { TopicQuizView } from "@/components/topic-quiz-view";
-import { Flashcard } from "@/lib/store";
+import { Flashcard, useFlashcardStore as _storeRef } from "@/lib/store";
+
+// Lazy-loads pdfContent from server if not in memory (excluded from localStorage)
+async function ensurePdfContent(project: { id: string; pdfContent?: string | null }): Promise<string | null> {
+  if (project.pdfContent) return project.pdfContent;
+  try {
+    const full = await fetchProject(project.id);
+    if (full.pdfContent) {
+      _storeRef.getState().setProjectContent(project.id, { pdfContent: full.pdfContent });
+    }
+    return full.pdfContent ?? null;
+  } catch {
+    return null;
+  }
+}
 
 // GamifiedRoadmapView Implementation
 function GamifiedRoadmapView({
@@ -273,14 +288,13 @@ function GamifiedRoadmapView({
       contentToUse: contentToUse.slice(0, 100) + "...",
     });
 
-    if (!project || !project.pdfContent) {
-      console.error("MCQ Generation Failed - Missing requirements:", {
-        hasProject: !!project,
-        hasPdfContent: !!project?.pdfContent,
-      });
-      toast.error("Cannot generate MCQs", {
-        description: "Project or document content is missing.",
-      });
+    if (!project) {
+      toast.error("Cannot generate MCQs", { description: "No active project." });
+      return;
+    }
+    const pdfContent = await ensurePdfContent(project);
+    if (!pdfContent) {
+      toast.error("Cannot generate MCQs", { description: "Document content is missing." });
       return;
     }
 
@@ -331,7 +345,7 @@ function GamifiedRoadmapView({
             const numCardsToGenerate = 10;
 
             const newMcqs = await generateFlashcards(
-              { kind: "text", text: topic.content || project.pdfContent },
+              { kind: "text", text: topic.content || pdfContent },
               numCardsToGenerate,
               routerDeps
             );
@@ -339,7 +353,7 @@ function GamifiedRoadmapView({
             if (newMcqs && newMcqs.length > 0) {
               const countAdded = addFlashcards(
                 newMcqs,
-                null, // No general source content hash for topic MCQs specifically
+                null,
                 sectionTitle,
                 topicTitle
               );
@@ -408,7 +422,7 @@ function GamifiedRoadmapView({
       const numCardsToGenerate = 10;
 
       const newMcqs = await generateFlashcards(
-        { kind: "text", text: contentToUse || project.pdfContent },
+        { kind: "text", text: contentToUse || pdfContent },
         numCardsToGenerate,
         routerDeps
       );
@@ -729,6 +743,7 @@ export function ProjectView() {
     setDocumentNotes,
     setVideoNotes,
     setDocumentFileName,
+    setProjectContent,
     currentStreak,
   } = useFlashcardStore();
   const providers = useFlashcardStore((s) => s.providers);
@@ -742,6 +757,7 @@ export function ProjectView() {
     }),
     [providers, modelRouting]
   );
+
   const [activeTab, setActiveTab] = useState<string>(() => {
     const urlTab = searchParams.get("tab");
     if (urlTab && (VALID_TABS as readonly string[]).includes(urlTab)) return urlTab;
@@ -893,21 +909,22 @@ export function ProjectView() {
 
   const handleGenerateDocumentNotes = async () => {
     const defaultProviderId = modelRouting.default.providerId;
-    if (
-      !providers[defaultProviderId].apiKey ||
-      !activeProject ||
-      !activeProject.pdfContent
-    ) {
+    if (!providers[defaultProviderId].apiKey || !activeProject) {
       toast.error("Cannot generate document notes", {
         description: "API key or document content is missing.",
       });
+      return;
+    }
+    const pdfContent = await ensurePdfContent(activeProject);
+    if (!pdfContent) {
+      toast.error("Cannot generate document notes", { description: "Document content is missing." });
       return;
     }
     setIsGeneratingDocumentNotes(true);
     const toastId = toast.loading("Generating notes from document...");
     try {
       const notes = await generateAutomatedNotes(
-        { kind: "text", text: activeProject.pdfContent },
+        { kind: "text", text: pdfContent },
         routerDeps
       );
       setDocumentNotes(notes);
@@ -1192,6 +1209,7 @@ export function ProjectView() {
                 <CardContent>
                   <DocumentUpload
                     onProcessingComplete={handleDocumentProcessingComplete}
+                    projectId={activeProject?.id}
                   />
                 </CardContent>
               </Card>

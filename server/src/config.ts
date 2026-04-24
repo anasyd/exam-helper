@@ -13,11 +13,15 @@ const schema = z.object({
   BETTER_AUTH_URL: z.string().url(),
   FRONTEND_URL: z.string().url(),
 
-  GOOGLE_CLIENT_ID: z.string().min(1),
-  GOOGLE_CLIENT_SECRET: z.string().min(1),
+  GOOGLE_CLIENT_ID: z.string().min(1).optional(),
+  GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
 
-  RESEND_API_KEY: z.string().startsWith("re_"),
-  RESEND_FROM_EMAIL: z.string().email(),
+  RESEND_API_KEY: z.string().startsWith("re_").optional(),
+  RESEND_FROM_EMAIL: z.string().email().optional(),
+
+  REGISTRATION_MODE: z.enum(["open", "invite-only"]).default("open"),
+  ADMIN_EMAIL: z.string().email().optional(),
+  ADMIN_PASSWORD: z.string().min(8).optional(),
 });
 
 const parsed = schema.safeParse(process.env);

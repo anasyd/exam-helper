@@ -102,6 +102,7 @@ interface FlashcardState {
   ) => void;
   deleteProject: (id: string) => void;
   setActiveProject: (id: string | null) => void;
+  setProjectContent: (id: string, content: { pdfContent?: string | null; originalTranscript?: string; formattedTranscript?: string }) => void;
   getActiveProject: () => Project | null;
 
   // Flashcard management within active project
@@ -277,6 +278,14 @@ export const useFlashcardStore = create<FlashcardState>()(
       },
 
       setActiveProject: (id) => set({ activeProjectId: id }),
+
+      setProjectContent: (id, content) => {
+        set((state) => ({
+          projects: state.projects.map((project) =>
+            project.id === id ? { ...project, ...content } : project
+          ),
+        }));
+      },
 
       getActiveProject: () => {
         const { projects, activeProjectId } = get();
@@ -1039,15 +1048,19 @@ export const useFlashcardStore = create<FlashcardState>()(
       name: "flashcards-storage-v2",
       version: 3,
       partialize: (state) => ({
-        projects: state.projects.map((project) => ({
-          ...project,
-          createdAt: project.createdAt.toISOString(),
-          updatedAt: project.updatedAt.toISOString(),
-          flashcards: project.flashcards.map((card) => ({
-            ...card,
-            lastSeen: card.lastSeen ? card.lastSeen.toISOString() : null,
-          })),
-        })),
+        projects: state.projects.map((project) => {
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          const { pdfContent: _pdf, originalTranscript: _ot, formattedTranscript: _ft, ...rest } = project;
+          return {
+            ...rest,
+            createdAt: project.createdAt.toISOString(),
+            updatedAt: project.updatedAt.toISOString(),
+            flashcards: project.flashcards.map((card) => ({
+              ...card,
+              lastSeen: card.lastSeen ? card.lastSeen.toISOString() : null,
+            })),
+          };
+        }),
         activeProjectId: state.activeProjectId,
         providers: state.providers,
         modelRouting: state.modelRouting,

@@ -14,7 +14,7 @@ export interface SendEmailOpts {
 export async function sendEmail(opts: SendEmailOpts): Promise<void> {
   try {
     const result = await client.emails.send({
-      from: config.RESEND_FROM_EMAIL,
+      from: config.RESEND_FROM_EMAIL!,
       to: opts.to,
       subject: opts.subject,
       html: opts.html,

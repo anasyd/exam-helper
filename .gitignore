@@ -22,6 +22,9 @@ outputs/
 # superpowers
 .superpowers/
 
+# local plan (session notes, not committed)
+plan.md
+
 # root-level artefacts (leftover from before monorepo restructure)
 /node_modules/
 /next-env.d.ts
@@ -42,5 +45,7 @@ server/node_modules/
 server/dist/
 server/.env
 server/.env.local
+!.env.example
 !server/.env.example
 !web/.env.example
+test.md

@@ -12,9 +12,32 @@ import { meRouter } from "./routes/me.js";
 import { projectsRouter } from "./routes/projects.js";
 import { filesRouter } from "./routes/files.js";
 import { statsRouter } from "./routes/stats.js";
+import { setupRouter } from "./routes/setup.js";
+import { adminRouter } from "./routes/admin.js";
+
+async function autoCreateAdmin(): Promise<void> {
+  const { config } = await import("./config.js");
+  const { userCol } = await import("./db.js");
+  const { auth } = await import("./auth.js");
+  if (!config.ADMIN_EMAIL || !config.ADMIN_PASSWORD) return;
+  const existing = await userCol().findOne({ planTier: "admin" });
+  if (existing) return;
+  const response = await auth.api.signUpEmail({
+    body: { email: config.ADMIN_EMAIL, password: config.ADMIN_PASSWORD, name: "Admin" },
+    asResponse: true,
+  });
+  if (response.ok) {
+    await userCol().updateOne({ email: config.ADMIN_EMAIL }, { $set: { planTier: "admin" } });
+    logger.info({ email: config.ADMIN_EMAIL }, "auto-created admin account");
+  } else {
+    logger.warn({ email: config.ADMIN_EMAIL, status: response.status }, "auto-create admin failed");
+  }
+}
 
 async function main(): Promise<void> {
   await connectDb();
+
+  await autoCreateAdmin();
 
   const app = express();
   app.set("trust proxy", 1);
@@ -29,11 +52,13 @@ async function main(): Promise<void> {
   app.use("/api/projects", express.json({ limit: "20mb" }));
   app.use(express.json({ limit: "64kb" }));
 
+  app.use("/api/setup", setupRouter);
   app.use("/api/health", healthRouter);
   app.use("/api/me", meRouter);
   app.use("/api/me/stats", statsRouter);
   app.use("/api/projects", projectsRouter);
   app.use("/api/files", filesRouter);
+  app.use("/api/admin", adminRouter);
 
   app.use(errorHandler);
 
