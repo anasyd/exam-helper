@@ -6,6 +6,8 @@ COPY package.json package-lock.json* ./
 RUN npm ci --include=dev
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_AUTH_URL
+ENV NEXT_PUBLIC_AUTH_URL=$NEXT_PUBLIC_AUTH_URL
 RUN npm run build
 
 FROM node:20-slim AS runner
