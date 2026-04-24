@@ -5,8 +5,8 @@
 <br/>
 
 <div align="center">
-  <strong>AI-powered flashcards and study guides from your own documents.</strong><br/>
-  Upload a PDF or DOCX, pick your AI model, and get flashcards, notes, and study guides in seconds.
+  <strong>Turn your documents into a full study system — powered by the AI model you already pay for.</strong><br/>
+  Upload a PDF, pick your provider, and get flashcards, structured notes, a study guide, and a gamified learning roadmap in seconds.
 </div>
 
 <br/>
@@ -37,12 +37,17 @@
 
 ## Features
 
-- **Bring your own AI** — Gemini, OpenAI, Claude, OpenRouter. Configure once, swap per feature.
+- **Bring your own AI** — Gemini, OpenAI, Claude, OpenRouter. Configure once, swap per feature. We never touch your API keys.
+- **Flashcards + spaced repetition** — cards you struggle with surface more often; mastered cards fade out.
+- **Study guides** — structured notes extracted from your document, section by section.
+- **Gamified roadmap** — a Duolingo-style learning path through your material. Complete topics to unlock the next, earn XP, track progress.
+- **Background generation** — close the tab and come back. Your API key is RSA-encrypted in transit and deleted the moment the job finishes.
 - **Vision-aware** — flagship models read PDFs directly; diagrams, equations, and scanned pages stay intact.
-- **Spaced repetition** — cards you struggle with surface more often; mastered cards fade out.
-- **Runs in your browser** — your documents and API keys stay on your device. No account required to start.
+- **Sync across devices** — projects, flashcards, and study guides synced via your account.
 - **Auth built in** — email/password + Google OAuth, password reset, email verification.
-- **Self-hostable** — single Docker Compose file, deploys to [Coolify](https://coolify.io) in minutes.
+- **Tier system** — Free, Student, and Pro plans with enforced project and file limits.
+- **Self-hostable** — single Docker Compose file, deploys to [Coolify](https://coolify.io) in minutes. MongoDB included.
+- **Registration control** — `REGISTRATION_MODE=invite-only` locks signups; admin creates accounts manually.
 
 ---
 
@@ -52,9 +57,10 @@
 |-------|------|
 | Frontend | Next.js 16, Tailwind CSS, shadcn/ui |
 | Backend | Express 4, TypeScript, Better Auth |
-| Database | MongoDB (Atlas or self-hosted) |
+| Database | MongoDB 8 (bundled or Atlas) |
 | Email | Resend |
 | Auth | Better Auth (email/pw + Google OAuth) |
+| Payments | Stripe (optional) |
 | Containers | Docker, GHCR |
 
 ---
@@ -92,14 +98,3 @@ cp .env.example .env.local   # defaults work for local dev
 npm install
 npm run dev                  # http://localhost:3000
 ```
-
----
-
-## Releasing
-
-```bash
-git tag v1.2.3
-git push origin v1.2.3
-```
-
-GitHub Actions builds both Docker images and pushes to GHCR with tags `latest`, `1`, `1.2`, and `1.2.3`.
