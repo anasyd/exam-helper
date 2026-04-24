@@ -5,10 +5,9 @@ import type { Provider } from "./providers/provider";
 import type { Capability, FeatureId, ModelMeta, ModelSelection } from "./types";
 
 export const FEATURE_REQUIREMENTS: Record<FeatureId, Capability[]> = {
-  flashcards: ["supportsStructuredOutput"],
   "study-guide": ["supportsStructuredOutput", "supportsLongContext"],
+  flashcards: ["supportsStructuredOutput"],
   notes: [],
-  summary: ["supportsLongContext"],
   transcript: ["supportsLongContext"],
 };
 

@@ -57,11 +57,10 @@ const PROVIDER_CONSOLE_URLS: Record<ProviderId, string> = {
 };
 
 const FEATURE_LABELS: Record<FeatureId, string> = {
+  "study-guide": "Roadmap",
   flashcards: "Flashcards",
   notes: "Notes",
-  "study-guide": "Study guide",
   transcript: "Transcript",
-  summary: "Summary",
 };
 
 function OpenRouterModelInput() {

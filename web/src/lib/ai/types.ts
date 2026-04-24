@@ -10,18 +10,16 @@ export const PROVIDER_IDS: readonly ProviderId[] = [
 ] as const;
 
 export type FeatureId =
+  | "study-guide"
   | "flashcards"
   | "notes"
-  | "study-guide"
-  | "transcript"
-  | "summary";
+  | "transcript";
 
 export const FEATURE_IDS: readonly FeatureId[] = [
+  "study-guide",
   "flashcards",
   "notes",
-  "study-guide",
   "transcript",
-  "summary",
 ] as const;
 
 // Capabilities
