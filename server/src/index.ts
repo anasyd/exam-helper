@@ -14,7 +14,7 @@ import { filesRouter } from "./routes/files.js";
 import { statsRouter } from "./routes/stats.js";
 import { setupRouter } from "./routes/setup.js";
 import { adminRouter } from "./routes/admin.js";
-import { stripeRouter, webhookHandler } from "./routes/stripe.js";
+// stripe is dynamically imported only when STRIPE_SECRET_KEY is set — avoids crash on startup
 
 async function autoCreateAdmin(): Promise<void> {
   const { config } = await import("./config.js");
@@ -56,9 +56,11 @@ async function main(): Promise<void> {
   // Better Auth's handler must come BEFORE express.json() — it parses request bodies itself.
   app.all("/api/auth/*", toNodeHandler(auth));
 
-  // Stripe webhook needs raw body — mount before express.json()
+  // Stripe: dynamic import so the module (and `new Stripe(key)`) never loads when key is absent
   if (config.STRIPE_SECRET_KEY) {
+    const { stripeRouter, webhookHandler } = await import("./routes/stripe.js");
     app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), webhookHandler);
+    app.use("/api/stripe", stripeRouter);
   }
 
   // Projects can include large PDF text blobs; files router uses multer (no JSON limit needed there)
@@ -72,9 +74,6 @@ async function main(): Promise<void> {
   app.use("/api/projects", projectsRouter);
   app.use("/api/files", filesRouter);
   app.use("/api/admin", adminRouter);
-  if (config.STRIPE_SECRET_KEY) {
-    app.use("/api/stripe", stripeRouter);
-  }
 
   app.use(errorHandler);
 
