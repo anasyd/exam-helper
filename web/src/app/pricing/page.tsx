@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { toast } from "sonner";
 import { notFound } from "next/navigation";
-import { BILLING_ENABLED } from "@/lib/billing";
+import { BILLING_ENABLED, BILLING_PROVIDER_NAME } from "@/lib/billing";
 import { useSession } from "@/lib/auth/client";
 import { fetchMe, type MeResponse } from "@/lib/api/me";
 import { Button } from "@/components/ui/button";
@@ -81,7 +81,7 @@ export default function PricingPage() {
     }
     setLoading(tier);
     try {
-      const res = await fetch(`${BASE}/api/stripe/checkout`, {
+      const res = await fetch(`${BASE}/api/billing/checkout`, {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
@@ -214,7 +214,7 @@ export default function PricingPage() {
         </div>
 
         <p className="text-center text-xs text-muted-foreground mt-10">
-          Payments are processed by Stripe. Cancel anytime.
+          Payments are processed by {BILLING_PROVIDER_NAME}. Cancel anytime.
         </p>
       </div>
     </div>

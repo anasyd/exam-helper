@@ -30,6 +30,15 @@ const schema = z.object({
   STRIPE_STUDENT_YEARLY_PRICE_ID: z.string().optional(),
   STRIPE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
   STRIPE_PRO_YEARLY_PRICE_ID: z.string().optional(),
+
+  // Lemon Squeezy — alternative billing provider (mutually exclusive with Stripe)
+  LS_API_KEY: z.string().optional(),
+  LS_WEBHOOK_SECRET: z.string().optional(),
+  LS_STORE_ID: z.string().optional(),
+  LS_STUDENT_MONTHLY_VARIANT_ID: z.string().optional(),
+  LS_STUDENT_YEARLY_VARIANT_ID: z.string().optional(),
+  LS_PRO_MONTHLY_VARIANT_ID: z.string().optional(),
+  LS_PRO_YEARLY_VARIANT_ID: z.string().optional(),
 });
 
 const parsed = schema.safeParse(process.env);

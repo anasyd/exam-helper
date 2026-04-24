@@ -33,7 +33,7 @@ export default function SettingsPage() {
   async function handleManageSubscription() {
     setPortalLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/stripe/portal`, { method: "POST", credentials: "include" });
+      const res = await fetch(`${BASE}/api/billing/portal`, { method: "POST", credentials: "include" });
       const data = await res.json() as { url?: string; error?: string };
       if (data.url) window.location.href = data.url;
       else toast.error(data.error ?? "Couldn't open billing portal");

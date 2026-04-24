@@ -57,11 +57,18 @@ async function main(): Promise<void> {
   // Better Auth's handler must come BEFORE express.json() — it parses request bodies itself.
   app.all("/api/auth/*", toNodeHandler(auth));
 
-  // Stripe: dynamic import so the module (and `new Stripe(key)`) never loads when key is absent
+  // Billing: webhooks need raw body before express.json(); routers loaded lazily
   if (config.STRIPE_SECRET_KEY) {
-    const { stripeRouter, webhookHandler } = await import("./routes/stripe.js");
+    const { webhookHandler } = await import("./routes/stripe.js");
     app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), webhookHandler);
-    app.use("/api/stripe", stripeRouter);
+  }
+  if (config.LS_API_KEY) {
+    const { webhookHandler } = await import("./routes/lemonsqueezy.js");
+    app.post("/api/lemonsqueezy/webhook", express.raw({ type: "application/json" }), webhookHandler);
+  }
+  if (config.STRIPE_SECRET_KEY || config.LS_API_KEY) {
+    const { billingRouter } = await import("./routes/billing.js");
+    app.use("/api/billing", billingRouter);
   }
 
   // Projects can include large PDF text blobs; files router uses multer (no JSON limit needed there)
