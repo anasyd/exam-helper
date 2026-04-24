@@ -63,7 +63,7 @@ export function AuthDropdown() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="w-9 h-9 rounded-full bg-[color:var(--ink)] text-[color:var(--canvas)] text-sm font-medium flex items-center justify-center hover:opacity-90 transition-opacity"
+          className="w-9 h-9 rounded-full bg-[color:var(--nav-ink)] text-[color:var(--nav-canvas)] text-sm font-medium flex items-center justify-center hover:opacity-90 transition-opacity"
           aria-label="Account"
         >
           {initials}

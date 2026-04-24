@@ -25,7 +25,7 @@ function ThemeToggle() {
 }
 
 export function LandingNav() {
-  const { data: session } = useSession();
+  const { data: session, isPending } = useSession();
   const isLoggedIn = !!session?.user;
 
   return (
@@ -51,7 +51,7 @@ export function LandingNav() {
             </svg>
           </a>
           <ThemeToggle />
-          {!isLoggedIn && (
+          {!isPending && !isLoggedIn && (
             <Link
               href="/app"
               className="hidden md:inline-flex text-sm px-4 py-2 rounded-sm bg-[color:var(--nav-ink)] text-[color:var(--nav-canvas)] hover:opacity-90 transition-opacity"
