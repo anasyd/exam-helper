@@ -76,12 +76,13 @@ projectsRouter.put("/:id", async (req, res) => {
     }
   }
 
-  const doc = { ...projectData, id, userId, updatedAt: new Date() };
+  const { createdAt: projectCreatedAt, ...rest } = projectData;
+  const doc = { ...rest, id, userId, updatedAt: new Date() };
 
   const ops: Promise<unknown>[] = [
     col().updateOne(
       { userId, id },
-      { $set: doc, $setOnInsert: { createdAt: doc.createdAt ?? new Date() } },
+      { $set: doc, $setOnInsert: { createdAt: projectCreatedAt ?? new Date() } },
       { upsert: true },
     ),
   ];
@@ -138,12 +139,13 @@ projectsRouter.post("/batch", async (req, res) => {
         delete data[field];
       }
     }
+    const { createdAt: dataCreatedAt, ...dataRest } = data;
     projectOps.push({
       updateOne: {
-        filter: { userId, id: data.id },
+        filter: { userId, id: dataRest.id },
         update: {
-          $set: { ...data, userId, updatedAt: new Date() },
-          $setOnInsert: { createdAt: data.createdAt ?? new Date() },
+          $set: { ...dataRest, userId, updatedAt: new Date() },
+          $setOnInsert: { createdAt: dataCreatedAt ?? new Date() },
         },
         upsert: true,
       },
