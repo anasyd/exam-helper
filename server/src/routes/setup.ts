@@ -35,15 +35,25 @@ setupRouter.post("/", async (req, res) => {
     asResponse: true,
   });
 
+  const body = await response.json().catch(() => ({})) as { user?: { id?: string } };
+
   if (!response.ok) {
-    const body = await response.json().catch(() => ({}));
     res.status(response.status).json(body);
     return;
   }
 
-  // Promote to admin
-  await userCol().updateOne({ email }, { $set: { planTier: "admin" } });
+  // Promote to admin — use the user ID from the response so the query is
+  // case-insensitive (Better Auth normalises email to lowercase on insert,
+  // so matching by the raw email string can miss).
+  const userId = body.user?.id;
+  const result = userId
+    ? await userCol().updateOne({ id: userId }, { $set: { planTier: "admin" } })
+    : await userCol().updateOne({ email: (email as string).toLowerCase() }, { $set: { planTier: "admin" } });
 
-  logger.info({ email }, "admin account created via setup wizard");
+  if (result.modifiedCount === 0) {
+    logger.warn({ email, userId }, "setup: admin promotion matched 0 documents");
+  }
+
+  logger.info({ email, userId }, "admin account created via setup wizard");
   res.json({ ok: true });
 });

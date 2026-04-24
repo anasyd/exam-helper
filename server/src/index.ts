@@ -27,7 +27,13 @@ async function autoCreateAdmin(): Promise<void> {
     asResponse: true,
   });
   if (response.ok) {
-    await userCol().updateOne({ email: config.ADMIN_EMAIL }, { $set: { planTier: "admin" } });
+    const body = await response.json().catch(() => ({})) as { user?: { id?: string } };
+    const userId = body.user?.id;
+    if (userId) {
+      await userCol().updateOne({ id: userId }, { $set: { planTier: "admin" } });
+    } else {
+      await userCol().updateOne({ email: config.ADMIN_EMAIL.toLowerCase() }, { $set: { planTier: "admin" } });
+    }
     logger.info({ email: config.ADMIN_EMAIL }, "auto-created admin account");
   } else {
     logger.warn({ email: config.ADMIN_EMAIL, status: response.status }, "auto-create admin failed");
