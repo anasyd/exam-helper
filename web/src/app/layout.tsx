@@ -1,11 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Fraunces } from "next/font/google";
 import "./globals.css";
 import { ThemeToaster } from "@/components/theme-toaster";
 import { ThemeProvider } from "next-themes";
 import { DemoSeedProvider } from "./_demo-seed-provider";
 
 const inter = Inter({ subsets: ["latin"] });
+const fraunces = Fraunces({
+  variable: "--font-display",
+  subsets: ["latin"],
+  axes: ["opsz"],
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "exam-helper — Study from your own documents",
@@ -35,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
-      <body className={inter.className}>
+      <body className={`${inter.className} ${fraunces.variable}`}>
         <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
           <DemoSeedProvider>
             <ThemeToaster />
