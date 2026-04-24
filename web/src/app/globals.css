@@ -112,6 +112,16 @@
   --sidebar-ring: oklch(0.556 0 0);
 }
 
+:root {
+  --nav-bg: oklch(1 0 0 / 0.85);
+  --rule: oklch(0.922 0 0);
+}
+
+.dark {
+  --nav-bg: oklch(0.145 0 0 / 0.85);
+  --rule: oklch(1 0 0 / 10%);
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;

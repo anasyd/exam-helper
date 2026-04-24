@@ -259,14 +259,7 @@ function GamifiedRoadmapView({
     );
 
     if (cardsForTopic.length > 0) {
-      // Mix in review cards from other topics (up to 5, capped at 15 total)
-      const reviewPool = flashcards.filter(
-        (card) =>
-          !(card.sourceSectionTitle === sectionTitle && card.sourceTopicTitle === topic.title)
-      );
-      const reviewCount = Math.min(reviewPool.length, Math.max(0, 15 - cardsForTopic.length));
-      const reviewCards = [...reviewPool].sort(() => Math.random() - 0.5).slice(0, reviewCount);
-      const combined = [...cardsForTopic, ...reviewCards].sort(() => Math.random() - 0.5);
+      const combined = [...cardsForTopic].sort(() => Math.random() - 0.5);
 
       setQuizCards(combined);
       setQuizTitle(topic.title);

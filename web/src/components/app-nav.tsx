@@ -15,7 +15,7 @@ function ThemeToggle() {
   return (
     <button
       onClick={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-      className="w-8 h-8 flex items-center justify-center rounded-sm text-muted-foreground hover:text-foreground transition-colors"
+      className="w-8 h-8 flex items-center justify-center rounded-sm text-[color:var(--muted-foreground)] hover:text-[color:var(--foreground)] transition-colors"
       aria-label="Toggle theme"
     >
       {resolvedTheme === "dark" ? <Sun size={16} /> : <Moon size={16} />}
@@ -25,8 +25,11 @@ function ThemeToggle() {
 
 export function AppNav() {
   return (
-    <nav className="sticky top-0 z-50 bg-background/95 backdrop-blur-sm border-b">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-2">
+    <nav
+      className="sticky top-0 z-50 backdrop-blur-md border-b border-[color:var(--rule)]"
+      style={{ backgroundColor: "var(--nav-bg)" }}
+    >
+      <div className="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between gap-2">
         <Link
           href="/app"
           className="flex items-center gap-2 font-semibold text-sm shrink-0"
