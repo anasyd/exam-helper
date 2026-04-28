@@ -51,6 +51,7 @@ export type Project = {
   documentNotes?: string;
   videoNotes?: string;
   xp?: number; // Added for project-specific experience points
+  local?: boolean; // True = never synced to server, not counted against plan quota
 };
 
 // Helper function to ensure lastSeen is a proper Date object
@@ -97,7 +98,7 @@ interface FlashcardState {
   setActiveJobId: (projectId: string, jobId: string | null) => void;
 
   // Project management
-  createProject: (name: string, description: string) => string;
+  createProject: (name: string, description: string, local?: boolean) => string;
   updateProject: (
     id: string,
     updates: Partial<
@@ -241,7 +242,7 @@ export const useFlashcardStore = create<FlashcardState>()(
           return { activeJobIds: next };
         }),
 
-      createProject: (name, description) => {
+      createProject: (name, description, local) => {
         const id = crypto.randomUUID();
         const now = new Date();
         set((state) => ({
@@ -259,7 +260,8 @@ export const useFlashcardStore = create<FlashcardState>()(
               cardsSeenThisSession: [],
               sessionComplete: false,
               studyGuide: null,
-              xp: 0, // Initialize XP
+              xp: 0,
+              ...(local ? { local: true } : {}),
             },
           ],
           activeProjectId: id,

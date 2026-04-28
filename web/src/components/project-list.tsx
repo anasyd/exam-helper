@@ -32,6 +32,7 @@ import {
   Trash2,
   MoreHorizontal,
   Clock,
+  HardDrive,
 } from "lucide-react";
 import { LogoIcon } from "@/components/logo-icon";
 import { Progress } from "@/components/ui/progress";
@@ -68,14 +69,13 @@ export function ProjectList() {
   const [formData, setFormData] = useState({ name: "", description: "" });
 
   const projectLimit = meData?.usage.limits.projects ?? Infinity;
-  const projectCount = meData?.usage.projects ?? projects.length;
-  const atLimit = projectLimit !== Infinity && projectCount >= projectLimit;
+  const syncedCount = meData?.usage.projects ?? projects.filter((p) => !p.local).length;
+  const atLimit = projectLimit !== Infinity && syncedCount >= projectLimit;
 
-  const handleCreateProject = () => {
+  const handleCreateProject = (forceLocal = false) => {
     if (!formData.name.trim()) return;
-    if (atLimit) return;
 
-    createProject(formData.name, formData.description);
+    createProject(formData.name, formData.description, forceLocal || atLimit);
     setFormData({ name: "", description: "" });
     setIsCreateDialogOpen(false);
 
@@ -146,7 +146,7 @@ export function ProjectList() {
             onOpenChange={setIsCreateDialogOpen}
           >
             <DialogTrigger asChild>
-              <Button disabled={atLimit} title={atLimit ? `Project limit reached (${projectLimit})` : undefined}>
+              <Button>
                 <Plus className="mr-2 h-4 w-4" />
                 New Project
               </Button>
@@ -155,7 +155,9 @@ export function ProjectList() {
               <DialogHeader>
                 <DialogTitle>Create New Project</DialogTitle>
                 <DialogDescription>
-                  Create a new project to organize your flashcards.
+                  {atLimit
+                    ? "You've reached your synced project limit. This project will be saved locally on this device only."
+                    : "Create a new project to organize your flashcards."}
                 </DialogDescription>
               </DialogHeader>
 
@@ -198,10 +200,10 @@ export function ProjectList() {
                   Cancel
                 </Button>
                 <Button
-                  onClick={handleCreateProject}
+                  onClick={() => handleCreateProject()}
                   disabled={!formData.name.trim()}
                 >
-                  Create Project
+                  {atLimit ? "Create Local Project" : "Create Project"}
                 </Button>
               </DialogFooter>
             </DialogContent>
@@ -214,19 +216,18 @@ export function ProjectList() {
       {meData && projectLimit !== Infinity && (
         <div className="mb-8 space-y-1">
           <div className="flex justify-between text-xs text-muted-foreground">
-            <span>{projectCount} / {projectLimit} projects</span>
+            <span>{syncedCount} / {projectLimit} synced projects</span>
             <span className="capitalize">{meData.planTier} plan</span>
           </div>
-          <Progress value={(projectCount / projectLimit) * 100} className="h-1.5" />
+          <Progress value={(syncedCount / projectLimit) * 100} className="h-1.5" />
           {atLimit && (
-            <p className="text-xs text-destructive">
-              Project limit reached.{" "}
+            <p className="text-xs text-muted-foreground">
+              Synced limit reached — new projects will be saved locally.{" "}
               {BILLING_ENABLED && (
                 <Link href="/pricing" className="underline underline-offset-2">
-                  Upgrade your plan
+                  Upgrade to sync more
                 </Link>
               )}
-              {!BILLING_ENABLED && "Delete a project to make room."}
             </p>
           )}
         </div>
@@ -357,7 +358,15 @@ export function ProjectList() {
               >
                 <CardHeader className="pb-3">
                   <div className="min-w-0 pr-10">
-                    <CardTitle className="truncate">{project.name}</CardTitle>
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="truncate">{project.name}</CardTitle>
+                      {project.local && (
+                        <span className="inline-flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground shrink-0" title="Saved locally — not synced to your account">
+                          <HardDrive className="h-2.5 w-2.5" />
+                          Local
+                        </span>
+                      )}
+                    </div>
                     <CardDescription className="mt-1 line-clamp-2">
                       {project.description || "No description"}
                     </CardDescription>

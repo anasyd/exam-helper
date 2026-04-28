@@ -8,27 +8,31 @@ import {
 const FAQS = [
   {
     q: "Do I need to pay?",
-    a: "No. Bring your own API key from Gemini, OpenAI, Anthropic, or OpenRouter and use it for free. A paid hosted tier is in development.",
+    a: "No — bring your own API key from Gemini, OpenAI, Anthropic, or OpenRouter and use exam-helper for free. Paid Student and Pro plans are available if you want more projects, larger files, or priority support.",
+  },
+  {
+    q: "Does my API key ever reach your server?",
+    a: "Not for regular generation. Your API key is stored in your browser and all AI calls go directly from your device to the provider. The only exception is background generation (processing while your tab is closed) — that requires explicit opt-in and the key is deleted from our servers the moment the job finishes.",
   },
   {
     q: "Which AI models are supported?",
-    a: "Gemini 2.5 Pro, Flash, and Flash Lite. GPT-5, GPT-5 mini, and GPT-5 nano. Claude Opus 4.7, Sonnet 4.6, and Haiku 4.5. Plus around 300 more models through OpenRouter.",
-  },
-  {
-    q: "Does my data leave my browser?",
-    a: "Only when you ask for generation — then the document content is sent to the AI provider you configured. Projects, settings, and API keys are stored locally in browser storage.",
-  },
-  {
-    q: "Can I use it offline?",
-    a: "The study session works offline against cards you already have. Generation needs internet because it calls the AI provider.",
+    a: "Gemini 2.5 Pro, Flash, and Flash Lite (plus 3.x previews). GPT-4o, GPT-5 family, and o3/o4-mini reasoning models. Claude Haiku 4.5, Sonnet 4.6, and Opus 4.7. Plus 300+ models via OpenRouter. You can assign a different model to each feature.",
   },
   {
     q: "What file types work?",
-    a: "PDF, DOCX, and plain text. PowerPoint support is on the roadmap.",
+    a: "PDF is fully supported, including scanned pages and diagrams when using a vision-capable model. Plain text and DOCX also work. Video transcripts are on the roadmap.",
   },
   {
-    q: "Is there a paid tier?",
-    a: "Not yet. A paid plan with hosted models (no API key required) is in development.",
+    q: "Can I create more than 5 projects on the free plan?",
+    a: "Yes. Once you hit the synced project limit, new projects are saved locally on your device instead. They work exactly the same — flashcards, roadmap, notes — they just aren't backed up to your account or accessible from other devices.",
+  },
+  {
+    q: "Can I use it offline?",
+    a: "Study sessions (flashcards, roadmap, notes) work fully offline once a project is loaded. Generating new content requires an internet connection because it calls your AI provider.",
+  },
+  {
+    q: "Can I self-host it?",
+    a: "Yes. A single Docker Compose file spins up the full stack — app, API server, and MongoDB. Deploy to any VPS, Coolify, or Portainer instance. See the self-hosting guide in the GitHub repo.",
   },
 ];
 

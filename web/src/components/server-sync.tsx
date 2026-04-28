@@ -53,8 +53,8 @@ export function ServerSync() {
         const localProjects = useFlashcardStore.getState().projects;
         const localById = new Map(localProjects.map((p) => [p.id, p]));
 
-        // Local projects not yet on server → bulk-push
-        const toUpload = localProjects.filter((p) => !serverById.has(p.id));
+        // Local projects not yet on server → bulk-push (skip local-only projects)
+        const toUpload = localProjects.filter((p) => !p.local && !serverById.has(p.id));
         if (toUpload.length > 0) {
           await batchUpsertProjects(toUpload);
         }
@@ -118,6 +118,7 @@ export function ServerSync() {
 
       const dirty: Project[] = [];
       for (const p of projects) {
+        if (p.local) continue;
         const prev = syncedAtRef.current.get(p.id);
         const curr = new Date(p.updatedAt).getTime();
         if (prev === undefined || curr > prev) {
