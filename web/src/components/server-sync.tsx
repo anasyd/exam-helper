@@ -13,6 +13,8 @@ import {
 import { fetchStats, putStats } from "@/lib/api/stats";
 
 const DEBOUNCE_MS = 2_000;
+// Skip the server fetch if we synced within this window — local OPFS data is fresh enough
+const SYNC_CACHE_MS = 3 * 60 * 1000; // 3 minutes
 
 // Merges a server project summary into the local project, preserving local
 // large-content fields (pdfContent, transcripts) if the server summary omits them.
@@ -47,6 +49,23 @@ export function ServerSync() {
     initializedRef.current = true;
 
     void (async () => {
+      const { lastServerSyncAt, setLastServerSyncAt } = useFlashcardStore.getState();
+      const cacheHit = lastServerSyncAt !== null && Date.now() - lastServerSyncAt < SYNC_CACHE_MS;
+
+      // Seed tracker from whatever is already in the store (OPFS data shown immediately)
+      const seedProjects = useFlashcardStore.getState().projects;
+      for (const p of seedProjects) {
+        syncedAtRef.current.set(p.id, new Date(p.updatedAt).getTime());
+      }
+      prevIdsRef.current = new Set(seedProjects.map((p) => p.id));
+
+      if (cacheHit) {
+        // OPFS data is fresh — skip server round-trip, still track streak ref
+        const s = useFlashcardStore.getState();
+        prevStreakRef.current = { currentStreak: s.currentStreak, lastStudiedDate: s.lastStudiedDate };
+        return;
+      }
+
       try {
         const serverSummaries = await fetchProjects();
         const serverById = new Map(serverSummaries.map((p) => [p.id, p]));
@@ -75,14 +94,16 @@ export function ServerSync() {
           });
         }
 
-        // Seed synced-state tracker from current store
+        // Re-seed tracker after merge
         const current = useFlashcardStore.getState().projects;
         for (const p of current) {
           syncedAtRef.current.set(p.id, new Date(p.updatedAt).getTime());
         }
         prevIdsRef.current = new Set(current.map((p) => p.id));
 
-        // Sync streak: server wins if it has a more recent lastStudiedDate, else keep local
+        setLastServerSyncAt(Date.now());
+
+        // Sync streak
         try {
           const serverStats = await fetchStats();
           const localStreak = useFlashcardStore.getState().currentStreak;
@@ -95,7 +116,6 @@ export function ServerSync() {
               lastStudiedDate: serverStats.lastStudiedDate,
             });
           } else if (localStreak > 0 || localDate) {
-            // Push local state to server so it's backed up
             await putStats({ currentStreak: localStreak, lastStudiedDate: localDate });
           }
           const s = useFlashcardStore.getState();

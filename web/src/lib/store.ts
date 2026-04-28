@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { opfsStorage } from "./opfs-storage";
 import { createShareableProject, getSharedProject } from "./share-service";
 import { toast } from "sonner"; // Added for completion toasts
 import type {
@@ -92,6 +93,8 @@ interface FlashcardState {
   demoSeedAttempted: boolean; // Have we already attempted to seed the built-in demo project?
   serverGenConsentGiven: boolean; // User has acknowledged the API key transmission disclosure
   activeJobIds: Record<string, string>; // projectId → active jobId (persisted so users can return to in-progress jobs)
+  lastServerSyncAt: number | null; // Unix ms — used to skip redundant fetches on quick reloads
+  setLastServerSyncAt: (ts: number) => void;
 
   setDemoSeedAttempted: (value: boolean) => void;
   setServerGenConsentGiven: (value: boolean) => void;
@@ -227,6 +230,8 @@ export const useFlashcardStore = create<FlashcardState>()(
       demoSeedAttempted: false,
       serverGenConsentGiven: false,
       activeJobIds: {},
+      lastServerSyncAt: null,
+      setLastServerSyncAt: (ts) => set({ lastServerSyncAt: ts }),
       openRouterCustomModels: [],
 
       setDemoSeedAttempted: (value) => set({ demoSeedAttempted: value }),
@@ -1227,8 +1232,9 @@ export const useFlashcardStore = create<FlashcardState>()(
         demoSeedAttempted: state.demoSeedAttempted,
         serverGenConsentGiven: state.serverGenConsentGiven,
         activeJobIds: state.activeJobIds,
+        lastServerSyncAt: state.lastServerSyncAt,
       }),
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => opfsStorage),
       // eslint-disable-next-line @typescript-eslint/no-explicit-any -- zustand persist callbacks hand back untyped data
       migrate: (persisted: any, version: number) => {
         if (version < 3) {
