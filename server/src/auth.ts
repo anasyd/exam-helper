@@ -32,10 +32,12 @@ export const auth = betterAuth({
     ...(config.RESEND_API_KEY && config.RESEND_FROM_EMAIL
       ? {
           sendResetPassword: async ({ user, url }: { user: { email: string; name: string }; url: string }) => {
+            const token = new URL(url).searchParams.get("token") ?? "";
+            const resetUrl = `${config.FRONTEND_URL}/reset-password?token=${encodeURIComponent(token)}`;
             await sendEmail({
               to: user.email,
               subject: "Reset your exam-helper password",
-              html: resetPasswordEmail({ name: user.name, resetUrl: url }),
+              html: resetPasswordEmail({ name: user.name, resetUrl }),
             });
           },
         }
