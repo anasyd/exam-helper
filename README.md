@@ -21,6 +21,16 @@
 
 ---
 
+## Demo
+
+<div align="center">
+  <video src="https://examhelper.app/demo.mp4" controls autoplay muted loop width="100%" style="border-radius:8px"></video>
+  <br/>
+  <a href="https://examhelper.app/demo.mp4">▶ Watch demo</a>
+</div>
+
+---
+
 ## Screenshots
 
 | Dark | Light |
