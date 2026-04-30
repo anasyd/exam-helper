@@ -1,0 +1,25 @@
+name: Welcome first-time contributors
+
+on:
+  issues:
+    types: [opened]
+  pull_request:
+    types: [opened]
+
+jobs:
+  welcome:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/first-interaction@v1
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          issue-message: |
+            Thanks for opening your first issue!
+
+            We will take a look and get back to you soon. In the meantime:
+            - For self-hosting issues, check the [self-hosting guide](docs/self-hosting.md)
+            - For general questions, consider using [Discussions](https://github.com/anasyd/exam-helper/discussions) instead
+          pr-message: |
+            Thanks for your first pull request! We will review it soon.
+
+            Please make sure your changes are tested locally before we begin the review.
