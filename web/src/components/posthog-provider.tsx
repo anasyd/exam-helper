@@ -6,11 +6,11 @@ import { useEffect, Suspense } from "react";
 import { usePathname, useSearchParams } from "next/navigation";
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
 
 if (typeof window !== "undefined" && KEY) {
   posthog.init(KEY, {
-    api_host: HOST,
+    api_host: "/ph",
+    ui_host: "https://eu.posthog.com",
     person_profiles: "identified_only",
     capture_pageview: false, // fired manually on every route change below
     capture_pageleave: true,

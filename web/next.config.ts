@@ -51,6 +51,16 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
+  async rewrites() {
+    return [
+      // PostHog — proxy through /ph/ so tracking protection can't fingerprint the destination
+      { source: "/ph/static/:path*", destination: "https://eu-assets.i.posthog.com/static/:path*" },
+      { source: "/ph/:path*",        destination: "https://eu.i.posthog.com/:path*" },
+      // Umami — proxy through /u/ for the same reason
+      { source: "/u/script.js",      destination: "https://cloud.umami.is/script.js" },
+      { source: "/u/:path*",         destination: "https://cloud.umami.is/:path*" },
+    ];
+  },
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
