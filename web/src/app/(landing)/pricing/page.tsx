@@ -76,6 +76,7 @@ export default function PricingPage() {
   }, [session.data?.user]);
 
   const currentTier = meData?.planTier ?? null;
+  const PLAN_RANK: Record<string, number> = { free: 0, student: 1, pro: 2, admin: 3 };
 
   async function handleUpgrade(tier: "student" | "pro") {
     if (!session.data?.user) {
@@ -85,6 +86,21 @@ export default function PricingPage() {
     setLoading(tier);
     ph?.capture("checkout_started", { tier, interval });
     try {
+      // Already subscribed — switch plan via API (no redirect)
+      if (currentTier && currentTier !== "free") {
+        const res = await fetch(`${BASE}/api/billing/switch`, {
+          method: "PATCH",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tier, interval }),
+        });
+        const data = await res.json() as { ok?: boolean; error?: string };
+        if (!res.ok) { toast.error(data.error ?? "Couldn't switch plan"); return; }
+        toast.success("Plan updated");
+        fetchMe().then(setMeData).catch(() => null);
+        return;
+      }
+      // New subscription — redirect to LS checkout
       const res = await fetch(`${BASE}/api/billing/checkout`, {
         method: "POST",
         credentials: "include",
@@ -92,13 +108,10 @@ export default function PricingPage() {
         body: JSON.stringify({ tier, interval }),
       });
       const data = await res.json() as { url?: string; error?: string };
-      if (!res.ok || !data.url) {
-        toast.error(data.error ?? "Couldn't start checkout");
-        return;
-      }
+      if (!res.ok || !data.url) { toast.error(data.error ?? "Couldn't start checkout"); return; }
       window.location.href = data.url;
     } catch {
-      toast.error("Couldn't start checkout");
+      toast.error("Couldn't process request");
     } finally {
       setLoading(null);
     }
@@ -209,11 +222,13 @@ export default function PricingPage() {
                     disabled={isCurrent || loading !== null}
                     variant={isPopular ? "default" : "outline"}
                   >
-                    {isCurrent
-                      ? "Current plan"
-                      : loading === plan.id
-                        ? "Redirecting…"
-                        : "Upgrade"}
+                    {loading === plan.id
+                      ? (currentTier && currentTier !== "free" ? "Switching…" : "Redirecting…")
+                      : isCurrent
+                        ? "Current plan"
+                        : currentTier && currentTier !== "free"
+                          ? PLAN_RANK[plan.id] > PLAN_RANK[currentTier] ? "Upgrade" : "Downgrade"
+                          : "Get started"}
                   </Button>
                 )}
               </div>

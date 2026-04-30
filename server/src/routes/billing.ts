@@ -30,3 +30,21 @@ billingRouter.post("/portal", async (req, res) => {
   }
   res.status(503).json({ error: "No billing provider configured" });
 });
+
+// DELETE /api/billing/cancel — cancel subscription at period end
+billingRouter.delete("/cancel", async (req, res) => {
+  if (config.LS_API_KEY) {
+    const { handleCancel } = await import("./lemonsqueezy.js");
+    return handleCancel(req, res);
+  }
+  res.status(503).json({ error: "No billing provider configured" });
+});
+
+// PATCH /api/billing/switch — change plan (upgrade / downgrade)
+billingRouter.patch("/switch", async (req, res) => {
+  if (config.LS_API_KEY) {
+    const { handleSwitch } = await import("./lemonsqueezy.js");
+    return handleSwitch(req, res);
+  }
+  res.status(503).json({ error: "No billing provider configured" });
+});

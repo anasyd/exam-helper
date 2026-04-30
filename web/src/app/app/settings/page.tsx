@@ -1,45 +1,55 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
-import { ChevronLeft, Zap, Key, Cpu, Database, CreditCard, Bell } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { ChevronLeft, Zap, Key, Cpu, Database, CreditCard, Bell, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { SettingsContent } from "@/components/app-settings";
 import { BILLING_ENABLED } from "@/lib/billing";
 import { fetchMe, type MeResponse } from "@/lib/api/me";
-import { useSession } from "@/lib/auth/client";
+import { useSession, authClient } from "@/lib/auth/client";
 import { cn } from "@/lib/utils";
 
 const BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000";
 
 const TIER_LABELS: Record<string, string> = {
-  free: "Free",
-  student: "Student",
-  pro: "Pro",
-  admin: "Admin",
+  free: "Free", student: "Student", pro: "Pro", admin: "Admin",
 };
 
-type Section = "ai-keys" | "model-routing" | "data" | "notifications" | "plan";
+type Section = "profile" | "ai-keys" | "model-routing" | "data" | "notifications" | "plan";
 
 const NAV_ITEMS: { id: Section; label: string; icon: React.ElementType; hidden?: boolean }[] = [
-  { id: "ai-keys",       label: "AI Keys",        icon: Key },
-  { id: "model-routing", label: "Model Routing",   icon: Cpu },
-  { id: "data",          label: "Data",            icon: Database },
-  { id: "notifications", label: "Notifications",   icon: Bell },
-  { id: "plan",          label: "Plan",            icon: CreditCard, hidden: !BILLING_ENABLED },
+  { id: "profile",        label: "Profile",        icon: User },
+  { id: "ai-keys",        label: "AI Keys",        icon: Key },
+  { id: "model-routing",  label: "Model Routing",  icon: Cpu },
+  { id: "data",           label: "Data",           icon: Database },
+  { id: "notifications",  label: "Notifications",  icon: Bell },
+  { id: "plan",           label: "Plan",           icon: CreditCard, hidden: !BILLING_ENABLED },
 ];
 
 export default function SettingsPage() {
   const session = useSession();
-  const [section, setSection] = useState<Section>("ai-keys");
+  const router = useRouter();
+  const [section, setSection] = useState<Section>("profile");
   const [meData, setMeData] = useState<MeResponse | null>(null);
-  const [portalLoading, setPortalLoading] = useState(false);
   const [emailPrefs, setEmailPrefs] = useState<{ productUpdates: boolean } | null>(null);
   const [prefsLoading, setPrefsLoading] = useState(false);
 
+  // Profile state
+  const [name, setName] = useState("");
+  const [nameSaving, setNameSaving] = useState(false);
+
+  // Plan state
+  const [cancelLoading, setCancelLoading] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+
   useEffect(() => {
     if (session.data?.user) {
+      setName(session.data.user.name ?? "");
       fetchMe().then(setMeData).catch(() => null);
     }
   }, [session.data?.user]);
@@ -52,9 +62,7 @@ export default function SettingsPage() {
           return r.json() as Promise<{ productUpdates: boolean }>;
         })
         .then(setEmailPrefs)
-        .catch((e) => {
-          toast.error(`Could not load email preferences: ${e instanceof Error ? e.message : "unknown error"}`);
-        });
+        .catch(() => toast.error("Could not load email preferences"));
     }
   }, [section, session.data?.user, emailPrefs]);
 
@@ -64,8 +72,7 @@ export default function SettingsPage() {
     setPrefsLoading(true);
     try {
       const res = await fetch(`${BASE}/api/me/email-prefs`, {
-        method: "PATCH",
-        credentials: "include",
+        method: "PATCH", credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ [key]: value }),
       });
@@ -78,17 +85,34 @@ export default function SettingsPage() {
     }
   }
 
-  async function handleManageSubscription() {
-    setPortalLoading(true);
+  async function handleSaveName(e: FormEvent) {
+    e.preventDefault();
+    if (!name.trim() || name === session.data?.user?.name) return;
+    setNameSaving(true);
+    const result = await authClient.updateUser({ name: name.trim() });
+    setNameSaving(false);
+    if (result.error) { toast.error(result.error.message ?? "Couldn't save"); return; }
+    toast.success("Name updated");
+  }
+
+  async function handleSignOut() {
+    await authClient.signOut();
+    router.replace("/");
+  }
+
+  async function handleCancelSubscription() {
+    setCancelLoading(true);
     try {
-      const res = await fetch(`${BASE}/api/billing/portal`, { method: "POST", credentials: "include" });
-      const data = await res.json() as { url?: string; error?: string };
-      if (data.url) window.open(data.url, "_blank", "noopener,noreferrer");
-      else toast.error(data.error ?? "Couldn't open billing portal");
+      const res = await fetch(`${BASE}/api/billing/cancel`, { method: "DELETE", credentials: "include" });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) { toast.error(data.error ?? "Couldn't cancel"); return; }
+      toast.success("Subscription cancelled — you keep access until the end of your billing period");
+      fetchMe().then(setMeData).catch(() => null);
     } catch {
-      toast.error("Couldn't open billing portal");
+      toast.error("Couldn't cancel subscription");
     } finally {
-      setPortalLoading(false);
+      setCancelLoading(false);
+      setConfirmCancel(false);
     }
   }
 
@@ -97,19 +121,14 @@ export default function SettingsPage() {
   return (
     <div className="min-h-screen">
       <div className="max-w-5xl mx-auto px-6 py-10">
-        <Link
-          href="/app"
-          className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
-        >
+        <Link href="/app" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8">
           <ChevronLeft className="h-4 w-4" /> Back to projects
         </Link>
 
         <div className="flex gap-8 items-start">
           {/* Side nav */}
           <aside className="w-48 shrink-0 sticky top-8">
-            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-3">
-              Settings
-            </p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3 px-3">Settings</p>
             <nav className="flex flex-col gap-0.5">
               {visibleNav.map(({ id, label, icon: Icon }) => (
                 <button
@@ -131,15 +150,45 @@ export default function SettingsPage() {
 
           {/* Content */}
           <div className="flex-1 min-w-0">
-            {section === "ai-keys" && (
-              <SettingsContent activeSection="ai-keys" />
+
+            {section === "profile" && session.data?.user && (
+              <div className="space-y-8">
+                <div>
+                  <h2 className="text-lg font-semibold">Profile</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">Your account details</p>
+                </div>
+
+                <form onSubmit={(e) => void handleSaveName(e)} className="space-y-4 max-w-sm">
+                  <div className="space-y-1.5">
+                    <Label htmlFor="name">Name</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Your name"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" value={session.data.user.email} disabled />
+                  </div>
+                  <Button type="submit" size="sm" disabled={nameSaving || !name.trim() || name === session.data.user.name}>
+                    {nameSaving ? "Saving…" : "Save"}
+                  </Button>
+                </form>
+
+                <div className="pt-4 border-t">
+                  <Button variant="outline" size="sm" onClick={() => void handleSignOut()}>
+                    Sign out
+                  </Button>
+                </div>
+              </div>
             )}
-            {section === "model-routing" && (
-              <SettingsContent activeSection="model-routing" />
-            )}
-            {section === "data" && (
-              <SettingsContent activeSection="data" />
-            )}
+
+            {section === "ai-keys" && <SettingsContent activeSection="ai-keys" />}
+            {section === "model-routing" && <SettingsContent activeSection="model-routing" />}
+            {section === "data" && <SettingsContent activeSection="data" />}
+
             {section === "notifications" && (
               <div className="space-y-6">
                 <div>
@@ -172,12 +221,7 @@ export default function SettingsPage() {
                         <p className="text-sm font-medium">Account &amp; security</p>
                         <p className="text-xs text-muted-foreground mt-0.5">Password resets, email verification, and important account alerts</p>
                       </div>
-                      <button
-                        role="switch"
-                        aria-checked={true}
-                        disabled
-                        className="relative inline-flex h-5 w-9 shrink-0 cursor-not-allowed items-center rounded-full border-2 border-transparent bg-primary opacity-50 transition-colors"
-                      >
+                      <button role="switch" aria-checked={true} disabled className="relative inline-flex h-5 w-9 shrink-0 cursor-not-allowed items-center rounded-full border-2 border-transparent bg-primary opacity-50 transition-colors">
                         <span className="pointer-events-none block h-4 w-4 translate-x-4 rounded-full bg-background shadow-lg ring-0 transition-transform" />
                       </button>
                     </div>
@@ -186,6 +230,7 @@ export default function SettingsPage() {
                 </div>
               </div>
             )}
+
             {section === "plan" && BILLING_ENABLED && meData && (
               <div className="space-y-6">
                 <div>
@@ -193,22 +238,21 @@ export default function SettingsPage() {
                   <p className="text-sm text-muted-foreground mt-0.5">Manage your subscription and usage</p>
                 </div>
                 <div className="rounded-xl border bg-muted/20 p-5 space-y-4">
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <p className="text-sm font-semibold">{TIER_LABELS[meData.planTier] ?? meData.planTier} plan</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {meData.usage.projects} of{" "}
-                        {meData.usage.limits.projects === Infinity ? "unlimited" : meData.usage.limits.projects} projects ·{" "}
-                        {meData.usage.limits.pdfsPerProject} PDFs per project ·{" "}
-                        {meData.usage.limits.maxFileSizeMb} MB max
+                  <div>
+                    <p className="text-sm font-semibold">{TIER_LABELS[meData.planTier] ?? meData.planTier} plan</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {meData.usage.projects} of{" "}
+                      {meData.usage.limits.projects === Infinity ? "unlimited" : meData.usage.limits.projects} projects ·{" "}
+                      {meData.usage.limits.pdfsPerProject} PDFs per project ·{" "}
+                      {meData.usage.limits.maxFileSizeMb} MB max
+                    </p>
+                    {meData.planCancelledAt && (
+                      <p className="text-xs text-red-500 mt-1 font-medium">
+                        Cancels {new Date(meData.planCancelledAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
                       </p>
-                    </div>
-                    {meData.planTier === "free" && (
-                      <span className="text-[10px] font-semibold uppercase tracking-wide bg-muted text-muted-foreground px-2 py-1 rounded">
-                        Free
-                      </span>
                     )}
                   </div>
+
                   {meData.planTier === "free" ? (
                     <Button asChild size="sm">
                       <Link href="/pricing" className="flex items-center gap-1.5">
@@ -216,14 +260,36 @@ export default function SettingsPage() {
                       </Link>
                     </Button>
                   ) : meData.planTier !== "admin" ? (
-                    <div className="flex flex-col items-end gap-1">
-                      <Button variant="outline" size="sm" onClick={() => void handleManageSubscription()} disabled={portalLoading}>
-                        {portalLoading ? "Opening…" : "Manage subscription"}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/pricing">Change plan</Link>
                       </Button>
-                      {meData.planCancelledAt && (
-                        <p className="text-xs text-muted-foreground">
-                          Cancels {new Date(meData.planCancelledAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
-                        </p>
+                      {!meData.planCancelledAt && (
+                        confirmCancel ? (
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs text-muted-foreground">Cancel at period end?</span>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => void handleCancelSubscription()}
+                              disabled={cancelLoading}
+                            >
+                              {cancelLoading ? "Cancelling…" : "Yes, cancel"}
+                            </Button>
+                            <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(false)}>
+                              Keep plan
+                            </Button>
+                          </div>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="text-muted-foreground hover:text-destructive"
+                            onClick={() => setConfirmCancel(true)}
+                          >
+                            Cancel subscription
+                          </Button>
+                        )
                       )}
                     </div>
                   ) : null}

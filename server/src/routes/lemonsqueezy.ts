@@ -79,6 +79,44 @@ export async function handleCheckout(req: Request, res: Response): Promise<void>
   res.json({ url: data.data.attributes.url });
 }
 
+export async function handleCancel(req: Request, res: Response): Promise<void> {
+  const { userId } = req as unknown as AuthedRequest;
+  const user = await userCol().findOne(byId(userId));
+  const subscriptionId = (user as Record<string, unknown>)?.lsSubscriptionId as string | undefined;
+  if (!subscriptionId) {
+    res.status(400).json({ error: "No active subscription" });
+    return;
+  }
+  await lsRequest(`/subscriptions/${subscriptionId}`, { method: "DELETE" });
+  res.json({ ok: true });
+}
+
+export async function handleSwitch(req: Request, res: Response): Promise<void> {
+  const { userId } = req as unknown as AuthedRequest;
+  const { tier, interval } = req.body as { tier: string; interval: string };
+  const variantId =
+    tier === "student"
+      ? interval === "year" ? config.LS_STUDENT_YEARLY_VARIANT_ID : config.LS_STUDENT_MONTHLY_VARIANT_ID
+      : interval === "year" ? config.LS_PRO_YEARLY_VARIANT_ID      : config.LS_PRO_MONTHLY_VARIANT_ID;
+  if (!variantId) {
+    res.status(400).json({ error: "Invalid tier or interval" });
+    return;
+  }
+  const user = await userCol().findOne(byId(userId));
+  const subscriptionId = (user as Record<string, unknown>)?.lsSubscriptionId as string | undefined;
+  if (!subscriptionId) {
+    res.status(400).json({ error: "No active subscription" });
+    return;
+  }
+  await lsRequest(`/subscriptions/${subscriptionId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      data: { type: "subscriptions", id: subscriptionId, attributes: { variant_id: parseInt(variantId) } },
+    }),
+  });
+  res.json({ ok: true });
+}
+
 export async function handlePortal(req: Request, res: Response): Promise<void> {
   const { userId } = req as unknown as AuthedRequest;
   const user = await userCol().findOne(byId(userId));
