@@ -11,14 +11,20 @@ async function proxy(req: NextRequest, path: string): Promise<NextResponse> {
   const url = `${UPSTREAM}/${path}${req.nextUrl.search}`;
   const body = req.method === "GET" || req.method === "HEAD" ? undefined : await req.arrayBuffer();
 
+  const fwd: Record<string, string> = {
+    "content-type": req.headers.get("content-type") ?? "application/json",
+    "user-agent": req.headers.get("user-agent") ?? "",
+    "x-forwarded-for": ip,
+    "x-real-ip": ip,
+  };
+  const referer = req.headers.get("referer");
+  const lang = req.headers.get("accept-language");
+  if (referer) fwd["referer"] = referer;
+  if (lang) fwd["accept-language"] = lang;
+
   const upstream = await fetch(url, {
     method: req.method,
-    headers: {
-      "content-type": req.headers.get("content-type") ?? "application/json",
-      "user-agent": req.headers.get("user-agent") ?? "",
-      "x-forwarded-for": ip,
-      "x-real-ip": ip,
-    },
+    headers: fwd,
     body: body ?? undefined,
   });
 
