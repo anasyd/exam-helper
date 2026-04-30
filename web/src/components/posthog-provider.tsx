@@ -5,7 +5,7 @@ import { PostHogProvider as PHProvider, usePostHog } from "posthog-js/react";
 import { useEffect } from "react";
 
 const KEY = process.env.NEXT_PUBLIC_POSTHOG_KEY;
-const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://us.i.posthog.com";
+const HOST = process.env.NEXT_PUBLIC_POSTHOG_HOST ?? "https://eu.i.posthog.com";
 
 if (typeof window !== "undefined" && KEY) {
   posthog.init(KEY, {
