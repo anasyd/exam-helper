@@ -101,6 +101,7 @@ interface LsWebhookPayload {
       status: string;
       variant_id: number;
       customer_id: number;
+      user_email?: string;
       urls?: { customer_portal?: string };
     };
   };
@@ -145,10 +146,15 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
 
   switch (event_name) {
     case "subscription_created": {
-      if (!userId) return;
       const tier = variantToTier(attrs.variant_id);
       if (!tier) return;
-      await userCol().updateOne(byId(userId), {
+      const filter = userId
+        ? byId(userId)
+        : attrs.user_email
+          ? ({ email: attrs.user_email.toLowerCase() } as never)
+          : null;
+      if (!filter) return;
+      await userCol().updateOne(filter, {
         $set: {
           planTier: tier,
           lsSubscriptionId: payload.data.id,
@@ -156,7 +162,7 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
           updatedAt: new Date(),
         },
       });
-      logger.info({ userId, tier }, "ls subscription created");
+      logger.info({ userId, email: attrs.user_email, tier }, "ls subscription created");
       break;
     }
 
