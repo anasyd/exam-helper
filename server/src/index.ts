@@ -63,7 +63,7 @@ async function main(): Promise<void> {
   // Better Auth's handler must come BEFORE express.json() — it parses request bodies itself.
   app.all("/api/auth/*", toNodeHandler(auth));
 
-  // Billing: webhooks need raw body before express.json(); routers loaded lazily
+  // Webhook endpoints must receive raw body for HMAC verification — each has inline express.raw()
   if (config.STRIPE_SECRET_KEY) {
     const { webhookHandler } = await import("./routes/stripe.js");
     app.post("/api/stripe/webhook", express.raw({ type: "application/json" }), webhookHandler);
@@ -72,14 +72,16 @@ async function main(): Promise<void> {
     const { webhookHandler } = await import("./routes/lemonsqueezy.js");
     app.post("/api/lemonsqueezy/webhook", express.raw({ type: "application/json" }), webhookHandler);
   }
-  if (config.STRIPE_SECRET_KEY || config.LS_API_KEY) {
-    const { billingRouter } = await import("./routes/billing.js");
-    app.use("/api/billing", billingRouter);
-  }
 
   // Projects can include large PDF text blobs; files router uses multer (no JSON limit needed there)
   app.use("/api/projects", express.json({ limit: "20mb" }));
   app.use(express.json({ limit: "64kb" }));
+
+  // Billing checkout/portal need parsed JSON — must come after express.json()
+  if (config.STRIPE_SECRET_KEY || config.LS_API_KEY) {
+    const { billingRouter } = await import("./routes/billing.js");
+    app.use("/api/billing", billingRouter);
+  }
 
   app.use("/api/setup", setupRouter);
   app.use("/api/health", healthRouter);

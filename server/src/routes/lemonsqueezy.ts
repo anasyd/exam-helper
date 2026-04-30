@@ -189,7 +189,41 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
           $set: { planTier: "free", planExpiresAt: null, updatedAt: new Date() },
         });
         logger.info({ subscriptionId: payload.data.id }, "ls subscription expired, downgraded");
+      } else {
+        // cancelled but still in billing period — keep access, just log
+        logger.info({ subscriptionId: payload.data.id }, "ls subscription cancelled, access until period end");
       }
+      break;
+    }
+
+    case "subscription_paused": {
+      // Billing paused — keep tier access during pause, LS will resume or expire later
+      logger.info({ subscriptionId: payload.data.id }, "ls subscription paused");
+      break;
+    }
+
+    case "subscription_unpaused":
+    case "subscription_resumed": {
+      // Restore tier from variant when coming back from pause or cancellation
+      const filter = userId
+        ? byId(userId)
+        : ({ lsSubscriptionId: payload.data.id } as never);
+      const tier = variantToTier(attrs.variant_id);
+      if (!tier) return;
+      await userCol().updateOne(filter, {
+        $set: {
+          planTier: tier,
+          lsCustomerPortalUrl: attrs.urls?.customer_portal ?? null,
+          updatedAt: new Date(),
+        },
+      });
+      logger.info({ subscriptionId: payload.data.id, tier, event: event_name }, "ls subscription restored");
+      break;
+    }
+
+    case "subscription_payment_failed": {
+      // LS handles grace period — don't downgrade yet, just log
+      logger.warn({ subscriptionId: payload.data.id }, "ls subscription payment failed");
       break;
     }
   }
