@@ -83,7 +83,7 @@ export default function SettingsPage() {
     try {
       const res = await fetch(`${BASE}/api/billing/portal`, { method: "POST", credentials: "include" });
       const data = await res.json() as { url?: string; error?: string };
-      if (data.url) window.location.href = data.url;
+      if (data.url) window.open(data.url, "_blank", "noopener,noreferrer");
       else toast.error(data.error ?? "Couldn't open billing portal");
     } catch {
       toast.error("Couldn't open billing portal");

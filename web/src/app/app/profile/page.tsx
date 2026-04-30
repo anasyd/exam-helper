@@ -41,7 +41,7 @@ export default function ProfilePage() {
         toast.error(data.error ?? "Couldn't open billing portal");
         return;
       }
-      window.location.href = data.url;
+      window.open(data.url, "_blank", "noopener,noreferrer");
     } catch {
       toast.error("Couldn't open billing portal");
     } finally {
