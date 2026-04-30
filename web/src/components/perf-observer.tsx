@@ -12,7 +12,7 @@ export function PerfObserver() {
         strategy="afterInteractive"
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/u/q/TJjk1M7XB" alt="" width={1} height={1} style={{ position: "absolute", left: -9999 }} />
+      <img src="/u/p/qVP38gUBG" alt="" width={1} height={1} style={{ position: "absolute", left: -9999 }} />
     </>
   );
 }
