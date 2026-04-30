@@ -1,0 +1,80 @@
+# Build-from-source compose — both server and web are built on the host.
+# Use this instead of docker-compose.coolify.yml if you want to always run
+# the latest code without waiting for a GHCR release to be tagged and pushed.
+#
+# In Coolify: set Compose file path to docker-compose.build.yml
+
+services:
+  mongo:
+    image: mongo:8
+    restart: unless-stopped
+    command: ["--wiredTigerCacheSizeGB", "0.25"]
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: ${SERVICE_PASSWORD_MONGOROOT}
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
+
+  server:
+    build: ./server
+    environment:
+      - NODE_ENV=production
+      - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
+      - MONGODB_URI=mongodb://admin:${SERVICE_PASSWORD_MONGOROOT}@mongo:27017/examhelper?authSource=admin
+      - SERVICE_FQDN_SERVER_4000=${SERVICE_FQDN_SERVER_4000}
+      - BETTER_AUTH_URL=${SERVICE_URL_SERVER}
+      - FRONTEND_URL=${SERVICE_URL_WEB}
+      - REGISTRATION_MODE=${REGISTRATION_MODE:-open}
+      - ADMIN_EMAIL=${ADMIN_EMAIL}
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD}
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - RESEND_API_KEY=${RESEND_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL}
+      - LS_API_KEY=${LS_API_KEY}
+      - LS_WEBHOOK_SECRET=${LS_WEBHOOK_SECRET}
+      - LS_STORE_ID=${LS_STORE_ID}
+      - LS_STUDENT_MONTHLY_VARIANT_ID=${LS_STUDENT_MONTHLY_VARIANT_ID}
+      - LS_STUDENT_YEARLY_VARIANT_ID=${LS_STUDENT_YEARLY_VARIANT_ID}
+      - LS_PRO_MONTHLY_VARIANT_ID=${LS_PRO_MONTHLY_VARIANT_ID}
+      - LS_PRO_YEARLY_VARIANT_ID=${LS_PRO_YEARLY_VARIANT_ID}
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET}
+      - STRIPE_STUDENT_MONTHLY_PRICE_ID=${STRIPE_STUDENT_MONTHLY_PRICE_ID}
+      - STRIPE_STUDENT_YEARLY_PRICE_ID=${STRIPE_STUDENT_YEARLY_PRICE_ID}
+      - STRIPE_PRO_MONTHLY_PRICE_ID=${STRIPE_PRO_MONTHLY_PRICE_ID}
+      - STRIPE_PRO_YEARLY_PRICE_ID=${STRIPE_PRO_YEARLY_PRICE_ID}
+    depends_on:
+      mongo:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "require('http').get('http://localhost:4000/api/health',r=>process.exit(r.statusCode===200?0:1)).on('error',()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+
+  web:
+    build:
+      context: ./web
+      args:
+        NEXT_PUBLIC_AUTH_URL: ${SERVICE_URL_SERVER}
+    environment:
+      - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000}
+      - NEXT_PUBLIC_BILLING_PROVIDER=${NEXT_PUBLIC_BILLING_PROVIDER}
+    depends_on:
+      server:
+        condition: service_healthy
+
+volumes:
+  mongo-data: {}
