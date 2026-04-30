@@ -15,7 +15,7 @@
 
 [![Server image](https://ghcr-badge.egpl.dev/anasyd/exam-helper-server/latest_tag?label=server%20image&color=%23b8854a)](https://github.com/anasyd/exam-helper/pkgs/container/exam-helper-server)
 [![Web image](https://ghcr-badge.egpl.dev/anasyd/exam-helper-web/latest_tag?label=web%20image&color=%23b8854a)](https://github.com/anasyd/exam-helper/pkgs/container/exam-helper-web)
-[![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-b8854a?style=flat)](LICENSE)
+[![License: AGPL-3.0 + Commons Clause](https://img.shields.io/badge/license-AGPL--3.0%20%2B%20Commons%20Clause-b8854a?style=flat)](LICENSE)
 
 </div>
 
