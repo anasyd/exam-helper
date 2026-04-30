@@ -24,21 +24,21 @@ const schema = z.object({
   ADMIN_PASSWORD: z.preprocess(v => v || undefined, z.string().min(8).optional()),
 
   // Stripe — all optional; billing is disabled when STRIPE_SECRET_KEY is absent
-  STRIPE_SECRET_KEY: z.string().startsWith("sk_").optional(),
-  STRIPE_WEBHOOK_SECRET: z.string().startsWith("whsec_").optional(),
-  STRIPE_STUDENT_MONTHLY_PRICE_ID: z.string().optional(),
-  STRIPE_STUDENT_YEARLY_PRICE_ID: z.string().optional(),
-  STRIPE_PRO_MONTHLY_PRICE_ID: z.string().optional(),
-  STRIPE_PRO_YEARLY_PRICE_ID: z.string().optional(),
+  STRIPE_SECRET_KEY: z.preprocess(v => v || undefined, z.string().startsWith("sk_").optional()),
+  STRIPE_WEBHOOK_SECRET: z.preprocess(v => v || undefined, z.string().startsWith("whsec_").optional()),
+  STRIPE_STUDENT_MONTHLY_PRICE_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  STRIPE_STUDENT_YEARLY_PRICE_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  STRIPE_PRO_MONTHLY_PRICE_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  STRIPE_PRO_YEARLY_PRICE_ID: z.preprocess(v => v || undefined, z.string().optional()),
 
   // Lemon Squeezy — alternative billing provider (mutually exclusive with Stripe)
-  LS_API_KEY: z.string().optional(),
-  LS_WEBHOOK_SECRET: z.string().optional(),
-  LS_STORE_ID: z.string().optional(),
-  LS_STUDENT_MONTHLY_VARIANT_ID: z.string().optional(),
-  LS_STUDENT_YEARLY_VARIANT_ID: z.string().optional(),
-  LS_PRO_MONTHLY_VARIANT_ID: z.string().optional(),
-  LS_PRO_YEARLY_VARIANT_ID: z.string().optional(),
+  LS_API_KEY: z.preprocess(v => v || undefined, z.string().optional()),
+  LS_WEBHOOK_SECRET: z.preprocess(v => v || undefined, z.string().optional()),
+  LS_STORE_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  LS_STUDENT_MONTHLY_VARIANT_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  LS_STUDENT_YEARLY_VARIANT_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  LS_PRO_MONTHLY_VARIANT_ID: z.preprocess(v => v || undefined, z.string().optional()),
+  LS_PRO_YEARLY_VARIANT_ID: z.preprocess(v => v || undefined, z.string().optional()),
 });
 
 const parsed = schema.safeParse(process.env);
