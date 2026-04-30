@@ -56,9 +56,7 @@ const nextConfig: NextConfig = {
       // PostHog — proxy through /ph/ so tracking protection can't fingerprint the destination
       { source: "/ph/static/:path*", destination: "https://eu-assets.i.posthog.com/static/:path*" },
       { source: "/ph/:path*",        destination: "https://eu.i.posthog.com/:path*" },
-      // Umami — proxy through /u/ for the same reason
-      { source: "/u/script.js",      destination: "https://cloud.umami.is/script.js" },
-      { source: "/u/:path*",         destination: "https://cloud.umami.is/:path*" },
+      // Umami — handled by /api/u/[...path]/route.ts which forwards X-Forwarded-For
     ];
   },
   webpack: (config, { isServer }) => {
