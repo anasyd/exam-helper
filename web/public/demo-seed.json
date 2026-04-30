@@ -2,7 +2,7 @@
   "project": {
     "id": "demo-intro-to-qc",
     "name": "Introduction to Quantum Computing",
-    "description": "Lecture notes — MIT 8.370x week 1",
+    "description": "Lecture notes \u2014 MIT 8.370x week 1",
     "documentFileName": "mit-8370x-week1.pdf",
     "pdfContent": "Quantum computing uses qubits, which can exist in superpositions of 0 and 1. Unlike classical bits that are deterministically 0 or 1, qubits leverage quantum mechanical phenomena like superposition and entanglement. The Bloch sphere is a geometric representation of a qubit's state. Quantum gates such as Hadamard, CNOT, and Pauli gates manipulate qubit states to perform computations. Shor's algorithm demonstrates exponential speedup over classical factoring algorithms, threatening RSA cryptography. Grover's algorithm provides quadratic speedup for unstructured search problems. Quantum entanglement allows correlated measurements across separated qubits, forming the basis of quantum teleportation and quantum key distribution.",
     "processedHashes": [],
@@ -14,7 +14,7 @@
         "id": "demo-card-1",
         "question": "What is a qubit?",
         "answer": "A quantum bit that can exist in a superposition of 0 and 1 simultaneously.",
-        "explanation": "A qubit is the fundamental unit of quantum information, described by |ψ⟩ = α|0⟩ + β|1⟩ where |α|² + |β|² = 1. Unlike a classical bit which always holds a definite value, a qubit genuinely occupies both states simultaneously until measured.",
+        "explanation": "A qubit is the fundamental unit of quantum information, described by |\u03c8\u27e9 = \u03b1|0\u27e9 + \u03b2|1\u27e9 where |\u03b1|\u00b2 + |\u03b2|\u00b2 = 1. Unlike a classical bit which always holds a definite value, a qubit genuinely occupies both states simultaneously until measured.",
         "options": [
           "A classical bit flipped quickly",
           "A quantum bit in superposition of 0 and 1",
@@ -30,8 +30,8 @@
       {
         "id": "demo-card-2",
         "question": "What does the Hadamard gate do?",
-        "answer": "Creates an equal superposition of |0⟩ and |1⟩ from a basis state.",
-        "explanation": "The Hadamard gate maps |0⟩ → (|0⟩+|1⟩)/√2 and |1⟩ → (|0⟩−|1⟩)/√2. Applying it twice returns the qubit to its original state (H² = I).",
+        "answer": "Creates an equal superposition of |0\u27e9 and |1\u27e9 from a basis state.",
+        "explanation": "The Hadamard gate maps |0\u27e9 \u2192 (|0\u27e9+|1\u27e9)/\u221a2 and |1\u27e9 \u2192 (|0\u27e9\u2212|1\u27e9)/\u221a2. Applying it twice returns the qubit to its original state (H\u00b2 = I).",
         "options": [
           "Entangles two qubits",
           "Measures the qubit state",
@@ -47,8 +47,8 @@
       {
         "id": "demo-card-3",
         "question": "Which algorithm threatens RSA cryptography?",
-        "answer": "Shor's algorithm — efficient integer factoring on a quantum computer.",
-        "explanation": "Shor's algorithm (1994) factors large integers in polynomial time O(n³). RSA relies on the assumption that factoring the product of two large primes is computationally infeasible — Shor's breaks that assumption entirely.",
+        "answer": "Shor's algorithm \u2014 efficient integer factoring on a quantum computer.",
+        "explanation": "Shor's algorithm (1994) factors large integers in polynomial time O(n\u00b3). RSA relies on the assumption that factoring the product of two large primes is computationally infeasible \u2014 Shor's breaks that assumption entirely.",
         "options": [
           "Grover's algorithm",
           "Shor's algorithm",
@@ -82,12 +82,12 @@
         "id": "demo-card-5",
         "question": "What speedup does Grover's algorithm provide?",
         "answer": "Quadratic speedup over classical unstructured search.",
-        "explanation": "Grover's algorithm finds a target item in an unsorted database of N entries using O(√N) oracle queries, versus O(N) classically — a quadratic speedup.",
+        "explanation": "Grover's algorithm finds a target item in an unsorted database of N entries using O(\u221aN) oracle queries, versus O(N) classically \u2014 a quadratic speedup.",
         "options": [
           "Exponential over any classical algorithm",
           "Quadratic speedup over classical search",
           "Linear speedup in all cases",
-          "No speedup — only a theoretical construct"
+          "No speedup \u2014 only a theoretical construct"
         ],
         "correctOptionIndex": 1,
         "difficulty": 3,
@@ -98,11 +98,11 @@
       {
         "id": "demo-mcq-q1-t1-a",
         "question": "How many states can a classical bit represent at once?",
-        "answer": "Exactly one — either 0 or 1.",
-        "explanation": "A classical bit is always in a single definite state — 0 or 1 — corresponding to a discrete voltage level. This is in stark contrast to a qubit, which can exist in a superposition of both values simultaneously.",
+        "answer": "Exactly one \u2014 either 0 or 1.",
+        "explanation": "A classical bit is always in a single definite state \u2014 0 or 1 \u2014 corresponding to a discrete voltage level. This is in stark contrast to a qubit, which can exist in a superposition of both values simultaneously.",
         "options": [
           "Two simultaneously",
-          "Exactly one — either 0 or 1",
+          "Exactly one \u2014 either 0 or 1",
           "Infinitely many via analog voltage",
           "It depends on the hardware"
         ],
@@ -116,14 +116,14 @@
       },
       {
         "id": "demo-mcq-q1-t1-b",
-        "question": "A qubit in the |+⟩ state is measured. What are the probabilities of outcomes?",
-        "answer": "50% |0⟩ and 50% |1⟩.",
-        "explanation": "The |+⟩ state is (|0⟩ + |1⟩)/√2. By the Born rule: P(|0⟩) = |1/√2|² = 1/2 and P(|1⟩) = 1/2. Once measured, the superposition collapses irreversibly to the observed outcome.",
+        "question": "A qubit in the |+\u27e9 state is measured. What are the probabilities of outcomes?",
+        "answer": "50% |0\u27e9 and 50% |1\u27e9.",
+        "explanation": "The |+\u27e9 state is (|0\u27e9 + |1\u27e9)/\u221a2. By the Born rule: P(|0\u27e9) = |1/\u221a2|\u00b2 = 1/2 and P(|1\u27e9) = 1/2. Once measured, the superposition collapses irreversibly to the observed outcome.",
         "options": [
-          "100% |0⟩",
-          "100% |1⟩",
-          "50% |0⟩ and 50% |1⟩",
-          "The result is always |0⟩ after the first measurement"
+          "100% |0\u27e9",
+          "100% |1\u27e9",
+          "50% |0\u27e9 and 50% |1\u27e9",
+          "The result is always |0\u27e9 after the first measurement"
         ],
         "correctOptionIndex": 2,
         "difficulty": 2,
@@ -136,11 +136,11 @@
       {
         "id": "demo-mcq-q1-t1-c",
         "question": "What happens to a qubit's superposition when it is measured?",
-        "answer": "It collapses to a definite classical state (|0⟩ or |1⟩) irreversibly.",
-        "explanation": "The Born rule states that measurement irreversibly collapses the wave function to an eigenstate — |0⟩ or |1⟩ — with probability given by the squared amplitude. This collapse is fundamental and unavoidable. Unlike classical uncertainty, quantum superposition is not mere ignorance about a hidden value; the qubit genuinely exists in multiple states at once until measured.",
+        "answer": "It collapses to a definite classical state (|0\u27e9 or |1\u27e9) irreversibly.",
+        "explanation": "The Born rule states that measurement irreversibly collapses the wave function to an eigenstate \u2014 |0\u27e9 or |1\u27e9 \u2014 with probability given by the squared amplitude. This collapse is fundamental and unavoidable. Unlike classical uncertainty, quantum superposition is not mere ignorance about a hidden value; the qubit genuinely exists in multiple states at once until measured.",
         "options": [
           "It remains in superposition indefinitely",
-          "It collapses to |0⟩ or |1⟩ irreversibly",
+          "It collapses to |0\u27e9 or |1\u27e9 irreversibly",
           "It splits into two separate qubits",
           "It teleports to another qubit"
         ],
@@ -154,14 +154,14 @@
       },
       {
         "id": "demo-mcq-q1-t1-d",
-        "question": "Which constraint must the amplitudes α and β of |ψ⟩ = α|0⟩ + β|1⟩ satisfy?",
-        "answer": "|α|² + |β|² = 1 (normalization condition).",
-        "explanation": "The normalization condition |α|² + |β|² = 1 ensures the total probability of all outcomes equals 1. Since α and β can be complex numbers, it is the squared moduli that sum to 1. This is the fundamental constraint on any valid quantum state vector.",
+        "question": "Which constraint must the amplitudes \u03b1 and \u03b2 of |\u03c8\u27e9 = \u03b1|0\u27e9 + \u03b2|1\u27e9 satisfy?",
+        "answer": "|\u03b1|\u00b2 + |\u03b2|\u00b2 = 1 (normalization condition).",
+        "explanation": "The normalization condition |\u03b1|\u00b2 + |\u03b2|\u00b2 = 1 ensures the total probability of all outcomes equals 1. Since \u03b1 and \u03b2 can be complex numbers, it is the squared moduli that sum to 1. This is the fundamental constraint on any valid quantum state vector.",
         "options": [
-          "α + β = 1",
-          "α² + β² = 1 (assuming real)",
-          "|α|² + |β|² = 1",
-          "α = β always"
+          "\u03b1 + \u03b2 = 1",
+          "\u03b1\u00b2 + \u03b2\u00b2 = 1 (assuming real)",
+          "|\u03b1|\u00b2 + |\u03b2|\u00b2 = 1",
+          "\u03b1 = \u03b2 always"
         ],
         "correctOptionIndex": 2,
         "difficulty": 2,
@@ -173,9 +173,9 @@
       },
       {
         "id": "demo-mcq-q1-t1-e",
-        "question": "A qubit is in state (3/5)|0⟩ + (4/5)|1⟩. What is the probability of measuring |1⟩?",
+        "question": "A qubit is in state (3/5)|0\u27e9 + (4/5)|1\u27e9. What is the probability of measuring |1\u27e9?",
         "answer": "16/25 (64%).",
-        "explanation": "By the Born rule, P(|1⟩) = |4/5|² = 16/25 ≈ 64%. Note that (3/5)² + (4/5)² = 9/25 + 16/25 = 1, confirming normalization. The amplitudes (3/5 and 4/5) are NOT the probabilities — it is their squared magnitudes. This is a common source of confusion.",
+        "explanation": "By the Born rule, P(|1\u27e9) = |4/5|\u00b2 = 16/25 \u2248 64%. Note that (3/5)\u00b2 + (4/5)\u00b2 = 9/25 + 16/25 = 1, confirming normalization. The amplitudes (3/5 and 4/5) are NOT the probabilities \u2014 it is their squared magnitudes. This is a common source of confusion.",
         "options": [
           "4/5 (80%)",
           "16/25 (64%)",
@@ -194,7 +194,7 @@
         "id": "demo-mcq-q1-t1-f",
         "question": "What is quantum parallelism?",
         "answer": "A qubit register's ability to evaluate a function on many inputs simultaneously via superposition.",
-        "explanation": "Quantum parallelism means a register of n qubits can be placed in a superposition of all 2^n input values at once. Applying a gate to this superposition transforms all values in a single step. However, extracting all results still requires clever algorithm design — direct measurement collapses the state to one answer, so the speedup comes from exploiting interference before measurement.",
+        "explanation": "Quantum parallelism means a register of n qubits can be placed in a superposition of all 2^n input values at once. Applying a gate to this superposition transforms all values in a single step. However, extracting all results still requires clever algorithm design \u2014 direct measurement collapses the state to one answer, so the speedup comes from exploiting interference before measurement.",
         "options": [
           "Running multiple quantum computers simultaneously",
           "A qubit register evaluating a function on all inputs simultaneously",
@@ -213,7 +213,7 @@
         "id": "demo-mcq-q1-t1-g",
         "question": "What is the no-cloning theorem?",
         "answer": "It is impossible to create a perfect copy of an arbitrary unknown quantum state.",
-        "explanation": "The no-cloning theorem (Wootters & Zurek, 1982) proves that copying an arbitrary unknown quantum state is physically impossible — a direct consequence of the linearity of quantum mechanics. It prevents faster-than-light communication via entanglement, rules out naive error-correction by copying, and ensures that eavesdroppers on quantum key distribution channels cannot clone qubits undetected.",
+        "explanation": "The no-cloning theorem (Wootters & Zurek, 1982) proves that copying an arbitrary unknown quantum state is physically impossible \u2014 a direct consequence of the linearity of quantum mechanics. It prevents faster-than-light communication via entanglement, rules out naive error-correction by copying, and ensures that eavesdroppers on quantum key distribution channels cannot clone qubits undetected.",
         "options": [
           "Qubits cannot be deleted",
           "An arbitrary unknown quantum state cannot be perfectly copied",
@@ -232,7 +232,7 @@
         "id": "demo-mcq-q1-t1-h",
         "question": "How many classical bits of information does measuring a single qubit yield?",
         "answer": "Exactly 1 classical bit.",
-        "explanation": "Despite a qubit's amplitudes encoding continuous complex values, a single measurement yields exactly one classical bit — |0⟩ or |1⟩. Holevo's theorem formalizes this: you cannot extract more than 1 bit from a single qubit per measurement. The quantum advantage comes from manipulating amplitudes before measurement to bias the outcome — not from reading more information per qubit.",
+        "explanation": "Despite a qubit's amplitudes encoding continuous complex values, a single measurement yields exactly one classical bit \u2014 |0\u27e9 or |1\u27e9. Holevo's theorem formalizes this: you cannot extract more than 1 bit from a single qubit per measurement. The quantum advantage comes from manipulating amplitudes before measurement to bias the outcome \u2014 not from reading more information per qubit.",
         "options": [
           "Infinite information from the continuous amplitudes",
           "Exactly 1 classical bit",
@@ -249,11 +249,11 @@
       },
       {
         "id": "demo-mcq-q1-t1-i",
-        "question": "If α = 1/√2 and β = 1/√2 for a qubit state, what is the probability of measuring |0⟩?",
+        "question": "If \u03b1 = 1/\u221a2 and \u03b2 = 1/\u221a2 for a qubit state, what is the probability of measuring |0\u27e9?",
         "answer": "1/2 (50%).",
-        "explanation": "P(|0⟩) = |α|² = |1/√2|² = 1/2. This is the |+⟩ state — an equal superposition with 50% chance of each outcome. Verifying normalization: |1/√2|² + |1/√2|² = 1/2 + 1/2 = 1 ✓. This is the state created by applying Hadamard to |0⟩.",
+        "explanation": "P(|0\u27e9) = |\u03b1|\u00b2 = |1/\u221a2|\u00b2 = 1/2. This is the |+\u27e9 state \u2014 an equal superposition with 50% chance of each outcome. Verifying normalization: |1/\u221a2|\u00b2 + |1/\u221a2|\u00b2 = 1/2 + 1/2 = 1 \u2713. This is the state created by applying Hadamard to |0\u27e9.",
         "options": [
-          "1/√2 ≈ 70.7%",
+          "1/\u221a2 \u2248 70.7%",
           "1/2 (50%)",
           "1/4 (25%)",
           "1 (100%)"
@@ -268,13 +268,13 @@
       },
       {
         "id": "demo-mcq-q1-t1-j",
-        "question": "α = 1 and β = 0 for a qubit |ψ⟩ = α|0⟩ + β|1⟩. What is the qubit's state?",
-        "answer": "|0⟩ — a definite classical state.",
-        "explanation": "With α = 1 and β = 0, the state is |ψ⟩ = 1·|0⟩ + 0·|1⟩ = |0⟩. This is a classical basis state: measuring it always yields 0. It satisfies normalization: |1|² + |0|² = 1. On the Bloch sphere, |0⟩ corresponds to the north pole — no superposition whatsoever.",
+        "question": "\u03b1 = 1 and \u03b2 = 0 for a qubit |\u03c8\u27e9 = \u03b1|0\u27e9 + \u03b2|1\u27e9. What is the qubit's state?",
+        "answer": "|0\u27e9 \u2014 a definite classical state.",
+        "explanation": "With \u03b1 = 1 and \u03b2 = 0, the state is |\u03c8\u27e9 = 1\u00b7|0\u27e9 + 0\u00b7|1\u27e9 = |0\u27e9. This is a classical basis state: measuring it always yields 0. It satisfies normalization: |1|\u00b2 + |0|\u00b2 = 1. On the Bloch sphere, |0\u27e9 corresponds to the north pole \u2014 no superposition whatsoever.",
         "options": [
-          "|1⟩ — definite state 1",
+          "|1\u27e9 \u2014 definite state 1",
           "An equal superposition",
-          "|0⟩ — a definite classical state",
+          "|0\u27e9 \u2014 a definite classical state",
           "An undefined/invalid state"
         ],
         "correctOptionIndex": 2,
@@ -289,7 +289,7 @@
         "id": "demo-mcq-q1-t2-a",
         "question": "What does a point on the surface of the Bloch sphere represent?",
         "answer": "A pure qubit state.",
-        "explanation": "The Bloch sphere is a unit sphere whose surface represents all possible pure single-qubit states — fully coherent states specified by two angles (θ, φ). The north pole is |0⟩, the south pole is |1⟩. Points inside the sphere represent mixed states from decoherence or partial information.",
+        "explanation": "The Bloch sphere is a unit sphere whose surface represents all possible pure single-qubit states \u2014 fully coherent states specified by two angles (\u03b8, \u03c6). The north pole is |0\u27e9, the south pole is |1\u27e9. Points inside the sphere represent mixed states from decoherence or partial information.",
         "options": [
           "A mixed quantum state",
           "A pure qubit state",
@@ -306,9 +306,9 @@
       },
       {
         "id": "demo-mcq-q1-t2-b",
-        "question": "Where on the Bloch sphere are |0⟩ and |1⟩ located?",
+        "question": "Where on the Bloch sphere are |0\u27e9 and |1\u27e9 located?",
         "answer": "At the north and south poles.",
-        "explanation": "By convention, |0⟩ is at the north pole (θ = 0) and |1⟩ is at the south pole (θ = π). These are the only two points on the Bloch sphere that correspond to classical bit states. All other points on the surface represent genuine quantum superpositions with no classical analogue.",
+        "explanation": "By convention, |0\u27e9 is at the north pole (\u03b8 = 0) and |1\u27e9 is at the south pole (\u03b8 = \u03c0). These are the only two points on the Bloch sphere that correspond to classical bit states. All other points on the surface represent genuine quantum superpositions with no classical analogue.",
         "options": [
           "At opposite points on the equator",
           "At the north and south poles",
@@ -325,13 +325,13 @@
       },
       {
         "id": "demo-mcq-q1-t2-c",
-        "question": "The |+⟩ = (|0⟩ + |1⟩)/√2 state lies where on the Bloch sphere?",
-        "answer": "On the equator (θ = π/2, φ = 0).",
-        "explanation": "|+⟩ lies on the equator of the Bloch sphere at θ = π/2, φ = 0. Equal superpositions map to equatorial points. The phase φ distinguishes different equatorial states: |+⟩ has φ = 0, |−⟩ has φ = π, |i⟩ has φ = π/2, and |−i⟩ has φ = 3π/2.",
+        "question": "The |+\u27e9 = (|0\u27e9 + |1\u27e9)/\u221a2 state lies where on the Bloch sphere?",
+        "answer": "On the equator (\u03b8 = \u03c0/2, \u03c6 = 0).",
+        "explanation": "|+\u27e9 lies on the equator of the Bloch sphere at \u03b8 = \u03c0/2, \u03c6 = 0. Equal superpositions map to equatorial points. The phase \u03c6 distinguishes different equatorial states: |+\u27e9 has \u03c6 = 0, |\u2212\u27e9 has \u03c6 = \u03c0, |i\u27e9 has \u03c6 = \u03c0/2, and |\u2212i\u27e9 has \u03c6 = 3\u03c0/2.",
         "options": [
           "North pole",
           "South pole",
-          "On the equator (θ = π/2, φ = 0)",
+          "On the equator (\u03b8 = \u03c0/2, \u03c6 = 0)",
           "Inside the sphere"
         ],
         "correctOptionIndex": 2,
@@ -345,13 +345,13 @@
       {
         "id": "demo-mcq-q1-t2-d",
         "question": "How many real parameters fully specify a pure qubit state on the Bloch sphere?",
-        "answer": "Two — the polar angle θ and azimuthal angle φ.",
-        "explanation": "A point on the unit sphere needs exactly 2 real parameters: θ ∈ [0, π] and φ ∈ [0, 2π). A general qubit state α|0⟩ + β|1⟩ has 4 real parameters (2 complex numbers), but normalization removes one and the global phase is physically unobservable — leaving exactly 2 physically meaningful parameters (θ, φ).",
+        "answer": "Two \u2014 the polar angle \u03b8 and azimuthal angle \u03c6.",
+        "explanation": "A point on the unit sphere needs exactly 2 real parameters: \u03b8 \u2208 [0, \u03c0] and \u03c6 \u2208 [0, 2\u03c0). A general qubit state \u03b1|0\u27e9 + \u03b2|1\u27e9 has 4 real parameters (2 complex numbers), but normalization removes one and the global phase is physically unobservable \u2014 leaving exactly 2 physically meaningful parameters (\u03b8, \u03c6).",
         "options": [
-          "One — only the polar angle matters",
-          "Two — θ (polar) and φ (azimuthal)",
-          "Three — x, y, z coordinates",
-          "Four — the full complex amplitudes α and β"
+          "One \u2014 only the polar angle matters",
+          "Two \u2014 \u03b8 (polar) and \u03c6 (azimuthal)",
+          "Three \u2014 x, y, z coordinates",
+          "Four \u2014 the full complex amplitudes \u03b1 and \u03b2"
         ],
         "correctOptionIndex": 1,
         "difficulty": 2,
@@ -364,13 +364,13 @@
       {
         "id": "demo-mcq-q1-t2-e",
         "question": "What does a point strictly inside the Bloch sphere represent?",
-        "answer": "A mixed state — an impure state from decoherence or partial knowledge.",
-        "explanation": "Points on the surface are pure states with full quantum coherence. Points inside the sphere are mixed states, arising from decoherence, entanglement with the environment, or incomplete knowledge. The center of the sphere is the maximally mixed state — complete ignorance — giving 50/50 probability for any measurement direction.",
+        "answer": "A mixed state \u2014 an impure state from decoherence or partial knowledge.",
+        "explanation": "Points on the surface are pure states with full quantum coherence. Points inside the sphere are mixed states, arising from decoherence, entanglement with the environment, or incomplete knowledge. The center of the sphere is the maximally mixed state \u2014 complete ignorance \u2014 giving 50/50 probability for any measurement direction.",
         "options": [
           "A pure qubit state with hidden information",
           "A mixed state from decoherence or partial knowledge",
           "An entangled pair stored inside the sphere",
-          "An error — only surface points are valid"
+          "An error \u2014 only surface points are valid"
         ],
         "correctOptionIndex": 1,
         "difficulty": 3,
@@ -384,7 +384,7 @@
         "id": "demo-mcq-q1-t2-f",
         "question": "What does a quantum gate correspond to on the Bloch sphere?",
         "answer": "A rotation of the Bloch vector.",
-        "explanation": "Any single-qubit unitary gate corresponds to a rotation of the Bloch sphere. Pauli-X rotates π around the x-axis, Pauli-Z rotates π around the z-axis, Hadamard rotates π around the (x+z)/√2 axis. This geometric view makes it intuitive to visualise cumulative gate effects.",
+        "explanation": "Any single-qubit unitary gate corresponds to a rotation of the Bloch sphere. Pauli-X rotates \u03c0 around the x-axis, Pauli-Z rotates \u03c0 around the z-axis, Hadamard rotates \u03c0 around the (x+z)/\u221a2 axis. This geometric view makes it intuitive to visualise cumulative gate effects.",
         "options": [
           "A translation of the Bloch vector",
           "A rotation of the Bloch vector",
@@ -401,14 +401,14 @@
       },
       {
         "id": "demo-mcq-q1-t2-g",
-        "question": "Pauli-Z is applied to |+⟩ = (|0⟩+|1⟩)/√2. What is the resulting state?",
-        "answer": "|−⟩ = (|0⟩ − |1⟩)/√2.",
-        "explanation": "Pauli-Z flips the sign of the |1⟩ amplitude: Z|+⟩ = Z(|0⟩+|1⟩)/√2 = (|0⟩−|1⟩)/√2 = |−⟩. On the Bloch sphere, Z rotates by π around the z-axis, mapping the equatorial point |+⟩ (φ=0) to |−⟩ (φ=π). Pauli-Z leaves |0⟩ and |1⟩ unchanged as they lie on the rotation axis.",
+        "question": "Pauli-Z is applied to |+\u27e9 = (|0\u27e9+|1\u27e9)/\u221a2. What is the resulting state?",
+        "answer": "|\u2212\u27e9 = (|0\u27e9 \u2212 |1\u27e9)/\u221a2.",
+        "explanation": "Pauli-Z flips the sign of the |1\u27e9 amplitude: Z|+\u27e9 = Z(|0\u27e9+|1\u27e9)/\u221a2 = (|0\u27e9\u2212|1\u27e9)/\u221a2 = |\u2212\u27e9. On the Bloch sphere, Z rotates by \u03c0 around the z-axis, mapping the equatorial point |+\u27e9 (\u03c6=0) to |\u2212\u27e9 (\u03c6=\u03c0). Pauli-Z leaves |0\u27e9 and |1\u27e9 unchanged as they lie on the rotation axis.",
         "options": [
-          "|+⟩ — unchanged",
-          "|0⟩",
-          "|−⟩ = (|0⟩ − |1⟩)/√2",
-          "|1⟩"
+          "|+\u27e9 \u2014 unchanged",
+          "|0\u27e9",
+          "|\u2212\u27e9 = (|0\u27e9 \u2212 |1\u27e9)/\u221a2",
+          "|1\u27e9"
         ],
         "correctOptionIndex": 2,
         "difficulty": 3,
@@ -422,7 +422,7 @@
         "id": "demo-mcq-q1-t2-h",
         "question": "For how many qubits is the Bloch sphere an exact representation?",
         "answer": "Exactly one qubit.",
-        "explanation": "The Bloch sphere is strictly a single-qubit visualization. For n qubits, the state space is 2^n-dimensional — far beyond a sphere. Two-qubit entangled states have no simple geometric picture on a single Bloch sphere. Separate Bloch spheres can visualize individual qubits of a product state, but fail entirely for entangled states.",
+        "explanation": "The Bloch sphere is strictly a single-qubit visualization. For n qubits, the state space is 2^n-dimensional \u2014 far beyond a sphere. Two-qubit entangled states have no simple geometric picture on a single Bloch sphere. Separate Bloch spheres can visualize individual qubits of a product state, but fail entirely for entangled states.",
         "options": [
           "Any number of qubits",
           "Exactly one qubit",
@@ -439,14 +439,14 @@
       },
       {
         "id": "demo-mcq-q1-t2-i",
-        "question": "The Hadamard gate maps |0⟩ (north pole) to which Bloch sphere location?",
-        "answer": "The positive x-axis equatorial point — the |+⟩ state.",
-        "explanation": "H|0⟩ = (|0⟩+|1⟩)/√2 = |+⟩. On the Bloch sphere, this is the positive x-axis point (θ = π/2, φ = 0). Conversely, H|1⟩ = |−⟩ (south pole maps to negative x-axis). The Hadamard corresponds to a π rotation around the axis midway between x and z on the Bloch sphere.",
+        "question": "The Hadamard gate maps |0\u27e9 (north pole) to which Bloch sphere location?",
+        "answer": "The positive x-axis equatorial point \u2014 the |+\u27e9 state.",
+        "explanation": "H|0\u27e9 = (|0\u27e9+|1\u27e9)/\u221a2 = |+\u27e9. On the Bloch sphere, this is the positive x-axis point (\u03b8 = \u03c0/2, \u03c6 = 0). Conversely, H|1\u27e9 = |\u2212\u27e9 (south pole maps to negative x-axis). The Hadamard corresponds to a \u03c0 rotation around the axis midway between x and z on the Bloch sphere.",
         "options": [
-          "South pole — |1⟩",
-          "Negative x-axis — |−⟩",
-          "Positive x-axis — |+⟩",
-          "North pole — unchanged"
+          "South pole \u2014 |1\u27e9",
+          "Negative x-axis \u2014 |\u2212\u27e9",
+          "Positive x-axis \u2014 |+\u27e9",
+          "North pole \u2014 unchanged"
         ],
         "correctOptionIndex": 2,
         "difficulty": 2,
@@ -462,7 +462,7 @@
         "answer": "It only applies to single-qubit pure states; multi-qubit states require higher-dimensional tools.",
         "explanation": "The Bloch sphere elegantly captures any single-qubit pure state and the effect of single-qubit gates as rotations. However, it cannot represent entangled two-or-more qubit states, nor fully represent mixed states (which fall inside the sphere). For multi-qubit systems, the full density matrix formalism is required.",
         "options": [
-          "It cannot represent |0⟩ or |1⟩",
+          "It cannot represent |0\u27e9 or |1\u27e9",
           "It only applies to single-qubit pure states; multi-qubit states need higher-dimensional tools",
           "It only works for superconducting qubits",
           "It cannot show quantum gate effects"
@@ -477,9 +477,9 @@
       },
       {
         "id": "demo-mcq-q2-t1-a",
-        "question": "Which gate is its own inverse (H² = I)?",
+        "question": "Which gate is its own inverse (H\u00b2 = I)?",
         "answer": "The Hadamard gate.",
-        "explanation": "The Hadamard satisfies H² = I: applying H to |0⟩ gives |+⟩, and applying it again returns |0⟩. The Pauli gates X, Y, Z also share this property. In contrast, S requires S† and T requires T† to undo. Gates that equal their own inverse are called involutory.",
+        "explanation": "The Hadamard satisfies H\u00b2 = I: applying H to |0\u27e9 gives |+\u27e9, and applying it again returns |0\u27e9. The Pauli gates X, Y, Z also share this property. In contrast, S requires S\u2020 and T requires T\u2020 to undo. Gates that equal their own inverse are called involutory.",
         "options": [
           "CNOT",
           "Phase gate S",
@@ -497,11 +497,11 @@
       {
         "id": "demo-mcq-q2-t1-b",
         "question": "What does the Pauli-X gate do?",
-        "answer": "Flips |0⟩ to |1⟩ and |1⟩ to |0⟩ — the quantum NOT gate.",
-        "explanation": "The Pauli-X gate is the quantum analogue of a classical NOT gate, with matrix [[0,1],[1,0]]. It swaps amplitudes of |0⟩ and |1⟩. Like all quantum gates it is unitary and reversible (X² = I). Applying a phase of π/2 is the job of the S gate, not X.",
+        "answer": "Flips |0\u27e9 to |1\u27e9 and |1\u27e9 to |0\u27e9 \u2014 the quantum NOT gate.",
+        "explanation": "The Pauli-X gate is the quantum analogue of a classical NOT gate, with matrix [[0,1],[1,0]]. It swaps amplitudes of |0\u27e9 and |1\u27e9. Like all quantum gates it is unitary and reversible (X\u00b2 = I). Applying a phase of \u03c0/2 is the job of the S gate, not X.",
         "options": [
-          "Applies a phase of π/2",
-          "Flips |0⟩ to |1⟩ and |1⟩ to |0⟩",
+          "Applies a phase of \u03c0/2",
+          "Flips |0\u27e9 to |1\u27e9 and |1\u27e9 to |0\u27e9",
           "Creates a Bell state",
           "Measures the qubit in the Z basis"
         ],
@@ -515,13 +515,13 @@
       },
       {
         "id": "demo-mcq-q2-t1-c",
-        "question": "What does the Pauli-Z gate do to the state |1⟩?",
-        "answer": "Applies a phase of π — multiplies the amplitude by −1.",
-        "explanation": "Pauli-Z: Z|0⟩ = |0⟩ and Z|1⟩ = −|1⟩. It applies a phase factor of −1 (= e^iπ) to |1⟩ without changing measurement probabilities. This is the quantum phase-flip — distinct from the bit-flip (Pauli-X). On the Bloch sphere, Z rotates by π around the z-axis.",
+        "question": "What does the Pauli-Z gate do to the state |1\u27e9?",
+        "answer": "Applies a phase of \u03c0 \u2014 multiplies the amplitude by \u22121.",
+        "explanation": "Pauli-Z: Z|0\u27e9 = |0\u27e9 and Z|1\u27e9 = \u2212|1\u27e9. It applies a phase factor of \u22121 (= e^i\u03c0) to |1\u27e9 without changing measurement probabilities. This is the quantum phase-flip \u2014 distinct from the bit-flip (Pauli-X). On the Bloch sphere, Z rotates by \u03c0 around the z-axis.",
         "options": [
-          "Flips it to |0⟩",
+          "Flips it to |0\u27e9",
           "Leaves it unchanged",
-          "Applies a phase of π (multiplies amplitude by −1)",
+          "Applies a phase of \u03c0 (multiplies amplitude by \u22121)",
           "Creates superposition"
         ],
         "correctOptionIndex": 2,
@@ -534,14 +534,14 @@
       },
       {
         "id": "demo-mcq-q2-t1-d",
-        "question": "What is the result of applying the Hadamard gate to |1⟩?",
-        "answer": "|−⟩ = (|0⟩ − |1⟩)/√2.",
-        "explanation": "H|1⟩ = (|0⟩ − |1⟩)/√2 = |−⟩. The negative relative phase is physically meaningful — it causes interference in quantum algorithms. H|0⟩ = |+⟩ and H|1⟩ = |−⟩. Applying H again: H|−⟩ = |1⟩, confirming H² = I.",
+        "question": "What is the result of applying the Hadamard gate to |1\u27e9?",
+        "answer": "|\u2212\u27e9 = (|0\u27e9 \u2212 |1\u27e9)/\u221a2.",
+        "explanation": "H|1\u27e9 = (|0\u27e9 \u2212 |1\u27e9)/\u221a2 = |\u2212\u27e9. The negative relative phase is physically meaningful \u2014 it causes interference in quantum algorithms. H|0\u27e9 = |+\u27e9 and H|1\u27e9 = |\u2212\u27e9. Applying H again: H|\u2212\u27e9 = |1\u27e9, confirming H\u00b2 = I.",
         "options": [
-          "(|0⟩ + |1⟩)/√2 = |+⟩",
-          "(|0⟩ − |1⟩)/√2 = |−⟩",
-          "|0⟩",
-          "|1⟩ — unchanged"
+          "(|0\u27e9 + |1\u27e9)/\u221a2 = |+\u27e9",
+          "(|0\u27e9 \u2212 |1\u27e9)/\u221a2 = |\u2212\u27e9",
+          "|0\u27e9",
+          "|1\u27e9 \u2014 unchanged"
         ],
         "correctOptionIndex": 1,
         "difficulty": 2,
@@ -555,7 +555,7 @@
         "id": "demo-mcq-q2-t1-e",
         "question": "Which statement about quantum gates is always true?",
         "answer": "They are reversible (unitary).",
-        "explanation": "All quantum gates are unitary (U†U = I), making them always reversible. This is a fundamental distinction from some classical logic gates (AND, OR are irreversible). Reversibility follows from the time-reversibility of quantum mechanics and ensures quantum information is always conserved. Measurement is NOT a quantum gate — it is an irreversible operation.",
+        "explanation": "All quantum gates are unitary (U\u2020U = I), making them always reversible. This is a fundamental distinction from some classical logic gates (AND, OR are irreversible). Reversibility follows from the time-reversibility of quantum mechanics and ensures quantum information is always conserved. Measurement is NOT a quantum gate \u2014 it is an irreversible operation.",
         "options": [
           "They can always be implemented as classical logic gates",
           "They are reversible (unitary)",
@@ -572,14 +572,14 @@
       },
       {
         "id": "demo-mcq-q2-t1-f",
-        "question": "The T gate applies what phase rotation to the |1⟩ amplitude?",
-        "answer": "π/4 (45 degrees).",
-        "explanation": "T|0⟩ = |0⟩ and T|1⟩ = e^(iπ/4)|1⟩ — a phase rotation of π/4. Combined with H and CNOT, the T gate makes {H, T, CNOT} a universal gate set. The S gate applies π/2; Pauli-Z applies π. Note: the T gate is sometimes called the 'π/8 gate' because its matrix entries involve e^(iπ/8), even though the phase applied to |1⟩ is π/4.",
+        "question": "The T gate applies what phase rotation to the |1\u27e9 amplitude?",
+        "answer": "\u03c0/4 (45 degrees).",
+        "explanation": "T|0\u27e9 = |0\u27e9 and T|1\u27e9 = e^(i\u03c0/4)|1\u27e9 \u2014 a phase rotation of \u03c0/4. Combined with H and CNOT, the T gate makes {H, T, CNOT} a universal gate set. The S gate applies \u03c0/2; Pauli-Z applies \u03c0. Note: the T gate is sometimes called the '\u03c0/8 gate' because its matrix entries involve e^(i\u03c0/8), even though the phase applied to |1\u27e9 is \u03c0/4.",
         "options": [
-          "π (180 degrees)",
-          "π/2 (90 degrees)",
-          "π/4 (45 degrees)",
-          "π/8 (22.5 degrees)"
+          "\u03c0 (180 degrees)",
+          "\u03c0/2 (90 degrees)",
+          "\u03c0/4 (45 degrees)",
+          "\u03c0/8 (22.5 degrees)"
         ],
         "correctOptionIndex": 2,
         "difficulty": 3,
@@ -593,7 +593,7 @@
         "id": "demo-mcq-q2-t1-g",
         "question": "Which Pauli gate combines both a bit flip and a phase flip?",
         "answer": "Pauli-Y.",
-        "explanation": "Pauli-Y: Y|0⟩ = i|1⟩ and Y|1⟩ = −i|0⟩. It can be written as Y = iXZ, combining both operations with an i phase factor. Like X and Z, Y is its own inverse (Y² = I) with eigenvalues ±1. The imaginary factor i distinguishes it from a simple combination of X and Z.",
+        "explanation": "Pauli-Y: Y|0\u27e9 = i|1\u27e9 and Y|1\u27e9 = \u2212i|0\u27e9. It can be written as Y = iXZ, combining both operations with an i phase factor. Like X and Z, Y is its own inverse (Y\u00b2 = I) with eigenvalues \u00b11. The imaginary factor i distinguishes it from a simple combination of X and Z.",
         "options": [
           "Pauli-X",
           "Pauli-Y",
@@ -611,12 +611,12 @@
       {
         "id": "demo-mcq-q2-t1-h",
         "question": "What makes {H, T, CNOT} a special gate set?",
-        "answer": "It is universal — it can approximate any quantum computation.",
+        "answer": "It is universal \u2014 it can approximate any quantum computation.",
         "explanation": "The set {H, T, CNOT} is universal for quantum computing (Solovay-Kitaev theorem): it can approximate any unitary on any number of qubits to arbitrary precision. Universality requires a non-Clifford gate like T, since the Clifford group {H, S, CNOT} alone cannot achieve universality. This parallels how NAND alone is universal classically.",
         "options": [
           "It contains only single-qubit gates",
           "It can only implement classical logic reversibly",
-          "It is universal — approximates any quantum computation",
+          "It is universal \u2014 approximates any quantum computation",
           "It is the minimum set needed to create entanglement"
         ],
         "correctOptionIndex": 2,
@@ -629,14 +629,14 @@
       },
       {
         "id": "demo-mcq-q2-t1-i",
-        "question": "The S gate applies what phase rotation to |1⟩?",
-        "answer": "π/2 — multiplies the |1⟩ amplitude by i.",
-        "explanation": "S|0⟩ = |0⟩ and S|1⟩ = i|1⟩ = e^(iπ/2)|1⟩. The S gate (also written Z^(1/2)) applies a 90-degree phase rotation. S² = Z (two S gates equal a Pauli-Z gate). Its inverse S† applies −π/2: S†|1⟩ = −i|1⟩. Phase gates are used extensively in the Quantum Fourier Transform.",
+        "question": "The S gate applies what phase rotation to |1\u27e9?",
+        "answer": "\u03c0/2 \u2014 multiplies the |1\u27e9 amplitude by i.",
+        "explanation": "S|0\u27e9 = |0\u27e9 and S|1\u27e9 = i|1\u27e9 = e^(i\u03c0/2)|1\u27e9. The S gate (also written Z^(1/2)) applies a 90-degree phase rotation. S\u00b2 = Z (two S gates equal a Pauli-Z gate). Its inverse S\u2020 applies \u2212\u03c0/2: S\u2020|1\u27e9 = \u2212i|1\u27e9. Phase gates are used extensively in the Quantum Fourier Transform.",
         "options": [
-          "π/4 — multiplies by e^(iπ/4)",
-          "π/2 — multiplies the |1⟩ amplitude by i",
-          "π — multiplies by −1",
-          "2π — returns to the same state"
+          "\u03c0/4 \u2014 multiplies by e^(i\u03c0/4)",
+          "\u03c0/2 \u2014 multiplies the |1\u27e9 amplitude by i",
+          "\u03c0 \u2014 multiplies by \u22121",
+          "2\u03c0 \u2014 returns to the same state"
         ],
         "correctOptionIndex": 1,
         "difficulty": 2,
@@ -649,13 +649,13 @@
       {
         "id": "demo-mcq-q2-t1-j",
         "question": "How many times must the Pauli-X gate be applied to return the qubit to its original state?",
-        "answer": "2 times (X² = I).",
-        "explanation": "X² = I: applying Pauli-X twice returns the qubit to its original state since X is its own inverse. All Pauli gates (X, Y, Z) and Hadamard satisfy U² = I — they are involutory. In contrast, the T gate requires applying it 8 times to return to identity (T^8 = I, since each T applies π/4 phase and 8 × π/4 = 2π).",
+        "answer": "2 times (X\u00b2 = I).",
+        "explanation": "X\u00b2 = I: applying Pauli-X twice returns the qubit to its original state since X is its own inverse. All Pauli gates (X, Y, Z) and Hadamard satisfy U\u00b2 = I \u2014 they are involutory. In contrast, the T gate requires applying it 8 times to return to identity (T^8 = I, since each T applies \u03c0/4 phase and 8 \u00d7 \u03c0/4 = 2\u03c0).",
         "options": [
           "1 time",
-          "2 times (X² = I)",
+          "2 times (X\u00b2 = I)",
           "4 times",
-          "Never — X has no inverse"
+          "Never \u2014 X has no inverse"
         ],
         "correctOptionIndex": 1,
         "difficulty": 1,
@@ -667,14 +667,14 @@
       },
       {
         "id": "demo-mcq-q2-t2-a",
-        "question": "What does the CNOT gate do to the target qubit when the control qubit is |0⟩?",
-        "answer": "Nothing — the target qubit is unchanged.",
-        "explanation": "CNOT (Controlled-NOT) applies an X gate to the target only when the control is |1⟩. When control is |0⟩, the gate acts as identity — target unchanged. Truth table: |00⟩→|00⟩, |01⟩→|01⟩, |10⟩→|11⟩, |11⟩→|10⟩.",
+        "question": "What does the CNOT gate do to the target qubit when the control qubit is |0\u27e9?",
+        "answer": "Nothing \u2014 the target qubit is unchanged.",
+        "explanation": "CNOT (Controlled-NOT) applies an X gate to the target only when the control is |1\u27e9. When control is |0\u27e9, the gate acts as identity \u2014 target unchanged. Truth table: |00\u27e9\u2192|00\u27e9, |01\u27e9\u2192|01\u27e9, |10\u27e9\u2192|11\u27e9, |11\u27e9\u2192|10\u27e9.",
         "options": [
           "Flips the target qubit",
-          "Nothing — the target qubit is unchanged",
+          "Nothing \u2014 the target qubit is unchanged",
           "Puts both qubits in superposition",
-          "Applies a phase of π"
+          "Applies a phase of \u03c0"
         ],
         "correctOptionIndex": 1,
         "difficulty": 2,
@@ -705,14 +705,14 @@
       },
       {
         "id": "demo-mcq-q2-t2-c",
-        "question": "What is the result of applying CNOT to |10⟩ (control=1, target=0)?",
-        "answer": "|11⟩ — the target is flipped.",
-        "explanation": "CNOT flips the target if control = |1⟩. In |10⟩, control is |1⟩, so target |0⟩ → |1⟩, giving |11⟩. CNOT acts as XOR on the target: target_out = control XOR target_in. Full truth table: |00⟩→|00⟩, |01⟩→|01⟩, |10⟩→|11⟩, |11⟩→|10⟩.",
+        "question": "What is the result of applying CNOT to |10\u27e9 (control=1, target=0)?",
+        "answer": "|11\u27e9 \u2014 the target is flipped.",
+        "explanation": "CNOT flips the target if control = |1\u27e9. In |10\u27e9, control is |1\u27e9, so target |0\u27e9 \u2192 |1\u27e9, giving |11\u27e9. CNOT acts as XOR on the target: target_out = control XOR target_in. Full truth table: |00\u27e9\u2192|00\u27e9, |01\u27e9\u2192|01\u27e9, |10\u27e9\u2192|11\u27e9, |11\u27e9\u2192|10\u27e9.",
         "options": [
-          "|10⟩ — unchanged",
-          "|11⟩ — target flipped",
-          "|00⟩ — control cleared",
-          "|01⟩ — both swapped"
+          "|10\u27e9 \u2014 unchanged",
+          "|11\u27e9 \u2014 target flipped",
+          "|00\u27e9 \u2014 control cleared",
+          "|01\u27e9 \u2014 both swapped"
         ],
         "correctOptionIndex": 1,
         "difficulty": 2,
@@ -724,9 +724,9 @@
       },
       {
         "id": "demo-mcq-q2-t2-d",
-        "question": "Which sequence creates the Bell state |Φ+⟩ = (|00⟩+|11⟩)/√2 from |00⟩?",
+        "question": "Which sequence creates the Bell state |\u03a6+\u27e9 = (|00\u27e9+|11\u27e9)/\u221a2 from |00\u27e9?",
         "answer": "Hadamard on qubit 1, then CNOT (control=1, target=2).",
-        "explanation": "Apply H to qubit 1: |00⟩ → (|0⟩+|1⟩)/√2 ⊗ |0⟩. Then CNOT (control=1, target=2): the |1⟩ component flips qubit 2, giving (|00⟩+|11⟩)/√2 = |Φ+⟩. This is the standard Bell state preparation circuit.",
+        "explanation": "Apply H to qubit 1: |00\u27e9 \u2192 (|0\u27e9+|1\u27e9)/\u221a2 \u2297 |0\u27e9. Then CNOT (control=1, target=2): the |1\u27e9 component flips qubit 2, giving (|00\u27e9+|11\u27e9)/\u221a2 = |\u03a6+\u27e9. This is the standard Bell state preparation circuit.",
         "options": [
           "CNOT then Hadamard on qubit 1",
           "Hadamard on qubit 1, then CNOT",
@@ -744,11 +744,11 @@
       {
         "id": "demo-mcq-q2-t2-e",
         "question": "How many qubits does the Toffoli (CCNOT) gate operate on?",
-        "answer": "3 qubits — two controls and one target.",
-        "explanation": "The Toffoli gate takes two control qubits and one target, flipping the target only when BOTH controls are |1⟩. It is universal for reversible classical computation (can simulate NAND). In quantum contexts it is used for arithmetic and error correction, and can be decomposed into ~6 CNOT gates and single-qubit gates.",
+        "answer": "3 qubits \u2014 two controls and one target.",
+        "explanation": "The Toffoli gate takes two control qubits and one target, flipping the target only when BOTH controls are |1\u27e9. It is universal for reversible classical computation (can simulate NAND). In quantum contexts it is used for arithmetic and error correction, and can be decomposed into ~6 CNOT gates and single-qubit gates.",
         "options": [
           "2 qubits",
-          "3 qubits — two controls and one target",
+          "3 qubits \u2014 two controls and one target",
           "4 qubits",
           "1 qubit with three modes"
         ],
@@ -763,11 +763,11 @@
       {
         "id": "demo-mcq-q2-t2-f",
         "question": "What is the effect of applying CNOT twice in succession to the same qubit pair?",
-        "answer": "Returns to the original state — CNOT is its own inverse.",
-        "explanation": "CNOT² = I: CNOT applied twice returns both qubits to their original state. This involutory property means CNOT can be used to both entangle and disentangle qubits. Applying CNOT then H to a Bell state reverses the preparation and produces |00⟩ in the measurement basis — the basis of quantum teleportation.",
+        "answer": "Returns to the original state \u2014 CNOT is its own inverse.",
+        "explanation": "CNOT\u00b2 = I: CNOT applied twice returns both qubits to their original state. This involutory property means CNOT can be used to both entangle and disentangle qubits. Applying CNOT then H to a Bell state reverses the preparation and produces |00\u27e9 in the measurement basis \u2014 the basis of quantum teleportation.",
         "options": [
           "Creates a Bell state",
-          "Returns to the original state — CNOT is its own inverse",
+          "Returns to the original state \u2014 CNOT is its own inverse",
           "Entangles the qubits permanently",
           "Applies a double phase flip"
         ],
@@ -783,7 +783,7 @@
         "id": "demo-mcq-q2-t2-g",
         "question": "Which two-qubit gate simply exchanges the states of two qubits?",
         "answer": "SWAP gate.",
-        "explanation": "SWAP|ψ₁⟩|ψ₂⟩ = |ψ₂⟩|ψ₁⟩. SWAP can be decomposed into three CNOT gates. It is used when qubits must be adjacent for two-qubit gates (limited connectivity architectures), and in quantum communication protocols. SWAP is also its own inverse (SWAP² = I).",
+        "explanation": "SWAP|\u03c8\u2081\u27e9|\u03c8\u2082\u27e9 = |\u03c8\u2082\u27e9|\u03c8\u2081\u27e9. SWAP can be decomposed into three CNOT gates. It is used when qubits must be adjacent for two-qubit gates (limited connectivity architectures), and in quantum communication protocols. SWAP is also its own inverse (SWAP\u00b2 = I).",
         "options": [
           "CNOT",
           "SWAP",
@@ -802,7 +802,7 @@
         "id": "demo-mcq-q2-t2-h",
         "question": "Why can single-qubit gates alone never create entanglement?",
         "answer": "Single-qubit gates act on one qubit at a time and cannot introduce correlations between qubits.",
-        "explanation": "Entanglement requires a non-separable two-qubit state — one that cannot be written as |ψ₁⟩⊗|ψ₂⟩. Single-qubit gates transform each qubit independently, mapping product states to product states. Only two-qubit gates like CNOT or CZ, which act on both qubits simultaneously, can create entanglement.",
+        "explanation": "Entanglement requires a non-separable two-qubit state \u2014 one that cannot be written as |\u03c8\u2081\u27e9\u2297|\u03c8\u2082\u27e9. Single-qubit gates transform each qubit independently, mapping product states to product states. Only two-qubit gates like CNOT or CZ, which act on both qubits simultaneously, can create entanglement.",
         "options": [
           "Single-qubit gates require too much energy",
           "Single-qubit gates act on one qubit at a time and cannot create inter-qubit correlations",
@@ -821,7 +821,7 @@
         "id": "demo-mcq-q2-t2-i",
         "question": "What is a Bell state?",
         "answer": "A maximally entangled two-qubit state.",
-        "explanation": "Bell states are the four maximally entangled two-qubit states: |Φ+⟩=(|00⟩+|11⟩)/√2, |Φ-⟩=(|00⟩-|11⟩)/√2, |Ψ+⟩=(|01⟩+|10⟩)/√2, |Ψ-⟩=(|01⟩-|10⟩)/√2. Measuring one qubit instantly determines the other. Bell states are used in quantum teleportation, superdense coding, and quantum key distribution.",
+        "explanation": "Bell states are the four maximally entangled two-qubit states: |\u03a6+\u27e9=(|00\u27e9+|11\u27e9)/\u221a2, |\u03a6-\u27e9=(|00\u27e9-|11\u27e9)/\u221a2, |\u03a8+\u27e9=(|01\u27e9+|10\u27e9)/\u221a2, |\u03a8-\u27e9=(|01\u27e9-|10\u27e9)/\u221a2. Measuring one qubit instantly determines the other. Bell states are used in quantum teleportation, superdense coding, and quantum key distribution.",
         "options": [
           "Any superposition of a single qubit",
           "A maximally entangled two-qubit state",
@@ -838,14 +838,14 @@
       },
       {
         "id": "demo-mcq-q2-t2-j",
-        "question": "CZ (controlled-Z) applies what operation to the target qubit when the control is |1⟩?",
+        "question": "CZ (controlled-Z) applies what operation to the target qubit when the control is |1\u27e9?",
         "answer": "A Pauli-Z phase flip.",
-        "explanation": "CZ applies Pauli-Z to the target when the control is |1⟩ — flipping the sign of the |11⟩ component. CZ is symmetric: it doesn't matter which qubit is 'control'. CZ = (I⊗H)·CNOT·(I⊗H) and is commonly used in superconducting qubit architectures as a native two-qubit gate.",
+        "explanation": "CZ applies Pauli-Z to the target when the control is |1\u27e9 \u2014 flipping the sign of the |11\u27e9 component. CZ is symmetric: it doesn't matter which qubit is 'control'. CZ = (I\u2297H)\u00b7CNOT\u00b7(I\u2297H) and is commonly used in superconducting qubit architectures as a native two-qubit gate.",
         "options": [
           "A Pauli-X bit flip",
           "A Pauli-Z phase flip",
           "A Hadamard gate",
-          "No operation — CZ only measures"
+          "No operation \u2014 CZ only measures"
         ],
         "correctOptionIndex": 1,
         "difficulty": 3,
@@ -858,13 +858,13 @@
       {
         "id": "demo-mcq-q3-t1-a",
         "question": "What is the time complexity of Shor's algorithm for factoring an n-bit integer?",
-        "answer": "O(n³) — polynomial in the number of bits.",
-        "explanation": "Shor's algorithm factors an n-bit integer in O(n³) gate operations — polynomial time. The best classical algorithm (GNFS) runs in sub-exponential time O(exp(n^(1/3)(log n)^(2/3))), which grows far faster. O(√n) is Grover's query complexity. The exponential O(2ⁿ) would be naïve trial division.",
+        "answer": "O(n\u00b3) \u2014 polynomial in the number of bits.",
+        "explanation": "Shor's algorithm factors an n-bit integer in O(n\u00b3) gate operations \u2014 polynomial time. The best classical algorithm (GNFS) runs in sub-exponential time O(exp(n^(1/3)(log n)^(2/3))), which grows far faster. O(\u221an) is Grover's query complexity. The exponential O(2\u207f) would be na\u00efve trial division.",
         "options": [
-          "O(2ⁿ) — exponential",
-          "O(n log n) — nearly linear",
-          "O(n³) — polynomial in the number of bits",
-          "O(√n) — sub-linear"
+          "O(2\u207f) \u2014 exponential",
+          "O(n log n) \u2014 nearly linear",
+          "O(n\u00b3) \u2014 polynomial in the number of bits",
+          "O(\u221an) \u2014 sub-linear"
         ],
         "correctOptionIndex": 2,
         "difficulty": 3,
@@ -878,7 +878,7 @@
         "id": "demo-mcq-q3-t1-b",
         "question": "Which quantum subroutine is at the heart of Shor's algorithm?",
         "answer": "The Quantum Fourier Transform (QFT).",
-        "explanation": "Shor's algorithm reduces factoring to finding the period r of f(x) = aˣ mod N. The QFT efficiently extracts this period from a superposition of function evaluations in O(n²) gates — exponentially faster than the classical DFT at O(n·2ⁿ). Without the QFT there would be no quantum advantage.",
+        "explanation": "Shor's algorithm reduces factoring to finding the period r of f(x) = a\u02e3 mod N. The QFT efficiently extracts this period from a superposition of function evaluations in O(n\u00b2) gates \u2014 exponentially faster than the classical DFT at O(n\u00b72\u207f). Without the QFT there would be no quantum advantage.",
         "options": [
           "Grover's oracle",
           "Amplitude amplification",
@@ -897,7 +897,7 @@
         "id": "demo-mcq-q3-t1-c",
         "question": "What mathematical problem does Shor's algorithm reduce integer factoring to?",
         "answer": "Finding the period of a modular exponential function.",
-        "explanation": "Shor's algorithm reduces factoring N to finding the period r of f(x) = aˣ mod N for a random a coprime to N. Once r is found, gcd(a^(r/2) ± 1, N) yields factors with high probability. The QFT finds r in polynomial time — this is where the quantum speedup occurs.",
+        "explanation": "Shor's algorithm reduces factoring N to finding the period r of f(x) = a\u02e3 mod N for a random a coprime to N. Once r is found, gcd(a^(r/2) \u00b1 1, N) yields factors with high probability. The QFT finds r in polynomial time \u2014 this is where the quantum speedup occurs.",
         "options": [
           "Matrix diagonalization",
           "Finding the period of a modular exponential function",
@@ -915,7 +915,7 @@
       {
         "id": "demo-mcq-q3-t1-d",
         "question": "Which cryptographic system is most directly broken by Shor's algorithm?",
-        "answer": "Public-key cryptography based on factoring — e.g., RSA.",
+        "answer": "Public-key cryptography based on factoring \u2014 e.g., RSA.",
         "explanation": "RSA, Diffie-Hellman, and elliptic curve cryptography rely on the hardness of factoring large integers or computing discrete logarithms. Shor's solves both in polynomial time. AES is only quadratically weakened by Grover's algorithm. Post-quantum lattice schemes are designed to resist quantum attacks.",
         "options": [
           "Symmetric-key cryptography (e.g., AES)",
@@ -935,7 +935,7 @@
         "id": "demo-mcq-q3-t1-e",
         "question": "Shor's algorithm was published in what year?",
         "answer": "1994.",
-        "explanation": "Peter Shor published his factoring algorithm in 1994, shocking the cryptographic community and sparking enormous interest in quantum computing. The algorithm was first experimentally demonstrated in 2001 (IBM, factoring 15 = 3×5). Prior to Shor's work, no quantum algorithm was known to provide exponential speedup for a practically useful problem.",
+        "explanation": "Peter Shor published his factoring algorithm in 1994, shocking the cryptographic community and sparking enormous interest in quantum computing. The algorithm was first experimentally demonstrated in 2001 (IBM, factoring 15 = 3\u00d75). Prior to Shor's work, no quantum algorithm was known to provide exponential speedup for a practically useful problem.",
         "options": [
           "1985",
           "1994",
@@ -954,7 +954,7 @@
         "id": "demo-mcq-q3-t1-f",
         "question": "Approximately how many logical qubits are needed to factor RSA-2048 using Shor's algorithm?",
         "answer": "~4,000 logical qubits.",
-        "explanation": "Factoring RSA-2048 requires roughly 4,000 logical qubits in optimized Shor's implementations. With quantum error correction (surface codes ~1,000 physical qubits per logical qubit), this translates to millions of physical qubits. Current hardware has hundreds to low-thousands of noisy physical qubits — far from cryptographically relevant factoring.",
+        "explanation": "Factoring RSA-2048 requires roughly 4,000 logical qubits in optimized Shor's implementations. With quantum error correction (surface codes ~1,000 physical qubits per logical qubit), this translates to millions of physical qubits. Current hardware has hundreds to low-thousands of noisy physical qubits \u2014 far from cryptographically relevant factoring.",
         "options": [
           "~4,000 logical qubits",
           "~20 logical qubits",
@@ -973,7 +973,7 @@
         "id": "demo-mcq-q3-t1-g",
         "question": "What is the role of the QFT in Shor's algorithm?",
         "answer": "It extracts the period r from a superposition of function evaluations.",
-        "explanation": "After creating a superposition of f(x) = aˣ mod N values, the QFT is applied to the input register. Interference reveals peaks at multiples of N/r, from which r can be extracted by measurement and classical continued-fractions post-processing. The QFT does this in O(n²) gates — the quantum speedup step.",
+        "explanation": "After creating a superposition of f(x) = a\u02e3 mod N values, the QFT is applied to the input register. Interference reveals peaks at multiples of N/r, from which r can be extracted by measurement and classical continued-fractions post-processing. The QFT does this in O(n\u00b2) gates \u2014 the quantum speedup step.",
         "options": [
           "It factors the number directly",
           "It extracts the period r from a superposition of function evaluations",
@@ -991,13 +991,13 @@
       {
         "id": "demo-mcq-q3-t1-h",
         "question": "The best classical factoring algorithm (GNFS) runs in what time complexity?",
-        "answer": "Sub-exponential — O(exp(n^(1/3) (log n)^(2/3))).",
-        "explanation": "The General Number Field Sieve (GNFS) runs in sub-exponential time O(exp((64/9 n)^(1/3)(log n)^(2/3))). For RSA-2048 (n=2048), this is astronomically large, which is why RSA-2048 is classically secure. Shor's O(n³) polynomial runtime represents an exponential quantum advantage over GNFS.",
+        "answer": "Sub-exponential \u2014 O(exp(n^(1/3) (log n)^(2/3))).",
+        "explanation": "The General Number Field Sieve (GNFS) runs in sub-exponential time O(exp((64/9 n)^(1/3)(log n)^(2/3))). For RSA-2048 (n=2048), this is astronomically large, which is why RSA-2048 is classically secure. Shor's O(n\u00b3) polynomial runtime represents an exponential quantum advantage over GNFS.",
         "options": [
-          "O(n²) — polynomial",
-          "O(n log n) — nearly linear",
-          "Sub-exponential — O(exp(n^(1/3)(log n)^(2/3)))",
-          "O(2ⁿ) — exponential"
+          "O(n\u00b2) \u2014 polynomial",
+          "O(n log n) \u2014 nearly linear",
+          "Sub-exponential \u2014 O(exp(n^(1/3)(log n)^(2/3)))",
+          "O(2\u207f) \u2014 exponential"
         ],
         "correctOptionIndex": 2,
         "difficulty": 3,
@@ -1011,7 +1011,7 @@
         "id": "demo-mcq-q3-t1-i",
         "question": "What does NIST's post-quantum cryptography standardization project aim to do?",
         "answer": "Standardize cryptographic algorithms resistant to quantum attacks, replacing RSA.",
-        "explanation": "NIST ran a multi-year competition (starting 2016) to identify quantum-resistant algorithms. In 2022–2024, NIST selected lattice-based algorithms (CRYSTALS-Kyber for key encapsulation, CRYSTALS-Dilithium for signatures) and others. These will replace RSA and elliptic curve cryptography in protocols like TLS and SSH.",
+        "explanation": "NIST ran a multi-year competition (starting 2016) to identify quantum-resistant algorithms. In 2022\u20132024, NIST selected lattice-based algorithms (CRYSTALS-Kyber for key encapsulation, CRYSTALS-Dilithium for signatures) and others. These will replace RSA and elliptic curve cryptography in protocols like TLS and SSH.",
         "options": [
           "Build a quantum computer to run Shor's algorithm",
           "Standardize quantum-resistant algorithms replacing RSA",
@@ -1029,11 +1029,11 @@
       {
         "id": "demo-mcq-q3-t1-j",
         "question": "What does the quantum period-finding step of Shor's algorithm directly output?",
-        "answer": "An estimate of the period r of f(x) = aˣ mod N.",
+        "answer": "An estimate of the period r of f(x) = a\u02e3 mod N.",
         "explanation": "The QFT step outputs an estimate of the period r such that f(x+r) = f(x). Classical post-processing then computes gcd(a^(r/2)-1, N) and gcd(a^(r/2)+1, N) to extract prime factors. If r is odd or gcds are trivial, the algorithm repeats with a different a. The quantum step provides exponential speedup only for this period-finding part.",
         "options": [
           "The prime factors p and q directly",
-          "An estimate of the period r of f(x) = aˣ mod N",
+          "An estimate of the period r of f(x) = a\u02e3 mod N",
           "The RSA private key",
           "A superposition of all possible factors"
         ],
@@ -1048,13 +1048,13 @@
       {
         "id": "demo-mcq-q3-t2-a",
         "question": "How many oracle queries does Grover's algorithm need to find one item in N items?",
-        "answer": "O(√N) queries.",
-        "explanation": "Grover's algorithm uses O(√N) oracle queries, iterating the Grover diffusion operator approximately π√N/4 times. Each iteration amplifies the target state's amplitude. Classical search requires O(N) on average. O(log N) is not achievable for unstructured search.",
+        "answer": "O(\u221aN) queries.",
+        "explanation": "Grover's algorithm uses O(\u221aN) oracle queries, iterating the Grover diffusion operator approximately \u03c0\u221aN/4 times. Each iteration amplifies the target state's amplitude. Classical search requires O(N) on average. O(log N) is not achievable for unstructured search.",
         "options": [
-          "O(N) — same as classical",
-          "O(log N) — logarithmic",
-          "O(N²) — quadratic",
-          "O(√N) — square root of N"
+          "O(N) \u2014 same as classical",
+          "O(log N) \u2014 logarithmic",
+          "O(N\u00b2) \u2014 quadratic",
+          "O(\u221aN) \u2014 square root of N"
         ],
         "correctOptionIndex": 3,
         "difficulty": 2,
@@ -1068,7 +1068,7 @@
         "id": "demo-mcq-q3-t2-b",
         "question": "What kind of speedup does Grover's algorithm achieve over classical search?",
         "answer": "Quadratic speedup.",
-        "explanation": "Grover's reduces O(N) classical queries to O(√N) — a quadratic speedup. This is less dramatic than Shor's exponential speedup but provably optimal: no quantum algorithm can search unstructured data faster than O(√N). For cryptography, AES-256 provides ~128-bit quantum security (Grover halves effective key length).",
+        "explanation": "Grover's reduces O(N) classical queries to O(\u221aN) \u2014 a quadratic speedup. This is less dramatic than Shor's exponential speedup but provably optimal: no quantum algorithm can search unstructured data faster than O(\u221aN). For cryptography, AES-256 provides ~128-bit quantum security (Grover halves effective key length).",
         "options": [
           "Exponential speedup",
           "Linear speedup",
@@ -1086,11 +1086,11 @@
       {
         "id": "demo-mcq-q3-t2-c",
         "question": "What is the Grover oracle's effect on the target state?",
-        "answer": "It flips the target state's phase — applying a factor of −1.",
-        "explanation": "The Grover oracle O|x⟩ = −|x⟩ for the target x* and O|x⟩ = |x⟩ otherwise. This phase flip marks the target without measuring it. The phase difference is then amplified by the diffusion operator. The oracle is a black box — you don't need to know which state is the target, just how to recognize a solution.",
+        "answer": "It flips the target state's phase \u2014 applying a factor of \u22121.",
+        "explanation": "The Grover oracle O|x\u27e9 = \u2212|x\u27e9 for the target x* and O|x\u27e9 = |x\u27e9 otherwise. This phase flip marks the target without measuring it. The phase difference is then amplified by the diffusion operator. The oracle is a black box \u2014 you don't need to know which state is the target, just how to recognize a solution.",
         "options": [
           "It generates the initial equal superposition",
-          "It flips the target state's phase by −1",
+          "It flips the target state's phase by \u22121",
           "It measures and collapses to the target state",
           "It applies the diffusion operator"
         ],
@@ -1106,9 +1106,9 @@
         "id": "demo-mcq-q3-t2-d",
         "question": "What does the diffusion operator (inversion about the mean) do?",
         "answer": "Reflects all amplitudes about their average, amplifying states above the mean.",
-        "explanation": "The diffusion operator reflects the amplitude vector about the mean amplitude. After the oracle phase-flips the target (pushing it below the mean), the diffusion operator's reflection pushes the target amplitude higher. Repeating oracle + diffusion steadily amplifies the target at the expense of other states, achieving O(√N) convergence.",
+        "explanation": "The diffusion operator reflects the amplitude vector about the mean amplitude. After the oracle phase-flips the target (pushing it below the mean), the diffusion operator's reflection pushes the target amplitude higher. Repeating oracle + diffusion steadily amplifies the target at the expense of other states, achieving O(\u221aN) convergence.",
         "options": [
-          "Resets all amplitudes to 1/√N",
+          "Resets all amplitudes to 1/\u221aN",
           "Reflects all amplitudes about their average, amplifying states above the mean",
           "Applies Hadamard to all qubits simultaneously",
           "Collapses the wave function to the most probable state"
@@ -1125,7 +1125,7 @@
         "id": "demo-mcq-q3-t2-e",
         "question": "Grover's algorithm was introduced in what year?",
         "answer": "1996.",
-        "explanation": "Lov Grover published his search algorithm in 1996, two years after Shor's algorithm. It was another landmark demonstrating quantum speedup. Unlike Shor's exponential speedup, Grover's quadratic speedup applies to a broad class of problems — essentially any problem where solutions can be efficiently verified.",
+        "explanation": "Lov Grover published his search algorithm in 1996, two years after Shor's algorithm. It was another landmark demonstrating quantum speedup. Unlike Shor's exponential speedup, Grover's quadratic speedup applies to a broad class of problems \u2014 essentially any problem where solutions can be efficiently verified.",
         "options": [
           "1985",
           "1994",
@@ -1144,7 +1144,7 @@
         "id": "demo-mcq-q3-t2-f",
         "question": "What is the security implication of Grover's algorithm for AES-128?",
         "answer": "AES-128 provides only ~64-bit security against a quantum adversary.",
-        "explanation": "Grover reduces effective key length by half. For AES-128 (2^128 possible keys), Grover's reduces the search to O(2^64) — effectively 64-bit security. NIST recommends AES-256 for post-quantum security: Grover reduces it to O(2^128), which remains infeasible. This is a quadratic weakening, not exponential.",
+        "explanation": "Grover reduces effective key length by half. For AES-128 (2^128 possible keys), Grover's reduces the search to O(2^64) \u2014 effectively 64-bit security. NIST recommends AES-256 for post-quantum security: Grover reduces it to O(2^128), which remains infeasible. This is a quadratic weakening, not exponential.",
         "options": [
           "AES-128 is completely broken",
           "AES-128 provides ~64-bit security against a quantum adversary",
@@ -1161,13 +1161,13 @@
       },
       {
         "id": "demo-mcq-q3-t2-g",
-        "question": "Is Grover's O(√N) query complexity provably optimal for unstructured search?",
-        "answer": "Yes — no quantum algorithm can do better than O(√N) for unstructured search.",
-        "explanation": "The quantum query complexity lower bound for unstructured search is proven to be Ω(√N). No quantum algorithm — not even one using highly entangled or adaptive queries — can solve unstructured search faster. This proof was given by Bennett, Bernstein, Brassard, and Vazirani (1997). Grover's is therefore provably optimal.",
+        "question": "Is Grover's O(\u221aN) query complexity provably optimal for unstructured search?",
+        "answer": "Yes \u2014 no quantum algorithm can do better than O(\u221aN) for unstructured search.",
+        "explanation": "The quantum query complexity lower bound for unstructured search is proven to be \u03a9(\u221aN). No quantum algorithm \u2014 not even one using highly entangled or adaptive queries \u2014 can solve unstructured search faster. This proof was given by Bennett, Bernstein, Brassard, and Vazirani (1997). Grover's is therefore provably optimal.",
         "options": [
-          "No — O(log N) is achievable with entangled queries",
-          "Yes — no quantum algorithm can beat O(√N) for unstructured search",
-          "No — better algorithms exist for structured databases",
+          "No \u2014 O(log N) is achievable with entangled queries",
+          "Yes \u2014 no quantum algorithm can beat O(\u221aN) for unstructured search",
+          "No \u2014 better algorithms exist for structured databases",
           "It depends on the oracle implementation"
         ],
         "correctOptionIndex": 1,
@@ -1180,12 +1180,12 @@
       },
       {
         "id": "demo-mcq-q3-t2-h",
-        "question": "What happens if you run Grover's algorithm for far more than the optimal π√N/4 iterations?",
-        "answer": "The target probability decreases — the state rotates past the target.",
-        "explanation": "Grover's performs a rotation in a 2D subspace. After ~π√N/4 iterations the state is near |target⟩. Continuing rotates the state away again — the target's amplitude decreases. Running exactly the right number of steps is critical. Too many iterations cause the probability to oscillate, eventually returning near the initial uniform superposition.",
+        "question": "What happens if you run Grover's algorithm for far more than the optimal \u03c0\u221aN/4 iterations?",
+        "answer": "The target probability decreases \u2014 the state rotates past the target.",
+        "explanation": "Grover's performs a rotation in a 2D subspace. After ~\u03c0\u221aN/4 iterations the state is near |target\u27e9. Continuing rotates the state away again \u2014 the target's amplitude decreases. Running exactly the right number of steps is critical. Too many iterations cause the probability to oscillate, eventually returning near the initial uniform superposition.",
         "options": [
           "The algorithm halts automatically at the correct answer",
-          "The target probability decreases — the state rotates past the target",
+          "The target probability decreases \u2014 the state rotates past the target",
           "Additional iterations don't change the state further",
           "The qubits decohere and produce random output"
         ],
@@ -1201,9 +1201,9 @@
         "id": "demo-mcq-q3-t2-i",
         "question": "What initialisation step is essential before Grover's iterations begin?",
         "answer": "Apply Hadamard to all qubits to create an equal superposition of all N states.",
-        "explanation": "Before Grover's iterations, H^⊗n is applied to all n qubits (initialized to |0⟩), creating (1/√N)Σ|x⟩ — an equal superposition of all 2^n = N states. This gives each state amplitude 1/√N. Without this, the diffusion operator's 'inversion about the mean' would not function correctly.",
+        "explanation": "Before Grover's iterations, H^\u2297n is applied to all n qubits (initialized to |0\u27e9), creating (1/\u221aN)\u03a3|x\u27e9 \u2014 an equal superposition of all 2^n = N states. This gives each state amplitude 1/\u221aN. Without this, the diffusion operator's 'inversion about the mean' would not function correctly.",
         "options": [
-          "Initialize all qubits to |1⟩",
+          "Initialize all qubits to |1\u27e9",
           "Apply Hadamard to all qubits for equal superposition",
           "Measure all qubits to find the starting state",
           "Apply CNOT to all adjacent qubit pairs"
@@ -1219,13 +1219,13 @@
       {
         "id": "demo-mcq-q3-t2-j",
         "question": "Grover's algorithm applied to NP-complete problems still leaves them in what complexity class?",
-        "answer": "Still exponential — O(2^(n/2)) is exponential, not polynomial.",
-        "explanation": "NP-complete problems have exponential search spaces. Grover's quadratic speedup of O(√(2^n)) = O(2^(n/2)) is still exponential — not polynomial. NP-complete problems remain hard even for quantum computers. Grover's does not prove or disprove P = NP or BPP = BQP. It suggests NP ⊄ BQP (unproven), but quantum computers almost certainly cannot solve NP in polynomial time.",
+        "answer": "Still exponential \u2014 O(2^(n/2)) is exponential, not polynomial.",
+        "explanation": "NP-complete problems have exponential search spaces. Grover's quadratic speedup of O(\u221a(2^n)) = O(2^(n/2)) is still exponential \u2014 not polynomial. NP-complete problems remain hard even for quantum computers. Grover's does not prove or disprove P = NP or BPP = BQP. It suggests NP \u2284 BQP (unproven), but quantum computers almost certainly cannot solve NP in polynomial time.",
         "options": [
-          "Polynomial — Grover makes NP problems tractable",
-          "Still exponential — O(2^(n/2)) is exponential, not polynomial",
-          "Logarithmic — the search becomes O(log 2^n) = O(n)",
-          "Unknown — it collapses complexity theory"
+          "Polynomial \u2014 Grover makes NP problems tractable",
+          "Still exponential \u2014 O(2^(n/2)) is exponential, not polynomial",
+          "Logarithmic \u2014 the search becomes O(log 2^n) = O(n)",
+          "Unknown \u2014 it collapses complexity theory"
         ],
         "correctOptionIndex": 1,
         "difficulty": 3,
@@ -1236,29 +1236,29 @@
         "sourceTopicTitle": "Grover's algorithm"
       }
     ],
-    "documentNotes": "# Introduction to Quantum Computing\n\nQuantum computing harnesses quantum mechanical phenomena — superposition, entanglement, and interference — to perform computations that are intractable for classical computers.\n\n---\n\n## Qubits and Superposition\n\nA **qubit** state: |ψ⟩ = α|0⟩ + β|1⟩, where |α|² + |β|² = 1.\n\nMeasurement collapses to |0⟩ with probability |α|² or |1⟩ with probability |β|² (Born rule). This is not classical ignorance — the qubit genuinely exists in both states until observed.\n\nThe superposition principle enables **quantum parallelism**: a register of n qubits can encode 2ⁿ values simultaneously, allowing certain computations to proceed across all inputs at once.\n\n---\n\n## The Bloch Sphere\n\nThe **Bloch sphere** is a geometric representation of a single qubit state. Every pure qubit state corresponds to a unique point on the surface of the unit sphere:\n\n- **North pole** → |0⟩\n- **South pole** → |1⟩\n- **Equator** → equal superpositions (e.g. |+⟩ = (|0⟩+|1⟩)/√2)\n\nSingle-qubit gates correspond to rotations on the Bloch sphere. Mixed states (affected by decoherence) lie inside the sphere rather than on its surface.\n\n---\n\n## Quantum Gates\n\nAll quantum gates are **unitary** (reversible). Key gates:\n\n| Gate | Effect |\n|------|--------|\n| Pauli-X | Bit flip: |0⟩↔|1⟩ |\n| Pauli-Z | Phase flip: |1⟩ → −|1⟩ |\n| Pauli-Y | Combined X and Z operation |\n| Hadamard H | Creates equal superposition |\n| S | Phase rotation π/2 |\n| T | Phase rotation π/4 |\n| CNOT | Flips target if control = |1⟩ |\n\n{H, T, CNOT} is a **universal gate set** — any quantum computation can be decomposed into these three gates.\n\n---\n\n## Quantum Entanglement\n\nEntanglement is a uniquely quantum phenomenon where two or more qubits share a joint state that **cannot** be described as a product of individual qubit states.\n\n**Bell states** are the canonical maximally entangled two-qubit states. Example: (|00⟩ + |11⟩)/√2 — measuring one qubit instantly determines the other, regardless of separation.\n\nApplications:\n- **Quantum teleportation** — transfer of quantum state using entanglement + classical channel\n- **Superdense coding** — send 2 classical bits using 1 qubit (with shared entanglement)\n- **Quantum key distribution (QKD)** — provably secure communication (BB84, E91)\n\n---\n\n## Key Algorithms\n\n**Shor's algorithm (1994):** Factors n-bit integers in O(n³) — exponential speedup over classical. Breaks RSA encryption. Uses the Quantum Fourier Transform (QFT) to find the period of aˣ mod N, reducing factoring to period-finding.\n\n**Grover's algorithm (1996):** Searches N unsorted items in O(√N) — quadratic speedup. Provably optimal for unstructured search. Halves effective key length of symmetric cryptography. Uses an oracle + diffusion operator to amplify the target state amplitude.\n\n---\n\n## Quantum Decoherence and Error Correction\n\n**Decoherence** occurs when a qubit interacts with its environment, causing quantum states to lose coherence and collapse — destroying the computation.\n\n**Quantum Error Correction (QEC)** encodes one logical qubit across multiple physical qubits so errors can be detected and corrected without measuring (collapsing) the logical state:\n\n- **Shor code**: 1 logical qubit → 9 physical qubits; corrects any single-qubit error\n- **Steane code**: 1 logical qubit → 7 physical qubits; more efficient\n- **Surface code**: leading practical approach; high error threshold (~1%), nearest-neighbour interactions only\n\nFault-tolerant quantum computing requires physical error rates below ~0.1–1% (the **fault-tolerance threshold**). Surface codes are the leading candidate for near-term quantum hardware.",
+    "documentNotes": "# Introduction to Quantum Computing\n### MIT 8.370x \u2014 Week 1 Lecture Notes\n\nQuantum computing harnesses quantum mechanical phenomena \u2014 superposition, entanglement, and interference \u2014 to perform computations that are intractable for classical computers. Where classical bits encode information as definite 0s and 1s, quantum bits exploit the full richness of quantum mechanics to represent, process, and transmit information in fundamentally new ways.\n\n---\n\n## 1. Qubits and Superposition\n\n### What is a Qubit?\n\nA **qubit** (quantum bit) is the fundamental unit of quantum information. Unlike a classical bit that is always definitively 0 or 1, a qubit can exist in a **superposition** of both states simultaneously.\n\nThe general state of a qubit is written in **Dirac notation** as:\n\n> |\u03c8\u27e9 = \u03b1|0\u27e9 + \u03b2|1\u27e9\n\nwhere:\n- \u03b1 and \u03b2 are **complex amplitudes**\n- |\u03b1|\u00b2 is the probability of measuring |0\u27e9\n- |\u03b2|\u00b2 is the probability of measuring |1\u27e9\n- The **normalisation constraint**: |\u03b1|\u00b2 + |\u03b2|\u00b2 = 1\n\n### The Born Rule\n\nWhen a qubit is measured, the superposition **collapses** irreversibly to one of the basis states:\n- Collapses to |0\u27e9 with probability |\u03b1|\u00b2\n- Collapses to |1\u27e9 with probability |\u03b2|\u00b2\n\nThis is not classical ignorance (where the value was always 0 or 1 and we just didn't know). The qubit **genuinely exists in both states simultaneously** until measured \u2014 a fact verified repeatedly by experiment (Bell inequality violations).\n\n### Quantum Parallelism\n\nA register of **n qubits** can exist in a superposition of all 2\u207f computational basis states simultaneously. For example:\n\n- 2 qubits \u2192 superposition of |00\u27e9, |01\u27e9, |10\u27e9, |11\u27e9 (4 states)\n- 10 qubits \u2192 1,024 states simultaneously\n- 300 qubits \u2192 more states than atoms in the observable universe\n\nThis allows certain quantum algorithms to process all inputs at once \u2014 a phenomenon called **quantum parallelism**. However, measurement only yields one result, so the art of quantum algorithm design lies in structuring interference to amplify the probability of the correct answer.\n\n### Phase\n\nBeyond the amplitudes' magnitudes, their **phase** (complex argument) matters. Two states can have the same measurement probabilities but different phases, and these differences affect how states interfere. The **global phase** of a state is unobservable, but **relative phase** between components is physically meaningful.\n\n---\n\n## 2. The Bloch Sphere\n\n### Geometric Representation\n\nThe **Bloch sphere** is a unit sphere used to visualise single-qubit pure states. Every pure qubit state maps to exactly one point on its surface:\n\n| State | Location on Bloch Sphere |\n|-------|--------------------------|\n| \\|0\u27e9 | North pole |\n| \\|1\u27e9 | South pole |\n| \\|+\u27e9 = (\\|0\u27e9+\\|1\u27e9)/\u221a2 | Front of equator (+X) |\n| \\|\u2212\u27e9 = (\\|0\u27e9\u2212\\|1\u27e9)/\u221a2 | Back of equator (\u2212X) |\n| \\|i\u27e9 = (\\|0\u27e9+i\\|1\u27e9)/\u221a2 | Right of equator (+Y) |\n| \\|\u2212i\u27e9 = (\\|0\u27e9\u2212i\\|1\u27e9)/\u221a2 | Left of equator (\u2212Y) |\n\nA general qubit state can be parameterised as:\n\n> |\u03c8\u27e9 = cos(\u03b8/2)|0\u27e9 + e^(i\u03c6) sin(\u03b8/2)|1\u27e9\n\nwhere \u03b8 \u2208 [0, \u03c0] is the polar angle and \u03c6 \u2208 [0, 2\u03c0) is the azimuthal angle.\n\n### Gates as Rotations\n\nSingle-qubit gates correspond to **rotations of the Bloch sphere**:\n- Pauli-X \u2192 180\u00b0 rotation around the X-axis\n- Pauli-Y \u2192 180\u00b0 rotation around the Y-axis\n- Pauli-Z \u2192 180\u00b0 rotation around the Z-axis\n- Hadamard \u2192 180\u00b0 rotation around the (X+Z)/\u221a2 axis\n\n### Mixed States\n\n**Mixed states** (qubits that have partially decohered due to environmental noise) correspond to points **inside** the sphere, not on its surface. The completely mixed state (maximally decohered) sits at the centre. The **purity** of a state is a measure of how close to the surface it sits.\n\n---\n\n## 3. Quantum Gates\n\n### Properties of Quantum Gates\n\nAll quantum gates must be **unitary**: U\u2020U = I (where U\u2020 is the conjugate transpose). This ensures:\n- **Reversibility**: every quantum gate can be undone\n- **Norm preservation**: probabilities always sum to 1\n- **No-cloning**: quantum states cannot be copied (unlike classical bits)\n\n### Single-Qubit Gates\n\n| Gate | Matrix | Effect | Bloch Sphere |\n|------|--------|--------|--------------|\n| Pauli-X | [[0,1],[1,0]] | Bit flip: \\|0\u27e9\u2194\\|1\u27e9 | 180\u00b0 around X |\n| Pauli-Y | [[0,\u2212i],[i,0]] | Bit + phase flip | 180\u00b0 around Y |\n| Pauli-Z | [[1,0],[0,\u22121]] | Phase flip: \\|1\u27e9\u2192\u2212\\|1\u27e9 | 180\u00b0 around Z |\n| Hadamard H | [[1,1],[1,\u22121]]/\u221a2 | Creates superposition | 180\u00b0 around (X+Z)/\u221a2 |\n| S (Phase) | [[1,0],[0,i]] | \u03c0/2 phase rotation | 90\u00b0 around Z |\n| T (\u03c0/8) | [[1,0],[0,e^(i\u03c0/4)]] | \u03c0/4 phase rotation | 45\u00b0 around Z |\n\n#### The Hadamard Gate in Detail\n\nThe Hadamard gate is one of the most important in quantum computing:\n- H|0\u27e9 = |+\u27e9 = (|0\u27e9 + |1\u27e9)/\u221a2\n- H|1\u27e9 = |\u2212\u27e9 = (|0\u27e9 \u2212 |1\u27e9)/\u221a2\n- H\u00b2 = I (applying Hadamard twice returns to the original state)\n\nIt is used to initialise qubits into superposition at the start of almost every quantum algorithm.\n\n### Two-Qubit Gates\n\n#### CNOT (Controlled-NOT)\n\nThe **CNOT gate** acts on two qubits \u2014 a **control** and a **target**:\n- If control = |0\u27e9: target is unchanged\n- If control = |1\u27e9: target is flipped (Pauli-X applied)\n\nTruth table:\n\n| Control | Target (in) | Target (out) |\n|---------|-------------|--------------|\n| \\|0\u27e9 | \\|0\u27e9 | \\|0\u27e9 |\n| \\|0\u27e9 | \\|1\u27e9 | \\|1\u27e9 |\n| \\|1\u27e9 | \\|0\u27e9 | \\|1\u27e9 |\n| \\|1\u27e9 | \\|1\u27e9 | \\|0\u27e9 |\n\nCNOT is also used to **create entanglement**: applying H to |0\u27e9 then CNOT produces the Bell state (|00\u27e9 + |11\u27e9)/\u221a2.\n\n### Universality\n\nThe gate set **{H, T, CNOT}** is **universal**: any unitary operation on any number of qubits can be approximated to arbitrary precision using only these three gates. This is the quantum analogue of classical universal gate sets like {NAND}.\n\n---\n\n## 4. Quantum Entanglement\n\n### Definition\n\n**Entanglement** is a correlation between quantum systems with no classical analogue. A two-qubit state is entangled if it **cannot** be written as a tensor product of two independent single-qubit states:\n\n> |\u03c8\u27e9 \u2260 |\u03c8_A\u27e9 \u2297 |\u03c8_B\u27e9\n\n### Bell States\n\nThe four **Bell states** are the canonical maximally entangled two-qubit states:\n\n| Name | State | Description |\n|------|-------|-------------|\n| \u03a6\u207a | (\\|00\u27e9 + \\|11\u27e9)/\u221a2 | Correlated in Z-basis |\n| \u03a6\u207b | (\\|00\u27e9 \u2212 \\|11\u27e9)/\u221a2 | Anti-phased |\n| \u03a8\u207a | (\\|01\u27e9 + \\|10\u27e9)/\u221a2 | Anti-correlated in Z-basis |\n| \u03a8\u207b | (\\|01\u27e9 \u2212 \\|10\u27e9)/\u221a2 | Singlet state |\n\n**Creating a Bell state** from |00\u27e9:\n1. Apply H to the first qubit \u2192 (|0\u27e9 + |1\u27e9)/\u221a2 \u2297 |0\u27e9\n2. Apply CNOT (first qubit as control) \u2192 (|00\u27e9 + |11\u27e9)/\u221a2 = \u03a6\u207a\n\n### Non-Locality and Bell Inequalities\n\nEntangled particles violate **Bell inequalities** \u2014 statistical bounds that any local hidden variable theory must satisfy. Experimental violations (Aspect 1982, loophole-free 2015) confirm that quantum correlations are genuinely non-local: measuring one particle instantaneously affects the state of its entangled partner regardless of distance.\n\nCrucially, this **cannot** be used to transmit information faster than light \u2014 no controllable signal is sent.\n\n### Applications of Entanglement\n\n**Quantum Teleportation**\nTransfers the quantum state of a qubit from one location to another using:\n- 1 shared entangled pair (pre-distributed)\n- 2 classical bits of communication\nThe original qubit state is destroyed in the process (no-cloning theorem compliance).\n\n**Superdense Coding**\nSends 2 classical bits of information by transmitting only 1 qubit (provided the parties share a pre-entangled pair). Doubles classical channel capacity.\n\n**Quantum Key Distribution (QKD)**\n- **BB84 (1984)**: Uses random basis measurements; any eavesdropping disturbs the quantum states detectably\n- **E91 (1991)**: Uses entangled pairs and Bell inequality violations to certify security\n\n---\n\n## 5. Shor's Algorithm\n\n### The Problem: Integer Factorisation\n\nGiven a large composite integer N = p \u00d7 q (product of two primes), find p and q. This is believed to be classically hard:\n- Best classical algorithm (General Number Field Sieve): sub-exponential but super-polynomial \u2014 O(exp(n^(1/3)))\n- **RSA encryption** relies on this hardness for security\n\n### Shor's Breakthrough (1994)\n\nPeter Shor showed that a quantum computer can factor N in **polynomial time** \u2014 specifically O(n\u00b3) where n is the number of bits in N. This is an **exponential speedup** over classical algorithms.\n\n### How It Works\n\nShor's algorithm reduces factoring to **period finding**:\n\n1. Choose a random integer a < N\n2. Find the period r of the function f(x) = a\u02e3 mod N (i.e., the smallest r such that a\u02b3 \u2261 1 mod N)\n3. If r is even and a^(r/2) \u2262 \u22121 mod N, then gcd(a^(r/2) \u00b1 1, N) gives a non-trivial factor\n\n**The quantum part** (step 2) uses the **Quantum Fourier Transform (QFT)**:\n- Prepare a superposition of all x values\n- Evaluate f(x) for all x simultaneously\n- Apply QFT to extract the period from the resulting interference pattern\n- Measure to obtain r with high probability\n\n### Impact on Cryptography\n\n| Cryptosystem | Classical Security | With Shor's Algorithm |\n|---|---|---|\n| RSA-2048 | ~112-bit security | Broken in polynomial time |\n| ECC-256 | ~128-bit security | Broken in polynomial time |\n| AES-128 | ~128-bit security | Unaffected by Shor's |\n\nThis has driven the development of **post-quantum cryptography** (PQC). NIST standardised the first PQC algorithms in 2024 (CRYSTALS-Kyber, CRYSTALS-Dilithium, SPHINCS+).\n\n### Current Status\n\nRunning Shor's algorithm to break RSA-2048 would require millions of **logical qubits** with error correction. Current quantum computers have hundreds to thousands of **noisy physical qubits** \u2014 we are likely decades away from cryptographically relevant attacks.\n\n---\n\n## 6. Grover's Algorithm\n\n### The Problem: Unstructured Search\n\nSearch an unsorted database of N items for one item satisfying a condition (an oracle). Classically requires O(N) queries on average (check each item).\n\n### Grover's Speedup (1996)\n\nLov Grover showed a quantum algorithm achieving **O(\u221aN)** queries \u2014 a **quadratic speedup**. This is provably optimal for quantum unstructured search (no quantum algorithm can do better).\n\n### How It Works\n\n**Initialisation**: Prepare an equal superposition of all N states using n Hadamard gates.\n\n**Grover Iteration** (repeated ~\u03c0\u221aN/4 times):\n1. **Oracle**: Apply a phase flip to the target state (marks the solution by flipping its amplitude sign)\n2. **Diffusion operator**: Reflect all amplitudes about their mean (amplifies the marked state)\n\nEach iteration increases the amplitude (and thus probability) of the target state. After O(\u221aN) iterations, measurement yields the correct answer with high probability.\n\n### Applications\n\n| Domain | Classical | Grover |\n|--------|-----------|--------|\n| Search N items | O(N) | O(\u221aN) |\n| Brute-force AES-128 | 2\u00b9\u00b2\u2078 operations | 2\u2076\u2074 operations |\n| SAT solving | Exponential | \u221a speedup |\n| Graph problems | Various | \u221a speedup on search component |\n\n### Security Implications\n\nGrover's algorithm effectively **halves the bit security** of symmetric cryptographic primitives:\n- AES-128 \u2192 64-bit security against quantum adversaries\n- AES-256 \u2192 128-bit security (still considered safe)\n\nThe response: use AES-256 and SHA-384+ in post-quantum deployments.\n\n---\n\n## 7. Quantum Decoherence and Error Correction\n\n### Decoherence\n\n**Decoherence** is the process by which a quantum system loses its quantum properties through interaction with its environment:\n- Thermal photons, magnetic fluctuations, and vibrations all disturb qubits\n- The quantum state \"leaks\" into the environment, causing the superposition to collapse\n- **Coherence time (T\u2082)**: the timescale over which a qubit maintains its quantum state\n\nTypical coherence times:\n| Technology | T\u2082 |\n|---|---|\n| Superconducting qubits (IBM, Google) | ~100 \u00b5s |\n| Trapped ion qubits (IonQ, Quantinuum) | ~1 second |\n| Photonic qubits | Variable (less susceptible) |\n| Spin qubits (silicon) | ~30 ms |\n\n### Types of Errors\n\n- **Bit flip**: |0\u27e9 \u2192 |1\u27e9 (analogous to classical bit error)\n- **Phase flip**: |+\u27e9 \u2192 |\u2212\u27e9 (no classical analogue)\n- **Depolarising**: random combination of X, Y, Z errors\n- **Leakage**: qubit escapes the computational subspace entirely\n\n### Quantum Error Correction (QEC)\n\nClassical error correction (repetition codes) doesn't directly apply to qubits because:\n- You cannot copy quantum states (no-cloning theorem)\n- Measurement destroys superposition\n\n**Key insight**: Errors can be detected using **ancilla qubits** and **syndrome measurements** \u2014 measuring correlations between qubits rather than the qubits themselves, leaving the logical state undisturbed.\n\n### Major QEC Codes\n\n**Shor Code (1995)**\n- Encodes 1 logical qubit into 9 physical qubits\n- Corrects any single-qubit error (bit flip + phase flip)\n- First demonstration that QEC was possible\n\n**Steane Code (1996)**\n- 1 logical qubit \u2192 7 physical qubits\n- Based on classical Hamming codes\n- Corrects any single-qubit error more efficiently\n\n**Surface Code**\n- 1 logical qubit \u2192 ~1,000 physical qubits (at practical error rates)\n- Only requires **nearest-neighbour interactions** (compatible with chip layout)\n- High error threshold: ~1% physical error rate tolerable\n- Leading candidate for fault-tolerant quantum computing\n\n### The Fault-Tolerance Threshold\n\nThe **fault-tolerance threshold** is the maximum physical error rate below which QEC can suppress errors arbitrarily:\n- Surface code threshold: ~1%\n- Current best physical error rates: 0.1\u20130.5% (close but not yet below threshold at scale)\n\nThe path to fault-tolerant quantum computing requires:\n1. Physical error rates below threshold\n2. Enough physical qubits to encode logical qubits with error correction (~1,000:1 ratio)\n3. Fast enough classical control to apply corrections in real time\n\n### The Road Ahead\n\n| Era | Status |\n|-----|--------|\n| NISQ (Noisy Intermediate-Scale Quantum) | Now \u2014 100s of noisy qubits, limited depth |\n| Early fault-tolerant | ~2030 \u2014 small numbers of logical qubits |\n| Fault-tolerant | ~2035+ \u2014 millions of physical qubits, Shor/Grover at scale |",
     "studyGuide": {
       "title": "Introduction to Quantum Computing",
       "sections": [
         {
           "title": "Qubits and Superposition",
           "summary": "The fundamental units of quantum information and how they differ from classical bits.",
-          "content": "A qubit is the quantum analogue of a classical bit. While a classical bit can be either 0 or 1, a qubit can exist in a superposition of both states simultaneously, described as α|0⟩ + β|1⟩ where |α|² + |β|² = 1.",
+          "content": "A qubit is the quantum analogue of a classical bit. While a classical bit can be either 0 or 1, a qubit can exist in a superposition of both states simultaneously, described as \u03b1|0\u27e9 + \u03b2|1\u27e9 where |\u03b1|\u00b2 + |\u03b2|\u00b2 = 1.",
           "isCompleted": false,
           "xpAwardedOnCompletion": 100,
           "topics": [
             {
               "title": "Bit vs qubit",
-              "summary": "A qubit can represent |0⟩, |1⟩, or any superposition of the two.",
-              "content": "Classical bits are deterministic — a 0 is a 0. A qubit is probabilistic until measured. This is not mere ignorance about the state; the qubit genuinely exists in multiple states at once. Measuring collapses the wave function irreversibly.",
+              "summary": "A qubit can represent |0\u27e9, |1\u27e9, or any superposition of the two.",
+              "content": "Classical bits are deterministic \u2014 a 0 is a 0. A qubit is probabilistic until measured. This is not mere ignorance about the state; the qubit genuinely exists in multiple states at once. Measuring collapses the wave function irreversibly.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 30
             },
             {
               "title": "Quantum parallelism",
-              "summary": "n qubits encode 2ⁿ states simultaneously, enabling parallel computation.",
-              "content": "A register of n qubits can exist in a superposition of all 2ⁿ possible classical states simultaneously. Certain algorithms exploit this to process all inputs at once, achieving exponential speedup for specific problems.",
+              "summary": "n qubits encode 2\u207f states simultaneously, enabling parallel computation.",
+              "content": "A register of n qubits can exist in a superposition of all 2\u207f possible classical states simultaneously. Certain algorithms exploit this to process all inputs at once, achieving exponential speedup for specific problems.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 30
@@ -1268,14 +1268,14 @@
         {
           "title": "The Bloch Sphere",
           "summary": "A geometric representation of a single qubit state.",
-          "content": "The Bloch sphere is a unit sphere where each point on the surface represents a pure qubit state. The north pole is |0⟩, the south pole is |1⟩. Quantum gates correspond to rotations of the sphere. Points inside the sphere represent mixed states.",
+          "content": "The Bloch sphere is a unit sphere where each point on the surface represents a pure qubit state. The north pole is |0\u27e9, the south pole is |1\u27e9. Quantum gates correspond to rotations of the sphere. Points inside the sphere represent mixed states.",
           "isCompleted": false,
           "xpAwardedOnCompletion": 80,
           "topics": [
             {
               "title": "Visualising qubit states",
               "summary": "Mapping qubit states to points on the unit sphere.",
-              "content": "Every pure single-qubit state |ψ⟩ = cos(θ/2)|0⟩ + e^(iφ)sin(θ/2)|1⟩ maps to the point (θ, φ) on the Bloch sphere. The equator holds equal superpositions. Mixed states, affected by decoherence, lie strictly inside the sphere.",
+              "content": "Every pure single-qubit state |\u03c8\u27e9 = cos(\u03b8/2)|0\u27e9 + e^(i\u03c6)sin(\u03b8/2)|1\u27e9 maps to the point (\u03b8, \u03c6) on the Bloch sphere. The equator holds equal superpositions. Mixed states, affected by decoherence, lie strictly inside the sphere.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 40
@@ -1292,7 +1292,7 @@
             {
               "title": "Single-qubit gates",
               "summary": "Hadamard, Pauli X/Y/Z, S and T phase gates.",
-              "content": "The Hadamard gate H puts a qubit into equal superposition. Pauli-X is the quantum NOT gate. Pauli-Z applies a phase flip. S and T gates apply π/2 and π/4 phase rotations. All single-qubit gates are unitary and reversible.",
+              "content": "The Hadamard gate H puts a qubit into equal superposition. Pauli-X is the quantum NOT gate. Pauli-Z applies a phase flip. S and T gates apply \u03c0/2 and \u03c0/4 phase rotations. All single-qubit gates are unitary and reversible.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 40
@@ -1300,7 +1300,7 @@
             {
               "title": "Two-qubit gates",
               "summary": "CNOT as the canonical entangling gate and universal gate sets.",
-              "content": "The CNOT gate flips the target qubit if the control qubit is |1⟩. Together with single-qubit gates, CNOT forms a universal gate set. The Toffoli gate (3 qubits) and SWAP gate are also important multi-qubit operations.",
+              "content": "The CNOT gate flips the target qubit if the control qubit is |1\u27e9. Together with single-qubit gates, CNOT forms a universal gate set. The Toffoli gate (3 qubits) and SWAP gate are also important multi-qubit operations.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 40
@@ -1317,7 +1317,7 @@
             {
               "title": "Bell states",
               "summary": "The four maximally entangled two-qubit states.",
-              "content": "The Bell states are the canonical maximally entangled two-qubit states. (|00⟩+|11⟩)/√2 is the most common example — measuring one qubit as 0 instantly collapses the other to 0, regardless of separation. They are the resource for quantum teleportation and superdense coding.",
+              "content": "The Bell states are the canonical maximally entangled two-qubit states. (|00\u27e9+|11\u27e9)/\u221a2 is the most common example \u2014 measuring one qubit as 0 instantly collapses the other to 0, regardless of separation. They are the resource for quantum teleportation and superdense coding.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 40
@@ -1341,16 +1341,16 @@
           "topics": [
             {
               "title": "Shor's algorithm",
-              "summary": "Polynomial-time integer factoring — breaks RSA encryption.",
-              "content": "Shor's algorithm (1994) factors an n-bit integer in O(n³) time using the Quantum Fourier Transform to find the period of aˣ mod N. This breaks RSA encryption and drives the development of post-quantum cryptography standards.",
+              "summary": "Polynomial-time integer factoring \u2014 breaks RSA encryption.",
+              "content": "Shor's algorithm (1994) factors an n-bit integer in O(n\u00b3) time using the Quantum Fourier Transform to find the period of a\u02e3 mod N. This breaks RSA encryption and drives the development of post-quantum cryptography standards.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 60
             },
             {
               "title": "Grover's algorithm",
-              "summary": "Quadratic speedup for unstructured search — provably optimal.",
-              "content": "Grover's algorithm (1996) searches an unsorted database of N items in O(√N) operations using an oracle and diffusion operator. This quadratic speedup is provably optimal for unstructured search and has implications for cryptanalysis.",
+              "summary": "Quadratic speedup for unstructured search \u2014 provably optimal.",
+              "content": "Grover's algorithm (1996) searches an unsorted database of N items in O(\u221aN) operations using an oracle and diffusion operator. This quadratic speedup is provably optimal for unstructured search and has implications for cryptanalysis.",
               "isCompleted": false,
               "mcqsGenerated": true,
               "xpAwardedOnCompletion": 60
@@ -1360,7 +1360,7 @@
         {
           "title": "Decoherence and Error Correction",
           "summary": "The main obstacle to practical quantum computing and how to overcome it.",
-          "content": "Qubits are extremely sensitive to environmental noise — a phenomenon called decoherence. Quantum Error Correction (QEC) encodes a logical qubit across multiple physical qubits so errors can be detected and corrected without measuring the logical state.",
+          "content": "Qubits are extremely sensitive to environmental noise \u2014 a phenomenon called decoherence. Quantum Error Correction (QEC) encodes a logical qubit across multiple physical qubits so errors can be detected and corrected without measuring the logical state.",
           "isCompleted": false,
           "xpAwardedOnCompletion": 150,
           "topics": [
