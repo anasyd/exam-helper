@@ -11,6 +11,7 @@ import { fetchMe, type MeResponse } from "@/lib/api/me";
 import { Button } from "@/components/ui/button";
 import { Check } from "lucide-react";
 import { LandingNav } from "@/app/(landing)/_components/landing-nav";
+import { usePostHog } from "posthog-js/react";
 
 const BASE = process.env.NEXT_PUBLIC_AUTH_URL ?? "http://localhost:4000";
 
@@ -63,6 +64,7 @@ export default function PricingPage() {
 
   const session = useSession();
   const router = useRouter();
+  const ph = usePostHog();
   const [interval, setInterval] = useState<"month" | "year">("month");
   const [meData, setMeData] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState<PlanId | null>(null);
@@ -81,6 +83,7 @@ export default function PricingPage() {
       return;
     }
     setLoading(tier);
+    ph?.capture("checkout_started", { tier, interval });
     try {
       const res = await fetch(`${BASE}/api/billing/checkout`, {
         method: "POST",

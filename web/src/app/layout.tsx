@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeToaster } from "@/components/theme-toaster";
 import { ThemeProvider } from "next-themes";
 import { DemoSeedProvider } from "./_demo-seed-provider";
+import { PostHogProvider } from "@/components/posthog-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 const fraunces = Fraunces({
@@ -42,12 +43,14 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning className="scroll-smooth">
       <body className={`${inter.className} ${fraunces.variable}`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <DemoSeedProvider>
-            <ThemeToaster />
-            {children}
-          </DemoSeedProvider>
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+            <DemoSeedProvider>
+              <ThemeToaster />
+              {children}
+            </DemoSeedProvider>
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );

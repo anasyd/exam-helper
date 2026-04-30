@@ -171,3 +171,53 @@ adminRouter.get("/email/recipients", async (_req, res) => {
   const unsubscribed = total - subscribed;
   res.json({ count: subscribed, total, unsubscribed });
 });
+
+// GET /api/admin/analytics — aggregate metrics for admin dashboard
+adminRouter.get("/analytics", async (_req, res) => {
+  const now = Date.now();
+  const [
+    totalUsers,
+    tierAgg,
+    newUsers7d,
+    newUsers30d,
+    emailAgg,
+    totalProjects,
+    jobAgg,
+  ] = await Promise.all([
+    userCol().countDocuments({}),
+    userCol().aggregate<{ _id: string | null; count: number }>([
+      { $group: { _id: "$planTier", count: { $sum: 1 } } },
+    ]).toArray(),
+    userCol().countDocuments({ createdAt: { $gte: new Date(now - 7 * 86_400_000) } }),
+    userCol().countDocuments({ createdAt: { $gte: new Date(now - 30 * 86_400_000) } }),
+    userCol().aggregate<{ _id: boolean | null; count: number }>([
+      { $group: { _id: "$emailUnsubscribed", count: { $sum: 1 } } },
+    ]).toArray(),
+    db().collection("projects").countDocuments({}),
+    db().collection("jobs").aggregate<{ _id: string | null; count: number }>([
+      { $group: { _id: "$status", count: { $sum: 1 } } },
+    ]).toArray(),
+  ]);
+
+  const byTier: Record<string, number> = {};
+  for (const row of tierAgg) byTier[row._id ?? "free"] = row.count;
+
+  const emailSubscribed = emailAgg.find((r) => !r._id)?.count ?? 0;
+  const emailUnsubscribed = emailAgg.find((r) => r._id === true)?.count ?? 0;
+
+  const jobsByStatus: Record<string, number> = {};
+  for (const row of jobAgg) jobsByStatus[row._id ?? "unknown"] = row.count;
+
+  res.json({
+    users: {
+      total: totalUsers,
+      newLast7d: newUsers7d,
+      newLast30d: newUsers30d,
+      byTier,
+    },
+    email: { subscribed: emailSubscribed, unsubscribed: emailUnsubscribed },
+    projects: { total: totalProjects },
+    jobs: jobsByStatus,
+    uptimeSeconds: process.uptime(),
+  });
+});

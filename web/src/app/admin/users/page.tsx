@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, ChevronLeft, Mail } from "lucide-react";
+import { Loader2, Plus, Trash2, ChevronLeft, Mail, BarChart2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -148,6 +148,12 @@ export default function AdminUsersPage() {
           <p className="text-sm text-muted-foreground mt-1">Admin panel — manage accounts and plan tiers</p>
         </div>
         <div className="flex items-center gap-2">
+          <Link href="/admin/analytics">
+            <Button variant="outline" className="rounded-full">
+              <BarChart2 className="h-4 w-4 mr-2" />
+              Analytics
+            </Button>
+          </Link>
           <Link href="/admin/email">
             <Button variant="outline" className="rounded-full">
               <Mail className="h-4 w-4 mr-2" />
