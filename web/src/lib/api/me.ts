@@ -17,6 +17,7 @@ export interface MeResponse {
   };
   planTier: "free" | "student" | "pro" | "admin";
   planExpiresAt: number | null;
+  planCancelledAt: string | null;
   usage: {
     projects: number;
     limits: TierLimits;

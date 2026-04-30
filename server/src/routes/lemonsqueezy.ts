@@ -5,6 +5,8 @@ import { config } from "../config.js";
 import { logger } from "../logger.js";
 import type { AuthedRequest } from "../middleware/auth-guard.js";
 import type { Tier } from "../tiers.js";
+import { sendEmail } from "../email/resend.js";
+import { subscriptionStartedEmail, subscriptionCancelledEmail } from "../email/templates.js";
 
 const LS_API_BASE = "https://api.lemonsqueezy.com/v1";
 
@@ -102,6 +104,9 @@ interface LsWebhookPayload {
       variant_id: number;
       customer_id: number;
       user_email?: string;
+      user_name?: string;
+      renews_at?: string | null;
+      ends_at?: string | null;
       urls?: { customer_portal?: string };
     };
   };
@@ -163,6 +168,13 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
         },
       });
       logger.info({ userId, email: attrs.user_email, tier }, "ls subscription created");
+      if (attrs.user_email && config.RESEND_API_KEY) {
+        sendEmail({
+          to: attrs.user_email,
+          subject: `You're on ${tier.charAt(0).toUpperCase() + tier.slice(1)} — thank you!`,
+          html: subscriptionStartedEmail({ name: attrs.user_name, tier, appUrl: config.FRONTEND_URL }),
+        }).catch((err) => logger.error({ err }, "failed to send subscription started email"));
+      }
       break;
     }
 
@@ -192,12 +204,27 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
       // cancelled = not yet expired, expired = access ends now
       if (event_name === "subscription_expired" || attrs.status === "expired") {
         await userCol().updateOne(filter, {
-          $set: { planTier: "free", planExpiresAt: null, updatedAt: new Date() },
+          $set: { planTier: "free", planExpiresAt: null, lsCancelledAt: null, updatedAt: new Date() },
         });
         logger.info({ subscriptionId: payload.data.id }, "ls subscription expired, downgraded");
       } else {
-        // cancelled but still in billing period — keep access, just log
+        const periodEnd = attrs.ends_at ?? attrs.renews_at;
+        const periodEndFormatted = periodEnd
+          ? new Date(periodEnd).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })
+          : "your next billing date";
+        await userCol().updateOne(filter, {
+          $set: { lsCancelledAt: periodEnd ?? null, updatedAt: new Date() },
+        });
         logger.info({ subscriptionId: payload.data.id }, "ls subscription cancelled, access until period end");
+        if (attrs.user_email && config.RESEND_API_KEY) {
+          const user = await userCol().findOne(filter as never);
+          const tier = (user as Record<string, unknown>)?.planTier as string ?? "paid";
+          sendEmail({
+            to: attrs.user_email,
+            subject: "Sorry to see you go — your access continues until " + periodEndFormatted,
+            html: subscriptionCancelledEmail({ name: attrs.user_name, tier, periodEnd: periodEndFormatted, appUrl: config.FRONTEND_URL }),
+          }).catch((err) => logger.error({ err }, "failed to send cancellation email"));
+        }
       }
       break;
     }

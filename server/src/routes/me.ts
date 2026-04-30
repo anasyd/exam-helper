@@ -29,6 +29,7 @@ meRouter.get("/", async (req, res) => {
     user: { id, email, emailVerified, name, image, createdAt },
     planTier: tier,
     planExpiresAt: dbUser?.planExpiresAt ?? null,
+    planCancelledAt: (dbUser as any)?.lsCancelledAt ?? null,
     usage: { projects: projectCount, limits },
   });
 });

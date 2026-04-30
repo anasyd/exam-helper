@@ -216,9 +216,16 @@ export default function SettingsPage() {
                       </Link>
                     </Button>
                   ) : meData.planTier !== "admin" ? (
-                    <Button variant="outline" size="sm" onClick={() => void handleManageSubscription()} disabled={portalLoading}>
-                      {portalLoading ? "Opening…" : "Manage subscription"}
-                    </Button>
+                    <div className="flex flex-col items-end gap-1">
+                      <Button variant="outline" size="sm" onClick={() => void handleManageSubscription()} disabled={portalLoading}>
+                        {portalLoading ? "Opening…" : "Manage subscription"}
+                      </Button>
+                      {meData.planCancelledAt && (
+                        <p className="text-xs text-muted-foreground">
+                          Cancels {new Date(meData.planCancelledAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
+                        </p>
+                      )}
+                    </div>
                   ) : null}
                 </div>
               </div>

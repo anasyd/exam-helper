@@ -144,6 +144,72 @@ ${ctaHtml}
 `);
 }
 
+export function subscriptionStartedEmail(opts: {
+  name?: string | null;
+  tier: string;
+  appUrl: string;
+}): string {
+  const greeting = opts.name ? `Hi ${opts.name},` : "Hi,";
+  const tierLabel = opts.tier.charAt(0).toUpperCase() + opts.tier.slice(1);
+  return wrap(`
+${LOGO}
+<h1 style="font-size:28px;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#f0ede6;">You're on ${tierLabel} — thank you!</h1>
+<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;">${greeting}</p>
+<p style="margin:0 0 20px;color:#c8c3b8;">Your ${tierLabel} plan is now active. Here's what you've unlocked:</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:24px;width:100%;">
+  <tr>
+    <td style="width:10px;vertical-align:middle;"><div style="width:6px;height:6px;background:#b8854a;border-radius:50%;"></div></td>
+    <td style="padding:10px 0 10px 12px;color:#c8c3b8;border-bottom:1px solid #2c2a26;">${opts.tier === "pro" ? "Unlimited projects" : "Up to 20 projects"}</td>
+  </tr>
+  <tr>
+    <td style="width:10px;vertical-align:middle;"><div style="width:6px;height:6px;background:#b8854a;border-radius:50%;"></div></td>
+    <td style="padding:10px 0 10px 12px;color:#c8c3b8;border-bottom:1px solid #2c2a26;">${opts.tier === "pro" ? "Up to 10 PDFs per project, 50 MB each" : "Up to 5 PDFs per project, 25 MB each"}</td>
+  </tr>
+  <tr>
+    <td style="width:10px;vertical-align:middle;"><div style="width:6px;height:6px;background:#b8854a;border-radius:50%;"></div></td>
+    <td style="padding:10px 0 10px 12px;color:#c8c3b8;">Priority support</td>
+  </tr>
+</table>
+<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+  <tr>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.appUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">Go to dashboard →</a>
+    </td>
+  </tr>
+</table>
+<div style="border-top:1px solid #2c2a26;padding-top:20px;font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#55534e;">
+  You're receiving this because you subscribed to exam-helper.
+</div>
+`);
+}
+
+export function subscriptionCancelledEmail(opts: {
+  name?: string | null;
+  tier: string;
+  periodEnd: string;
+  appUrl: string;
+}): string {
+  const greeting = opts.name ? `Hi ${opts.name},` : "Hi,";
+  const tierLabel = opts.tier.charAt(0).toUpperCase() + opts.tier.slice(1);
+  return wrap(`
+${LOGO}
+<h1 style="font-size:28px;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#f0ede6;">Sorry to see you go</h1>
+<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;">${greeting}</p>
+<p style="margin:0 0 20px;color:#c8c3b8;">Your ${tierLabel} subscription has been cancelled. You'll keep full access until <strong style="color:#f0ede6;">${opts.periodEnd}</strong>, after which your account moves to the free plan.</p>
+<p style="margin:0 0 20px;color:#c8c3b8;">Your projects and data are never deleted — they'll be waiting if you decide to come back.</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+  <tr>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.appUrl}/pricing" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">Resubscribe →</a>
+    </td>
+  </tr>
+</table>
+<div style="border-top:1px solid #2c2a26;padding-top:20px;font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#55534e;">
+  You're receiving this because you had a subscription on exam-helper.
+</div>
+`);
+}
+
 export function verificationEmail(opts: {
   name?: string | null;
   verifyUrl: string;
