@@ -72,43 +72,9 @@ services:
     environment:
       - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000}
       - NEXT_PUBLIC_BILLING_PROVIDER=${NEXT_PUBLIC_BILLING_PROVIDER}
-      - UMAMI_UPSTREAM_URL=http://telemetry:3000
     depends_on:
       server:
         condition: service_healthy
 
-  telemetry:
-    image: ghcr.io/umami-software/umami:postgresql-latest
-    restart: unless-stopped
-    environment:
-      - SERVICE_FQDN_TELEMETRY_3000
-      DATABASE_URL: postgresql://umami:${SERVICE_PASSWORD_TELEMETRYDB}@telemetry-db:5432/umami
-      APP_SECRET: ${SERVICE_PASSWORD_TELEMETRYAPP}
-    depends_on:
-      telemetry-db:
-        condition: service_healthy
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/heartbeat || exit 1"]
-      interval: 15s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
-  telemetry-db:
-    image: postgres:15-alpine
-    restart: unless-stopped
-    environment:
-      POSTGRES_DB: umami
-      POSTGRES_USER: umami
-      POSTGRES_PASSWORD: ${SERVICE_PASSWORD_TELEMETRYDB}
-    volumes:
-      - telemetry-db-data:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U umami"]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-
 volumes:
   mongo-data: {}
-  telemetry-db-data: {}

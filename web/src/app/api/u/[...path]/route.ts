@@ -1,6 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server";
 
-const UPSTREAM = process.env.UMAMI_UPSTREAM_URL ?? "https://cloud.umami.is";
+const UPSTREAM = "https://cloud.umami.is";
 
 async function proxy(req: NextRequest, path: string): Promise<NextResponse> {
   const ip =
