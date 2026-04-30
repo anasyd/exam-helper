@@ -12,7 +12,8 @@ if (typeof window !== "undefined" && KEY) {
     api_host: "/ph",
     ui_host: "https://eu.posthog.com",
     person_profiles: "identified_only",
-    capture_pageview: false, // fired manually on every route change below
+    persistence: "memory",        // no cookies, no localStorage — GDPR compliant without a consent banner
+    capture_pageview: false,
     capture_pageleave: true,
   });
 }
