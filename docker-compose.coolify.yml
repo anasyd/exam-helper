@@ -63,8 +63,6 @@ services:
       context: ./web
       args:
         NEXT_PUBLIC_AUTH_URL: ${SERVICE_URL_SERVER}
-        NEXT_PUBLIC_POSTHOG_KEY: ${NEXT_PUBLIC_POSTHOG_KEY}
-        NEXT_PUBLIC_POSTHOG_HOST: ${NEXT_PUBLIC_POSTHOG_HOST:-https://us.i.posthog.com}
     environment:
       # ── Auto-assigned domain ──────────────────────────────────────────────────
       - SERVICE_FQDN_WEB_3000=${SERVICE_FQDN_WEB_3000}
