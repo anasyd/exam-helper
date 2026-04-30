@@ -8,7 +8,7 @@ export function PerfObserver() {
       <Script
         src="/api/u/script.js"
         data-website-id="216497cd-cf5b-46f6-82ff-be37ddfe35d3"
-        data-host-url="/api/u"
+        data-host-url="https://cloud.umami.is"
         strategy="afterInteractive"
       />
       {/* eslint-disable-next-line @next/next/no-img-element */}
