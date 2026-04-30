@@ -117,6 +117,23 @@ export async function handleSwitch(req: Request, res: Response): Promise<void> {
   res.json({ ok: true });
 }
 
+export async function handleResume(req: Request, res: Response): Promise<void> {
+  const { userId } = req as unknown as AuthedRequest;
+  const user = await userCol().findOne(byId(userId));
+  const subscriptionId = (user as Record<string, unknown>)?.lsSubscriptionId as string | undefined;
+  if (!subscriptionId) {
+    res.status(400).json({ error: "No active subscription" });
+    return;
+  }
+  await lsRequest(`/subscriptions/${subscriptionId}`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      data: { type: "subscriptions", id: subscriptionId, attributes: { cancelled: false } },
+    }),
+  });
+  res.json({ ok: true });
+}
+
 export async function handlePortal(req: Request, res: Response): Promise<void> {
   const { userId } = req as unknown as AuthedRequest;
   const user = await userCol().findOne(byId(userId));
@@ -143,6 +160,8 @@ interface LsWebhookPayload {
       customer_id: number;
       user_email?: string;
       user_name?: string;
+      card_brand?: string | null;
+      card_last_four?: string | null;
       renews_at?: string | null;
       ends_at?: string | null;
       urls?: { customer_portal?: string };
@@ -202,6 +221,8 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
           planTier: tier,
           lsSubscriptionId: payload.data.id,
           lsCustomerPortalUrl: attrs.urls?.customer_portal ?? null,
+          lsCardBrand: attrs.card_brand ?? null,
+          lsCardLast4: attrs.card_last_four ?? null,
           updatedAt: new Date(),
         },
       });
@@ -227,6 +248,8 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
         $set: {
           planTier: tier,
           lsCustomerPortalUrl: attrs.urls?.customer_portal ?? null,
+          lsCardBrand: attrs.card_brand ?? null,
+          lsCardLast4: attrs.card_last_four ?? null,
           updatedAt: new Date(),
         },
       });

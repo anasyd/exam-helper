@@ -30,6 +30,8 @@ meRouter.get("/", async (req, res) => {
     planTier: tier,
     planExpiresAt: dbUser?.planExpiresAt ?? null,
     planCancelledAt: (dbUser as any)?.lsCancelledAt ?? null,
+    cardBrand: (dbUser as any)?.lsCardBrand ?? null,
+    cardLast4: (dbUser as any)?.lsCardLast4 ?? null,
     usage: { projects: projectCount, limits },
   });
 });

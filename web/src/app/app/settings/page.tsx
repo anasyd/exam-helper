@@ -46,6 +46,7 @@ export default function SettingsPage() {
   // Plan state
   const [cancelLoading, setCancelLoading] = useState(false);
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [resumeLoading, setResumeLoading] = useState(false);
 
   useEffect(() => {
     if (session.data?.user) {
@@ -98,6 +99,21 @@ export default function SettingsPage() {
   async function handleSignOut() {
     await authClient.signOut();
     router.replace("/");
+  }
+
+  async function handleResumeSubscription() {
+    setResumeLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/billing/resume`, { method: "PATCH", credentials: "include" });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) { toast.error(data.error ?? "Couldn't resume"); return; }
+      toast.success("Subscription resumed");
+      fetchMe().then(setMeData).catch(() => null);
+    } catch {
+      toast.error("Couldn't resume subscription");
+    } finally {
+      setResumeLoading(false);
+    }
   }
 
   async function handleCancelSubscription() {
@@ -246,6 +262,11 @@ export default function SettingsPage() {
                       {meData.usage.limits.pdfsPerProject} PDFs per project ·{" "}
                       {meData.usage.limits.maxFileSizeMb} MB max
                     </p>
+                    {meData.cardBrand && meData.cardLast4 && (
+                      <p className="text-xs text-muted-foreground mt-0.5 capitalize">
+                        {meData.cardBrand} •••• {meData.cardLast4}
+                      </p>
+                    )}
                     {meData.planCancelledAt && (
                       <p className="text-xs text-red-500 mt-1 font-medium">
                         Cancels {new Date(meData.planCancelledAt).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}
@@ -261,35 +282,36 @@ export default function SettingsPage() {
                     </Button>
                   ) : meData.planTier !== "admin" ? (
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Button variant="outline" size="sm" asChild>
-                        <Link href="/pricing">Change plan</Link>
-                      </Button>
-                      {!meData.planCancelledAt && (
-                        confirmCancel ? (
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs text-muted-foreground">Cancel at period end?</span>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => void handleCancelSubscription()}
-                              disabled={cancelLoading}
-                            >
-                              {cancelLoading ? "Cancelling…" : "Yes, cancel"}
-                            </Button>
-                            <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(false)}>
-                              Keep plan
-                            </Button>
-                          </div>
-                        ) : (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-muted-foreground hover:text-destructive"
-                            onClick={() => setConfirmCancel(true)}
-                          >
-                            Cancel subscription
+                      {meData.planCancelledAt ? (
+                        <>
+                          <Button size="sm" onClick={() => void handleResumeSubscription()} disabled={resumeLoading}>
+                            {resumeLoading ? "Resuming…" : "Resume subscription"}
                           </Button>
-                        )
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href="/pricing">Change plan</Link>
+                          </Button>
+                        </>
+                      ) : (
+                        <>
+                          <Button variant="outline" size="sm" asChild>
+                            <Link href="/pricing">Change plan</Link>
+                          </Button>
+                          {confirmCancel ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-muted-foreground">Cancel at period end?</span>
+                              <Button variant="destructive" size="sm" onClick={() => void handleCancelSubscription()} disabled={cancelLoading}>
+                                {cancelLoading ? "Cancelling…" : "Yes, cancel"}
+                              </Button>
+                              <Button variant="ghost" size="sm" onClick={() => setConfirmCancel(false)}>
+                                Keep plan
+                              </Button>
+                            </div>
+                          ) : (
+                            <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-destructive" onClick={() => setConfirmCancel(true)}>
+                              Cancel subscription
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
                   ) : null}

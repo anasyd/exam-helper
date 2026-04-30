@@ -40,6 +40,15 @@ billingRouter.delete("/cancel", async (req, res) => {
   res.status(503).json({ error: "No billing provider configured" });
 });
 
+// PATCH /api/billing/resume — undo a pending cancellation
+billingRouter.patch("/resume", async (req, res) => {
+  if (config.LS_API_KEY) {
+    const { handleResume } = await import("./lemonsqueezy.js");
+    return handleResume(req, res);
+  }
+  res.status(503).json({ error: "No billing provider configured" });
+});
+
 // PATCH /api/billing/switch — change plan (upgrade / downgrade)
 billingRouter.patch("/switch", async (req, res) => {
   if (config.LS_API_KEY) {
