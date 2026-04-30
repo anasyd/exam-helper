@@ -125,6 +125,8 @@ export default function AdminEmailPage() {
   const [unsubCount, setUnsubCount] = useState<number | null>(null);
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
+  const [ctaLabel, setCtaLabel] = useState("");
+  const [ctaUrl, setCtaUrl] = useState("");
   const [sending, setSending] = useState(false);
   const [result, setResult] = useState<{ sent: number; total: number } | null>(null);
 
@@ -149,12 +151,14 @@ export default function AdminEmailPage() {
     try {
       const data = await adminFetch<{ ok: boolean; sent: number; total: number }>(
         "/api/admin/email/broadcast",
-        { method: "POST", body: JSON.stringify({ subject, message }) },
+        { method: "POST", body: JSON.stringify({ subject, message, ctaLabel: ctaLabel || undefined, ctaUrl: ctaUrl || undefined }) },
       );
       setResult({ sent: data.sent, total: data.total });
       toast.success(`Sent to ${data.sent} of ${data.total} users`);
       setSubject("");
       setMessage("");
+      setCtaLabel("");
+      setCtaUrl("");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Send failed");
     } finally {
@@ -259,6 +263,25 @@ export default function AdminEmailPage() {
             />
           </div>
 
+          <div className="space-y-3">
+            <Label className="text-sm">CTA Button <span className="text-muted-foreground font-normal">(optional)</span></Label>
+            <div className="flex gap-2">
+              <Input
+                className="rounded-full"
+                placeholder="Button label, e.g. Check it out →"
+                value={ctaLabel}
+                onChange={(e) => setCtaLabel(e.target.value)}
+              />
+              <Input
+                className="rounded-full"
+                placeholder="https://…"
+                type="url"
+                value={ctaUrl}
+                onChange={(e) => setCtaUrl(e.target.value)}
+              />
+            </div>
+          </div>
+
           <Button type="submit" className="rounded-full" disabled={sending || recipientCount === null || recipientCount === 0}>
             {sending ? (
               <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Sending…</>
@@ -289,13 +312,18 @@ export default function AdminEmailPage() {
             </div>
             <div className="px-6 py-5">
               <p style={{ margin: "0 0 16px", fontSize: 13, color: "#b8854a", fontWeight: 700 }}>exam-helper</p>
-              <p style={{ margin: "0 0 16px", fontSize: 14, color: "#f0ede6" }}>Hi there,</p>
+              <p style={{ margin: "0 0 16px", fontSize: 14, color: "#f0ede6" }}>Hi {"{{name}}"},</p>
               {message ? (
                 <div style={{ fontSize: 14, lineHeight: 1.6 }}>
                   <EmailPreviewBody md={message} />
                 </div>
               ) : (
                 <p style={{ margin: 0, fontSize: 13, color: "#55534e", fontStyle: "italic" }}>Your message will appear here…</p>
+              )}
+              {ctaLabel && ctaUrl && (
+                <div style={{ margin: "20px 0" }}>
+                  <a href={ctaUrl} style={{ display: "inline-block", padding: "10px 24px", background: "#b8854a", color: "#fafaf7", textDecoration: "none", borderRadius: 24, fontSize: 13, fontWeight: 500, fontFamily: "system-ui,sans-serif" }}>{ctaLabel}</a>
+                </div>
               )}
               <div style={{ borderTop: "1px solid #2c2a26", paddingTop: 16, marginTop: 20, fontSize: 11, color: "#55534e" }}>
                 You&apos;re receiving this because you subscribed to exam-helper updates.

@@ -118,13 +118,25 @@ export function broadcastEmail(opts: {
   name?: string | null;
   message: string;
   unsubscribeUrl: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
 }): string {
   const greeting = opts.name ? `Hi ${opts.name},` : "Hi,";
   const bodyHtml = markdownToEmailHtml(opts.message);
+  const ctaHtml = opts.ctaLabel && opts.ctaUrl
+    ? `<table cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;">
+  <tr>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.ctaUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">${opts.ctaLabel}</a>
+    </td>
+  </tr>
+</table>`
+    : "";
   return wrap(`
 ${LOGO}
 <p style="margin:0 0 20px;color:#f0ede6;font-size:17px;">${greeting}</p>
 ${bodyHtml}
+${ctaHtml}
 <div style="border-top:1px solid #2c2a26;padding-top:20px;font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#55534e;">
   You're receiving this because you have an account on exam-helper. &nbsp;
   <a href="${opts.unsubscribeUrl}" style="color:#908e89;">Unsubscribe</a>

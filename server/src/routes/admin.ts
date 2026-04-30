@@ -122,7 +122,7 @@ adminRouter.delete("/users/:id", async (req, res) => {
 
 // POST /api/admin/email/broadcast — send email to all verified users
 adminRouter.post("/email/broadcast", async (req, res) => {
-  const { subject, message } = req.body ?? {};
+  const { subject, message, ctaLabel, ctaUrl } = req.body ?? {};
   if (!subject?.trim() || !message?.trim()) {
     res.status(400).json({ error: "subject and message are required" });
     return;
@@ -150,6 +150,8 @@ adminRouter.post("/email/broadcast", async (req, res) => {
           name: user.name as string,
           message: personalizedMessage,
           unsubscribeUrl: buildUnsubscribeUrl(userId),
+          ctaLabel: ctaLabel?.trim() || undefined,
+          ctaUrl: ctaUrl?.trim() || undefined,
         }),
       });
       sent++;
