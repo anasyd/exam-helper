@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -29,6 +29,12 @@ export default function SignInPage() {
 
   const anyLoading = emailLoading || googleLoading;
 
+  useEffect(() => {
+    const reset = (e: PageTransitionEvent) => { if (e.persisted) { setGoogleLoading(false); setEmailLoading(false); } };
+    window.addEventListener("pageshow", reset);
+    return () => window.removeEventListener("pageshow", reset);
+  }, []);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setEmailLoading(true);
@@ -47,10 +53,14 @@ export default function SignInPage() {
 
   async function handleGoogle() {
     setGoogleLoading(true);
-    await authClient.signIn.social({
-      provider: "google",
-      callbackURL: window.location.origin + "/app",
-    });
+    try {
+      await authClient.signIn.social({
+        provider: "google",
+        callbackURL: window.location.origin + "/app",
+      });
+    } finally {
+      setGoogleLoading(false);
+    }
   }
 
   return (
