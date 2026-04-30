@@ -96,10 +96,19 @@ adminRouter.post("/users", async (req, res) => {
 
 // PATCH /api/admin/users/:id — update a user's plan tier
 adminRouter.patch("/users/:id", async (req, res) => {
-  const { planTier, planExpiresAt } = req.body ?? {};
+  const { planTier, planExpiresAt, clearBilling } = req.body ?? {};
   const update: Record<string, unknown> = { updatedAt: new Date() };
   if (planTier !== undefined) update.planTier = planTier;
   if (planExpiresAt !== undefined) update.planExpiresAt = planExpiresAt;
+  if (clearBilling) {
+    update.planTier = "free";
+    update.planExpiresAt = null;
+    update.lsSubscriptionId = null;
+    update.lsCustomerPortalUrl = null;
+    update.lsCancelledAt = null;
+    update.stripeCustomerId = null;
+    update.stripeSubscriptionId = null;
+  }
 
   const result = await userCol().updateOne(byId(req.params.id), { $set: update });
   if (result.matchedCount === 0) {

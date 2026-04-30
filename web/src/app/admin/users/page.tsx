@@ -28,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Plus, Trash2, ChevronLeft, Mail, BarChart2 } from "lucide-react";
+import { Loader2, Plus, Trash2, X, ChevronLeft, Mail, BarChart2 } from "lucide-react";
 import { toast } from "sonner";
 import Link from "next/link";
 
@@ -130,6 +130,19 @@ export default function AdminUsersPage() {
       toast.success("Plan updated");
     } catch {
       toast.error("Failed to update plan");
+    }
+  };
+
+  const handleClearBilling = async (userId: string) => {
+    try {
+      await adminFetch(`/api/admin/users/${userId}`, {
+        method: "PATCH",
+        body: JSON.stringify({ clearBilling: true }),
+      });
+      setUsers((prev) => prev.map((u) => u.id === userId ? { ...u, planTier: "free" } : u));
+      toast.success("Billing data cleared");
+    } catch {
+      toast.error("Failed to clear billing");
     }
   };
 
@@ -252,16 +265,28 @@ export default function AdminUsersPage() {
                   {new Date(user.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-7 w-7 text-destructive hover:text-destructive"
-                    onClick={() => void handleDelete(user)}
-                    disabled={user.planTier === "admin"}
-                    title={user.planTier === "admin" ? "Cannot delete admin" : "Delete user"}
-                  >
-                    <Trash2 className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                      onClick={() => void handleClearBilling(user.id)}
+                      disabled={user.planTier === "admin" || user.planTier === "free"}
+                      title="Clear billing data — resets to free"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7 text-destructive hover:text-destructive"
+                      onClick={() => void handleDelete(user)}
+                      disabled={user.planTier === "admin"}
+                      title={user.planTier === "admin" ? "Cannot delete admin" : "Delete user"}
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </TableCell>
               </TableRow>
             ))}
