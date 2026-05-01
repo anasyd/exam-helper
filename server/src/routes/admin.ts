@@ -11,6 +11,21 @@ import { sendEmail } from "../email/resend.js";
 import { broadcastEmail } from "../email/templates.js";
 import { buildUnsubscribeUrl } from "./email-prefs.js";
 
+const LS_API_BASE = "https://api.lemonsqueezy.com/v1";
+async function lsCancelSubscription(subscriptionId: string): Promise<void> {
+  const res = await fetch(`${LS_API_BASE}/subscriptions/${subscriptionId}`, {
+    method: "DELETE",
+    headers: {
+      Authorization: `Bearer ${config.LS_API_KEY}`,
+      Accept: "application/vnd.api+json",
+    },
+  });
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new Error(`LS cancel failed ${res.status}: ${body}`);
+  }
+}
+
 export const adminRouter = Router();
 
 // Middleware: require authenticated admin
@@ -108,6 +123,23 @@ adminRouter.patch("/users/:id", async (req, res) => {
     update.lsCancelledAt = null;
     update.stripeCustomerId = null;
     update.stripeSubscriptionId = null;
+  }
+
+  // If downgrading to free, cancel any active LS subscription so they stop being charged
+  if (planTier === "free" && config.LS_API_KEY) {
+    const target = await userCol().findOne(byId(req.params.id));
+    const subscriptionId = (target as Record<string, unknown>)?.lsSubscriptionId as string | undefined;
+    if (subscriptionId) {
+      try {
+        await lsCancelSubscription(subscriptionId);
+        update.lsCancelledAt = null;
+        logger.info({ userId: req.params.id, subscriptionId }, "admin downgrade: cancelled LS subscription");
+      } catch (err) {
+        logger.error({ err, userId: req.params.id, subscriptionId }, "admin downgrade: failed to cancel LS subscription");
+        res.status(500).json({ error: "Failed to cancel subscription in Lemon Squeezy" });
+        return;
+      }
+    }
   }
 
   const result = await userCol().updateOne(byId(req.params.id), { $set: update });
