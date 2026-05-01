@@ -35,7 +35,7 @@ export async function handleCheckout(req: Request, res: Response): Promise<void>
     mode: "subscription",
     line_items: [{ price: priceId, quantity: 1 }],
     client_reference_id: userId,
-    metadata: { userId, tier },
+    metadata: { userId },
     allow_promotion_codes: true,
     success_url: `${config.FRONTEND_URL}/app?checkout=success`,
     cancel_url:  `${config.FRONTEND_URL}/pricing`,
@@ -85,8 +85,13 @@ async function handleEvent(event: Stripe.Event): Promise<void> {
     case "checkout.session.completed": {
       const session = event.data.object as Stripe.Checkout.Session;
       const userId = session.client_reference_id ?? session.metadata?.userId;
-      const tier   = session.metadata?.tier as Tier | undefined;
-      if (!userId || !tier) return;
+      if (!userId) return;
+      // Derive tier from the actual purchased price — never trust client-supplied metadata
+      const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+        expand: ["line_items"],
+      });
+      const tier = priceToTier(fullSession.line_items?.data[0]?.price?.id ?? "");
+      if (!tier) return;
       await userCol().updateOne(byId(userId), {
         $set: { planTier: tier, stripeCustomerId: session.customer as string, updatedAt: new Date() },
       });

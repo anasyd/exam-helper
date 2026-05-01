@@ -1,0 +1,14 @@
+{
+  "name": "exam-helper",
+  "short_name": "exam-helper",
+  "description": "Upload a PDF. Get flashcards, a study guide, and notes — powered by your own AI key.",
+  "icons": [
+    { "src": "/android-chrome-192x192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/android-chrome-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "theme_color": "#0e0e0c",
+  "background_color": "#0e0e0c",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
+}
