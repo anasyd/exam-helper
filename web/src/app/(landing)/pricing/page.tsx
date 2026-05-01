@@ -78,6 +78,21 @@ export default function PricingPage() {
   const currentTier = meData?.planTier ?? null;
   const PLAN_RANK: Record<string, number> = { free: 0, student: 1, pro: 2, admin: 3 };
 
+  async function handleDowngradeToFree() {
+    setLoading("free");
+    try {
+      const res = await fetch(`${BASE}/api/billing/cancel`, { method: "DELETE", credentials: "include" });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) { toast.error(data.error ?? "Couldn't cancel"); return; }
+      toast.success("Subscription cancelled — you keep access until the end of your billing period");
+      fetchMe().then(setMeData).catch(() => null);
+    } catch {
+      toast.error("Couldn't cancel subscription");
+    } finally {
+      setLoading(null);
+    }
+  }
+
   async function handleUpgrade(tier: "student" | "pro") {
     if (!session.data?.user) {
       router.push("/sign-in?redirect=/pricing");
@@ -211,11 +226,21 @@ export default function PricingPage() {
                 </ul>
 
                 {plan.id === "free" ? (
-                  <Button variant="outline" asChild>
-                    <Link href={session.data?.user ? "/app" : "/sign-up"}>
-                      {session.data?.user ? "Go to app" : "Get started free"}
-                    </Link>
-                  </Button>
+                  currentTier && currentTier !== "free" && currentTier !== "admin" ? (
+                    <Button
+                      variant="outline"
+                      disabled={loading !== null || !!meData?.planCancelledAt}
+                      onClick={() => void handleDowngradeToFree()}
+                    >
+                      {loading === "free" ? "Cancelling…" : meData?.planCancelledAt ? "Cancellation pending" : "Downgrade to free"}
+                    </Button>
+                  ) : (
+                    <Button variant="outline" asChild>
+                      <Link href={session.data?.user ? "/app" : "/sign-up"}>
+                        {session.data?.user ? "Go to app" : "Get started free"}
+                      </Link>
+                    </Button>
+                  )
                 ) : (
                   <Button
                     onClick={() => void handleUpgrade(plan.id)}
