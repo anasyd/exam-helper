@@ -108,12 +108,23 @@ export async function handleSwitch(req: Request, res: Response): Promise<void> {
     res.status(400).json({ error: "No active subscription" });
     return;
   }
+  const isCancelled = !!(user as Record<string, unknown>)?.lsCancelledAt;
   await lsRequest(`/subscriptions/${subscriptionId}`, {
     method: "PATCH",
     body: JSON.stringify({
-      data: { type: "subscriptions", id: subscriptionId, attributes: { variant_id: parseInt(variantId) } },
+      data: {
+        type: "subscriptions",
+        id: subscriptionId,
+        attributes: {
+          variant_id: parseInt(variantId),
+          ...(isCancelled ? { cancelled: false } : {}),
+        },
+      },
     }),
   });
+  if (isCancelled) {
+    await userCol().updateOne(byId(userId), { $set: { lsCancelledAt: null, updatedAt: new Date() } });
+  }
   res.json({ ok: true });
 }
 

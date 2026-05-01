@@ -78,6 +78,21 @@ export default function PricingPage() {
   const currentTier = meData?.planTier ?? null;
   const PLAN_RANK: Record<string, number> = { free: 0, student: 1, pro: 2, admin: 3 };
 
+  async function handleResume() {
+    setLoading("free"); // reuse loading slot as a generic "busy" flag
+    try {
+      const res = await fetch(`${BASE}/api/billing/resume`, { method: "PATCH", credentials: "include" });
+      const data = await res.json() as { ok?: boolean; error?: string };
+      if (!res.ok) { toast.error(data.error ?? "Couldn't resume"); return; }
+      toast.success("Subscription resumed");
+      fetchMe().then(setMeData).catch(() => null);
+    } catch {
+      toast.error("Couldn't resume subscription");
+    } finally {
+      setLoading(null);
+    }
+  }
+
   async function handleDowngradeToFree() {
     setLoading("free");
     try {
@@ -242,19 +257,29 @@ export default function PricingPage() {
                     </Button>
                   )
                 ) : (
-                  <Button
-                    onClick={() => void handleUpgrade(plan.id)}
-                    disabled={isCurrent || loading !== null}
-                    variant={isPopular ? "default" : "outline"}
-                  >
-                    {loading === plan.id
-                      ? (currentTier && currentTier !== "free" ? "Switching…" : "Redirecting…")
-                      : isCurrent
-                        ? "Current plan"
-                        : currentTier && currentTier !== "free"
-                          ? PLAN_RANK[plan.id] > PLAN_RANK[currentTier] ? "Upgrade" : "Downgrade"
-                          : "Get started"}
-                  </Button>
+                  isCurrent && meData?.planCancelledAt ? (
+                    <Button
+                      variant={isPopular ? "default" : "outline"}
+                      disabled={loading !== null}
+                      onClick={() => void handleResume()}
+                    >
+                      {loading === "free" ? "Resuming…" : "Resume subscription"}
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={() => void handleUpgrade(plan.id)}
+                      disabled={isCurrent || loading !== null}
+                      variant={isPopular ? "default" : "outline"}
+                    >
+                      {loading === plan.id
+                        ? (currentTier && currentTier !== "free" ? "Switching…" : "Redirecting…")
+                        : isCurrent
+                          ? "Current plan"
+                          : currentTier && currentTier !== "free"
+                            ? PLAN_RANK[plan.id] > PLAN_RANK[currentTier] ? "Upgrade" : "Downgrade"
+                            : "Get started"}
+                    </Button>
+                  )
                 )}
               </div>
             );
