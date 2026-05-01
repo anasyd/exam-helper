@@ -7,6 +7,7 @@ import { Sun, Moon } from "lucide-react";
 import { AuthDropdown } from "@/components/auth/auth-dropdown";
 import { LogoIcon } from "@/components/logo-icon";
 import { useSession } from "@/lib/auth/client";
+import { BILLING_ENABLED } from "@/lib/billing";
 
 function ThemeToggle() {
   const { resolvedTheme, setTheme } = useTheme();
@@ -39,6 +40,14 @@ export function LandingNav() {
           <span>exam-helper</span>
         </Link>
         <div className="flex items-center gap-2">
+          {BILLING_ENABLED && (
+            <Link
+              href="/pricing"
+              className="hidden md:inline-flex text-sm px-3 py-1.5 rounded-sm text-[color:var(--nav-icon)] hover:text-[color:var(--nav-ink)] transition-colors"
+            >
+              Pricing
+            </Link>
+          )}
           <a
             href="https://github.com/anasyd/exam-helper"
             target="_blank"
