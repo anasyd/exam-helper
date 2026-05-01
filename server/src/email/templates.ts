@@ -210,6 +210,31 @@ ${LOGO}
 `);
 }
 
+export function subscriptionResumedEmail(opts: {
+  name?: string | null;
+  tier: string;
+  appUrl: string;
+}): string {
+  const greeting = opts.name ? `Hi ${opts.name},` : "Hi,";
+  const tierLabel = opts.tier.charAt(0).toUpperCase() + opts.tier.slice(1);
+  return wrap(`
+${LOGO}
+<h1 style="font-size:28px;font-weight:400;letter-spacing:-0.01em;margin:0 0 20px;color:#f0ede6;">Welcome back!</h1>
+<p style="margin:0 0 12px;color:#f0ede6;font-size:17px;">${greeting}</p>
+<p style="margin:0 0 20px;color:#c8c3b8;">Your ${tierLabel} subscription has been resumed. Your next renewal is back on schedule — no action needed.</p>
+<table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
+  <tr>
+    <td style="border-radius:24px;background-color:#b8854a;">
+      <a href="${opts.appUrl}" style="display:inline-block;padding:12px 28px;color:#fafaf7;text-decoration:none;font-family:-apple-system,system-ui,sans-serif;font-size:14px;font-weight:500;border-radius:24px;">Go to dashboard →</a>
+    </td>
+  </tr>
+</table>
+<div style="border-top:1px solid #2c2a26;padding-top:20px;font-family:-apple-system,system-ui,sans-serif;font-size:12px;color:#55534e;">
+  You're receiving this because you reactivated your exam-helper subscription.
+</div>
+`);
+}
+
 export function verificationEmail(opts: {
   name?: string | null;
   verifyUrl: string;

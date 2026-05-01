@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { fromNodeHeaders } from "better-auth/node";
 import { auth } from "../auth.js";
-import { db, userCol, byId } from "../db.js";
+import { db, userCol, byId, filesBucket, contentCol, jobsCol } from "../db.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 import { config } from "../config.js";
 import { sendEmail } from "../email/resend.js";
 import { welcomeEmail } from "../email/templates.js";
+import { logger } from "../logger.js";
 
 export const meRouter = Router();
 
@@ -78,4 +79,40 @@ meRouter.patch("/email-prefs", async (req, res) => {
     await userCol().updateOne(byId(session.user.id), update as any);
   }
   res.json({ ok: true });
+});
+
+// DELETE /api/me — permanently delete the authenticated user's account and all data
+meRouter.delete("/", async (req, res) => {
+  const session = await auth.api.getSession({ headers: fromNodeHeaders(req.headers) });
+  if (!session?.user) { res.status(401).json({}); return; }
+  const userId = session.user.id;
+
+  try {
+    // Collect project IDs to delete content + files scoped to them
+    const projects = await db().collection("projects").find({ userId }, { projection: { id: 1 } }).toArray();
+    const projectIds = projects.map((p) => (p as any).id as string);
+
+    await Promise.all([
+      // User record + auth accounts
+      userCol().deleteOne(byId(userId)),
+      db().collection("account").deleteMany({ userId }),
+      db().collection("session").deleteMany({ userId }),
+      // Projects and their content
+      db().collection("projects").deleteMany({ userId }),
+      contentCol().deleteMany({ userId }),
+      // Jobs
+      jobsCol().deleteMany({ userId }),
+    ]);
+
+    // Delete all GridFS files for this user
+    const bucket = filesBucket();
+    const files = await bucket.find({ "metadata.userId": userId }).toArray();
+    await Promise.all(files.map((f) => bucket.delete(f._id)));
+
+    logger.info({ userId, projectCount: projectIds.length, fileCount: files.length }, "user account deleted");
+    res.json({ ok: true });
+  } catch (err) {
+    logger.error({ err, userId }, "failed to delete account");
+    res.status(500).json({ error: "Failed to delete account" });
+  }
 });

@@ -6,7 +6,7 @@ import { logger } from "../logger.js";
 import type { AuthedRequest } from "../middleware/auth-guard.js";
 import type { Tier } from "../tiers.js";
 import { sendEmail } from "../email/resend.js";
-import { subscriptionStartedEmail, subscriptionCancelledEmail } from "../email/templates.js";
+import { subscriptionStartedEmail, subscriptionCancelledEmail, subscriptionResumedEmail } from "../email/templates.js";
 
 const LS_API_BASE = "https://api.lemonsqueezy.com/v1";
 
@@ -131,6 +131,15 @@ export async function handleResume(req: Request, res: Response): Promise<void> {
       data: { type: "subscriptions", id: subscriptionId, attributes: { cancelled: false } },
     }),
   });
+  await userCol().updateOne(byId(userId), { $set: { lsCancelledAt: null, updatedAt: new Date() } });
+  if (config.RESEND_API_KEY && user) {
+    const tier = (user as Record<string, unknown>)?.planTier as string ?? "paid";
+    sendEmail({
+      to: (user as Record<string, unknown>).email as string,
+      subject: "Your subscription is back on — welcome back!",
+      html: subscriptionResumedEmail({ name: (user as Record<string, unknown>).name as string | null, tier, appUrl: config.FRONTEND_URL }),
+    }).catch((err) => logger.error({ err }, "failed to send resume email"));
+  }
   res.json({ ok: true });
 }
 
@@ -227,9 +236,11 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
         },
       });
       logger.info({ userId, email: attrs.user_email, tier }, "ls subscription created");
-      if (attrs.user_email && config.RESEND_API_KEY) {
-        sendEmail({
-          to: attrs.user_email,
+      if (config.RESEND_API_KEY) {
+        const createdUser = await userCol().findOne(filter as never);
+        const toEmail = (createdUser as Record<string, unknown>)?.email as string | undefined ?? attrs.user_email;
+        if (toEmail) sendEmail({
+          to: toEmail,
           subject: `You're on ${tier.charAt(0).toUpperCase() + tier.slice(1)} — thank you!`,
           html: subscriptionStartedEmail({ name: attrs.user_name, tier, appUrl: config.FRONTEND_URL }),
         }).catch((err) => logger.error({ err }, "failed to send subscription started email"));
@@ -244,15 +255,16 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
         : ({ lsSubscriptionId: payload.data.id } as never);
       const tier = variantToTier(attrs.variant_id);
       if (!tier) return;
-      await userCol().updateOne(filter, {
-        $set: {
-          planTier: tier,
-          lsCustomerPortalUrl: attrs.urls?.customer_portal ?? null,
-          lsCardBrand: attrs.card_brand ?? null,
-          lsCardLast4: attrs.card_last_four ?? null,
-          updatedAt: new Date(),
-        },
-      });
+      const updateFields: Record<string, unknown> = {
+        planTier: tier,
+        lsCustomerPortalUrl: attrs.urls?.customer_portal ?? null,
+        lsCardBrand: attrs.card_brand ?? null,
+        lsCardLast4: attrs.card_last_four ?? null,
+        updatedAt: new Date(),
+      };
+      // If LS reports subscription is active again (not cancelled), clear the cancelled date
+      if (attrs.status === "active") updateFields.lsCancelledAt = null;
+      await userCol().updateOne(filter, { $set: updateFields });
       logger.info({ subscriptionId: payload.data.id, tier }, "ls subscription updated");
       break;
     }
@@ -277,11 +289,12 @@ async function handleEvent(payload: LsWebhookPayload): Promise<void> {
           $set: { lsCancelledAt: periodEnd ?? null, updatedAt: new Date() },
         });
         logger.info({ subscriptionId: payload.data.id }, "ls subscription cancelled, access until period end");
-        if (attrs.user_email && config.RESEND_API_KEY) {
+        if (config.RESEND_API_KEY) {
           const user = await userCol().findOne(filter as never);
           const tier = (user as Record<string, unknown>)?.planTier as string ?? "paid";
-          sendEmail({
-            to: attrs.user_email,
+          const toEmail = (user as Record<string, unknown>)?.email as string | undefined ?? attrs.user_email;
+          if (toEmail) sendEmail({
+            to: toEmail,
             subject: "Sorry to see you go — your access continues until " + periodEndFormatted,
             html: subscriptionCancelledEmail({ name: attrs.user_name, tier, periodEnd: periodEndFormatted, appUrl: config.FRONTEND_URL }),
           }).catch((err) => logger.error({ err }, "failed to send cancellation email"));

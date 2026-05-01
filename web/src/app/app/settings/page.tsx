@@ -48,6 +48,10 @@ export default function SettingsPage() {
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [resumeLoading, setResumeLoading] = useState(false);
 
+  // Delete account state
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+
   useEffect(() => {
     if (session.data?.user) {
       setName(session.data.user.name ?? "");
@@ -99,6 +103,21 @@ export default function SettingsPage() {
   async function handleSignOut() {
     await authClient.signOut();
     router.replace("/");
+  }
+
+  async function handleDeleteAccount() {
+    setDeleteLoading(true);
+    try {
+      const res = await fetch(`${BASE}/api/me`, { method: "DELETE", credentials: "include" });
+      if (!res.ok) { toast.error("Failed to delete account"); return; }
+      await authClient.signOut();
+      router.replace("/");
+    } catch {
+      toast.error("Failed to delete account");
+    } finally {
+      setDeleteLoading(false);
+      setConfirmDelete(false);
+    }
   }
 
   async function handleResumeSubscription() {
@@ -193,10 +212,30 @@ export default function SettingsPage() {
                   </Button>
                 </form>
 
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t space-y-6">
                   <Button variant="outline" size="sm" onClick={() => void handleSignOut()}>
                     Sign out
                   </Button>
+
+                  <div className="pt-4 border-t">
+                    <p className="text-sm font-medium text-destructive mb-1">Danger zone</p>
+                    <p className="text-xs text-muted-foreground mb-3">Permanently delete your account, all projects, and all files. This cannot be undone.</p>
+                    {confirmDelete ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-muted-foreground">Are you sure? This is permanent.</span>
+                        <Button variant="destructive" size="sm" onClick={() => void handleDeleteAccount()} disabled={deleteLoading}>
+                          {deleteLoading ? "Deleting…" : "Yes, delete everything"}
+                        </Button>
+                        <Button variant="ghost" size="sm" onClick={() => setConfirmDelete(false)}>
+                          Cancel
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button variant="outline" size="sm" className="text-destructive border-destructive/40 hover:bg-destructive/10 hover:text-destructive" onClick={() => setConfirmDelete(true)}>
+                        Delete account
+                      </Button>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
