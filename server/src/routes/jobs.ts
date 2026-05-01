@@ -45,6 +45,16 @@ jobsRouter.post("/", async (req, res) => {
     return;
   }
 
+  if (typeof modelId !== "string" || modelId.length > 128 || !/^[\w\-.:\/]+$/.test(modelId)) {
+    res.status(400).json({ error: "Invalid modelId" });
+    return;
+  }
+
+  if (typeof pdfContent !== "string" || pdfContent.length > 500_000) {
+    res.status(400).json({ error: "pdfContent too large" });
+    return;
+  }
+
   const job = {
     userId,
     projectId,

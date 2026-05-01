@@ -127,6 +127,20 @@ projectsRouter.post("/batch", async (req, res) => {
     return;
   }
 
+  // Enforce tier project limit — only allow up to remaining slots
+  const user = await userCol().findOne(byId(userId));
+  const tier = ((user?.planTier as Tier) ?? "free");
+  const limit = TIER_LIMITS[tier].projects;
+  if (limit !== Infinity) {
+    const existing = await col().countDocuments({ userId });
+    const slots = Math.max(0, limit - existing);
+    if (slots === 0) {
+      res.status(403).json({ code: "PROJECT_LIMIT", limit });
+      return;
+    }
+    projects.splice(slots); // truncate to available slots
+  }
+
   const projectOps = [];
   const contentOps = [];
 

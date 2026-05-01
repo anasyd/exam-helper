@@ -2,7 +2,7 @@ import { Router } from "express";
 import multer from "multer";
 import { ObjectId } from "mongodb";
 import { requireAuth, type AuthedRequest } from "../middleware/auth-guard.js";
-import { filesBucket, userCol } from "../db.js";
+import { filesBucket, userCol, byId } from "../db.js";
 import { logger } from "../logger.js";
 import { TIER_LIMITS, type Tier } from "../tiers.js";
 
@@ -38,7 +38,7 @@ filesRouter.post("/upload", upload.single("file"), async (req, res) => {
   const projectId = req.body?.projectId as string | undefined;
 
   // Resolve tier limits
-  const user = await userCol().findOne({ id: userId });
+  const user = await userCol().findOne(byId(userId));
   const tier = ((user?.planTier as Tier) ?? "free");
   const limits = TIER_LIMITS[tier];
 

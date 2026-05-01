@@ -111,6 +111,9 @@ adminRouter.post("/users", async (req, res) => {
 
 // PATCH /api/admin/users/:id — update a user's plan tier
 adminRouter.patch("/users/:id", async (req, res) => {
+  let targetId;
+  try { targetId = byId(req.params.id); } catch { res.status(400).json({ error: "Invalid user ID" }); return; }
+
   const { planTier, planExpiresAt, clearBilling } = req.body ?? {};
   const update: Record<string, unknown> = { updatedAt: new Date() };
   if (planTier !== undefined) update.planTier = planTier;
@@ -127,7 +130,7 @@ adminRouter.patch("/users/:id", async (req, res) => {
 
   // If downgrading to free, cancel any active LS subscription so they stop being charged
   if (planTier === "free" && config.LS_API_KEY) {
-    const target = await userCol().findOne(byId(req.params.id));
+    const target = await userCol().findOne(targetId);
     const subscriptionId = (target as Record<string, unknown>)?.lsSubscriptionId as string | undefined;
     if (subscriptionId) {
       try {
@@ -142,7 +145,7 @@ adminRouter.patch("/users/:id", async (req, res) => {
     }
   }
 
-  const result = await userCol().updateOne(byId(req.params.id), { $set: update });
+  const result = await userCol().updateOne(targetId, { $set: update });
   if (result.matchedCount === 0) {
     res.status(404).json({ error: "User not found" });
     return;
@@ -152,7 +155,9 @@ adminRouter.patch("/users/:id", async (req, res) => {
 
 // DELETE /api/admin/users/:id — remove a user
 adminRouter.delete("/users/:id", async (req, res) => {
-  const result = await userCol().deleteOne(byId(req.params.id));
+  let deleteId;
+  try { deleteId = byId(req.params.id); } catch { res.status(400).json({ error: "Invalid user ID" }); return; }
+  const result = await userCol().deleteOne(deleteId);
   if (result.deletedCount === 0) {
     res.status(404).json({ error: "User not found" });
     return;

@@ -1,4 +1,5 @@
 import express from "express";
+import rateLimit from "express-rate-limit";
 import { toNodeHandler } from "better-auth/node";
 import { config } from "./config.js";
 import { logger } from "./logger.js";
@@ -52,6 +53,13 @@ async function main(): Promise<void> {
   initKeys();
   startWorker();
 
+  if (config.LS_API_KEY && !config.LS_WEBHOOK_SECRET) {
+    logger.warn("LS_API_KEY is set but LS_WEBHOOK_SECRET is missing — subscription webhooks will not be processed");
+  }
+  if (config.STRIPE_SECRET_KEY && !config.STRIPE_WEBHOOK_SECRET) {
+    logger.warn("STRIPE_SECRET_KEY is set but STRIPE_WEBHOOK_SECRET is missing — subscription webhooks will not be processed");
+  }
+
   await autoCreateAdmin();
 
   const app = express();
@@ -83,6 +91,9 @@ async function main(): Promise<void> {
     app.use("/api/billing", billingRouter);
   }
 
+  const jobsLimiter = rateLimit({ windowMs: 60_000, limit: 10, standardHeaders: true, legacyHeaders: false });
+  const checkoutLimiter = rateLimit({ windowMs: 60_000, limit: 5, standardHeaders: true, legacyHeaders: false });
+
   app.use("/api/setup", setupRouter);
   app.use("/api/health", healthRouter);
   app.use("/api/me", meRouter);
@@ -92,7 +103,11 @@ async function main(): Promise<void> {
   app.use("/api/admin", adminRouter);
   app.use("/api/email", emailPrefsRouter);
   app.use("/api/demo", demoRouter);
+  app.post("/api/jobs", jobsLimiter);
   app.use("/api/jobs", jobsRouter);
+  if (config.STRIPE_SECRET_KEY || config.LS_API_KEY) {
+    app.post("/api/billing/checkout", checkoutLimiter);
+  }
 
   app.use(errorHandler);
 
