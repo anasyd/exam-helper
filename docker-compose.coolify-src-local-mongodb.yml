@@ -1,8 +1,9 @@
-# Build-from-source compose — both server and web are built on the host.
-# Use this instead of docker-compose.coolify.yml if you want to always run
-# the latest code without waiting for a GHCR release to be tagged and pushed.
+# Coolify source build with MongoDB 8 in a local volume.
+# Use this when you want the latest source without waiting for a GHCR release.
+# For Atlas/external MongoDB with the same source-build strategy, use
+# docker-compose.coolify-src-atlas.yml.
 #
-# In Coolify: set Compose file path to docker-compose.build.yml
+# In Coolify: set the Compose file path to this file.
 
 services:
   mongo:

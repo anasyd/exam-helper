@@ -70,7 +70,9 @@ In your DNS provider:
 
 1. In Coolify → **New Resource → Docker Compose**
 2. Connect your forked repo (or use the upstream `anasyd/exam-helper`)
-3. Set **Compose file path** to `docker-compose.coolify.yml`
+3. Set **Compose file path** to `docker-compose.coolify-src-atlas.yml`
+
+This choice builds both app services from source and uses Atlas via `MONGODB_URI`; it does not start a local MongoDB container. See [Compose file choices](#compose-file-choices) if you prefer a bundled database or prebuilt server image.
 
 ### 4c. Configure domains in Coolify
 
@@ -110,22 +112,18 @@ https://yourdomain.com                  → landing page loads
 
 ---
 
-## Building from source (optional)
+## Compose file choices
 
-If you prefer to build the images yourself instead of pulling from GHCR, swap the `image:` lines in `docker-compose.coolify.yml` for `build:` directives:
+Choose the file that matches both how you want to get the app images and where you want MongoDB to run:
 
-```yaml
-services:
-  server:
-    build:
-      context: ./server
-    # image: ghcr.io/anasyd/exam-helper-server:latest  ← remove this
+| Compose file | App services | Database | Use it when |
+|---|---|---|---|
+| `docker-compose.yml` | Pulls the latest server and web images from GHCR | Local MongoDB 8 container with a named volume | Running the standard stack with Docker Compose outside Coolify |
+| `docker-compose.coolify-release-api-local-mongodb.yml` | Uses the pinned GHCR server image; builds the web app from source | Local MongoDB 8 container with a named volume | You want Coolify-generated settings and a release server image |
+| `docker-compose.coolify-src-local-mongodb.yml` | Builds server and web from source | Local MongoDB 8 container with a named volume | You want source builds and a database on the same server |
+| `docker-compose.coolify-src-atlas.yml` | Builds server and web from source | External MongoDB, such as Atlas; no local MongoDB service or volume | You want source builds and a managed database |
 
-  web:
-    build:
-      context: ./web
-    # image: ghcr.io/anasyd/exam-helper-web:latest  ← remove this
-```
+The Atlas file requires `MONGODB_URI`. The local-Mongo files use their own MongoDB service and persistent volume instead; do not set `MONGODB_URI` to Atlas when choosing one of those files.
 
 ---
 

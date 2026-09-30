@@ -1,5 +1,6 @@
-# Build-from-source Compose for deployments using an external MongoDB service.
-# Set MONGODB_URI in the deployment environment (for example, a MongoDB Atlas URI).
+# Coolify: build the server and web from source; use MongoDB Atlas.
+# This file has no local MongoDB container or database volume. Set MONGODB_URI
+# in the deployment environment (for example, a MongoDB Atlas URI).
 
 services:
   server:

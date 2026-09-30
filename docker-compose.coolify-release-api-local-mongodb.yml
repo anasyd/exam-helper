@@ -1,3 +1,7 @@
+# Coolify: use the pinned GHCR server release, build the web app from source,
+# and run MongoDB 8 in a local volume. For both app services built from source,
+# use docker-compose.coolify-src-local-mongodb.yml or its Atlas variant.
+
 services:
   mongo:
     image: mongo:8

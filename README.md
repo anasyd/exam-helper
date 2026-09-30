@@ -56,7 +56,7 @@
 - **Sync across devices** — projects, flashcards, and study guides synced via your account.
 - **Auth built in** — email/password + Google OAuth, password reset, email verification.
 - **Tier system** — Free, Student, and Pro plans with enforced project and file limits.
-- **Self-hostable** — single Docker Compose file, deploys to [Coolify](https://coolify.io) in minutes. MongoDB included.
+- **Self-hostable** — Docker Compose options for bundled MongoDB or MongoDB Atlas; deploys to [Coolify](https://coolify.io) in minutes.
 - **Registration control** — `REGISTRATION_MODE=invite-only` locks signups; admin creates accounts manually.
 
 ---
@@ -87,7 +87,7 @@ exam-helper/
 
 ## Self-hosting
 
-See **[docs/self-hosting.md](docs/self-hosting.md)** for the full Coolify deployment guide — auto-generated secrets, one-compose setup, smoke-test checklist.
+See **[docs/self-hosting.md](docs/self-hosting.md)** for the Coolify deployment guide, Compose file comparison, generated secrets, and smoke-test checklist.
 
 ---
 

@@ -1,3 +1,7 @@
+# Standard Docker Compose deployment: latest GHCR app images + bundled MongoDB 8.
+# For Coolify-specific variables or an external MongoDB/Atlas database, see the
+# corresponding docker-compose.coolify-*.yml variant.
+
 services:
   mongo:
     image: mongo:8

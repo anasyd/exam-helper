@@ -32,7 +32,7 @@ const FAQS = [
   },
   {
     q: "Can I self-host it?",
-    a: "Yes. A single Docker Compose file spins up the full stack — app, API server, and MongoDB. Deploy to any VPS, Coolify, or Portainer instance. See the self-hosting guide in the GitHub repo.",
+    a: "Yes. Docker Compose can run the full stack — web app, API server, and either bundled MongoDB or MongoDB Atlas. Deploy to any VPS, Coolify, or Portainer instance. See the self-hosting guide in the GitHub repo.",
   },
 ];
 

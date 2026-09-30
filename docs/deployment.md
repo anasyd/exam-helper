@@ -1,6 +1,6 @@
 # Deployment Guide
 
-> **Self-hosting the full stack?** See [self-hosting.md](self-hosting.md) for the Docker Compose + Coolify guide — auto-generated secrets, one-compose setup, no Vercel required.
+> **Self-hosting the full stack?** See [self-hosting.md](self-hosting.md) for the Docker Compose + Coolify guide, including the bundled-MongoDB and Atlas options. No Vercel required.
 
 This guide covers the split deployment: frontend on **Vercel**, backend on **Coolify** (your own server).
 

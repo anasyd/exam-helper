@@ -2,16 +2,7 @@ const LOGO = `
 <table cellpadding="0" cellspacing="0" border="0" style="margin-bottom:28px;">
   <tr>
     <td style="vertical-align:middle;padding-right:8px;">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="22" height="22" aria-hidden="true">
-        <defs>
-          <linearGradient id="lbar" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e8b870"/><stop offset="100%" stop-color="#8a5020"/></linearGradient>
-          <radialGradient id="ldot" cx="50%" cy="50%" r="50%"><stop offset="0%" stop-color="#fff4d6"/><stop offset="60%" stop-color="#fcd98a"/><stop offset="100%" stop-color="#c99252"/></radialGradient>
-        </defs>
-        <rect x="4" y="5.5" width="24" height="5" rx="2.5" fill="url(#lbar)"/>
-        <rect x="4" y="13.5" width="16" height="5" rx="2.5" fill="url(#lbar)"/>
-        <rect x="4" y="21.5" width="24" height="5" rx="2.5" fill="url(#lbar)"/>
-        <circle cx="24" cy="16" r="3.8" fill="url(#ldot)"/>
-      </svg>
+      <img src="https://examhelper.app/icon.png" width="22" height="22" alt="exam-helper" style="display:block;border:0;"/>
     </td>
     <td style="vertical-align:middle;font-size:13px;letter-spacing:0.1em;text-transform:uppercase;color:#b8854a;font-family:-apple-system,system-ui,sans-serif;">
       exam-helper
