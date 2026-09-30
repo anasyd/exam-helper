@@ -14,7 +14,7 @@ if (typeof window !== "undefined") {
 async function extractTextFromPDF(file: File): Promise<string> {
   try {
     const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjs.getDocument(arrayBuffer).promise;
+    const pdf = await pdfjs.getDocument({ data: new Uint8Array(arrayBuffer) }).promise;
     let fullText = "";
 
     for (let i = 1; i <= pdf.numPages; i++) {

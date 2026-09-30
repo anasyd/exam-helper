@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM node:20-slim AS build
+FROM node:24-slim AS build
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci --include=dev
@@ -10,7 +10,7 @@ ARG NEXT_PUBLIC_AUTH_URL
 ENV NEXT_PUBLIC_AUTH_URL=$NEXT_PUBLIC_AUTH_URL
 RUN npm run build
 
-FROM node:20-slim AS runner
+FROM node:24-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1

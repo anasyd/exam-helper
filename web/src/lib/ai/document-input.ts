@@ -29,7 +29,7 @@ export async function rasterizePdfPages(
 ): Promise<{ mimeType: "image/png"; data: Uint8Array }[]> {
   const maxPages = opts.maxPages ?? DEFAULT_MAX_PAGES;
   const pdfjs = await loadPdfjs();
-  const pdf = await pdfjs.getDocument(bytes).promise;
+  const pdf = await pdfjs.getDocument({ data: Uint8Array.from(bytes) }).promise;
   const pageCount = Math.min(pdf.numPages, maxPages);
   const images: { mimeType: "image/png"; data: Uint8Array }[] = [];
 
@@ -56,7 +56,7 @@ export async function rasterizePdfPages(
 // Text extraction fallback (same impl as src/lib/document-service.ts, duplicated to avoid cycle).
 async function extractPdfText(bytes: Uint8Array): Promise<string> {
   const pdfjs = await loadPdfjs();
-  const pdf = await pdfjs.getDocument(bytes).promise;
+  const pdf = await pdfjs.getDocument({ data: Uint8Array.from(bytes) }).promise;
   let full = "";
   for (let i = 1; i <= pdf.numPages; i++) {
     const page = await pdf.getPage(i);
