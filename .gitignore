@@ -55,3 +55,4 @@ docker-compose.*.anasyd.yml
 
 # promotion materials (private)
 promo/
+examhelper.env
