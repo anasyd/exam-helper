@@ -108,3 +108,7 @@ cp .env.example .env.local   # defaults work for local dev
 npm install
 npm run dev                  # http://localhost:3000
 ```
+
+## Adaptive revision practice
+
+Optional Gemini BYOK practice sessions use one Google ADK TypeScript agent with grounded feedback and saved progress. Enable `ADAPTIVE_PRACTICE_ENABLED=true` on the backend. See the [setup, architecture, demo and evaluation guide](docs/adaptive-practice.md).

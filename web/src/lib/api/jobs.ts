@@ -40,7 +40,7 @@ function pemToDer(pem: string): ArrayBuffer {
   return bytes.buffer;
 }
 
-async function encryptWithPublicKey(publicKeyPem: string, plaintext: string): Promise<string> {
+export async function encryptWithPublicKey(publicKeyPem: string, plaintext: string): Promise<string> {
   const pubKey = await crypto.subtle.importKey(
     "spki",
     pemToDer(publicKeyPem),
@@ -61,7 +61,7 @@ async function encryptWithPublicKey(publicKeyPem: string, plaintext: string): Pr
 
 let _cachedPublicKey: string | null = null;
 
-async function getPublicKey(): Promise<string> {
+export async function getPublicKey(): Promise<string> {
   if (_cachedPublicKey) return _cachedPublicKey;
   const res = await fetch(`${BASE}/api/jobs/pubkey`, { credentials: "include" });
   if (!res.ok) throw new Error(`Failed to fetch public key: HTTP ${res.status}`);

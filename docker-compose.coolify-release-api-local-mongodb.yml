@@ -24,6 +24,7 @@ services:
     image: ghcr.io/anasyd/exam-helper-server:1.4.0
     environment:
       - NODE_ENV=production
+      - ADAPTIVE_PRACTICE_ENABLED=${ADAPTIVE_PRACTICE_ENABLED:-false}
 
       # ── Manual secret — generate once: openssl rand -base64 32, paste in Coolify ─
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}

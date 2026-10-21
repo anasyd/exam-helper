@@ -2,6 +2,7 @@ import "dotenv/config";
 import { z } from "zod";
 
 const schema = z.object({
+  ADAPTIVE_PRACTICE_ENABLED: z.string().default("false").transform(v => v === "true"),
   PORT: z.string().default("4000").transform(Number),
   NODE_ENV: z.enum(["development", "production"]).default("development"),
 

@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useFlashcardStore, Project as ProjectType } from "@/lib/store"; // Import Project type
+import { AdaptivePractice } from "@/components/adaptive-practice";
 import { DocumentUpload } from "@/components/document-upload";
 import { ProjectFileList } from "@/components/project-file-list";
 import { FlashcardSession } from "@/components/flashcard-session";
@@ -1139,6 +1140,7 @@ export function ProjectView() {
         </div>
       </div>
       <div className="container mx-auto py-6 px-4">
+        <AdaptivePractice key={activeProject.id} project={activeProject} />
         {/* Tab bar */}
         <div className="mb-6 flex justify-center">
           <div className="border rounded-full p-1 inline-flex overflow-x-auto scrollbar-none gap-1">

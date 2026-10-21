@@ -2,7 +2,7 @@ import { Resend } from "resend";
 import { config } from "../config.js";
 import { logger } from "../logger.js";
 
-const client = new Resend(config.RESEND_API_KEY);
+const client = config.RESEND_API_KEY ? new Resend(config.RESEND_API_KEY) : null;
 
 export interface SendEmailOpts {
   to: string;
@@ -12,6 +12,7 @@ export interface SendEmailOpts {
 }
 
 export async function sendEmail(opts: SendEmailOpts): Promise<void> {
+  if (!client || !config.RESEND_FROM_EMAIL) throw new Error("Email delivery is not configured");
   try {
     const result = await client.emails.send({
       from: config.RESEND_FROM_EMAIL!,

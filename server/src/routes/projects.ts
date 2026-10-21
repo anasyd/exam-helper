@@ -109,6 +109,7 @@ projectsRouter.delete("/:id", async (req, res) => {
   const [result] = await Promise.all([
     col().deleteOne({ userId, id: req.params.id }),
     contentCol().deleteOne({ userId, projectId: req.params.id }),
+    db().collection("practiceSessions").deleteMany({ userId, projectId: req.params.id }),
   ]);
   if (result.deletedCount === 0) {
     res.status(404).json({ error: "Not found" });

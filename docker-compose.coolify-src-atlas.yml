@@ -7,6 +7,7 @@ services:
     build: ./server
     environment:
       - NODE_ENV=production
+      - ADAPTIVE_PRACTICE_ENABLED=${ADAPTIVE_PRACTICE_ENABLED:-false}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - MONGODB_URI=${MONGODB_URI:?Set MONGODB_URI to your external MongoDB connection string}
       - SERVICE_FQDN_SERVER_4000=${SERVICE_FQDN_SERVER_4000}

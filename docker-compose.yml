@@ -27,6 +27,7 @@ services:
         condition: service_healthy
     environment:
       NODE_ENV: production
+      ADAPTIVE_PRACTICE_ENABLED: ${ADAPTIVE_PRACTICE_ENABLED:-false}
       MONGODB_URI: ${MONGODB_URI:-mongodb://admin:${MONGO_ROOT_PASSWORD:-changeme}@mongo:27017/examhelper?authSource=admin}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?required}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:4000}

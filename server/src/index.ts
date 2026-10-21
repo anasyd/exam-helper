@@ -10,6 +10,7 @@ import { requestId } from "./middleware/request-id.js";
 import { errorHandler } from "./middleware/error.js";
 import { healthRouter } from "./routes/health.js";
 import { meRouter } from "./routes/me.js";
+import { practiceRouter } from "./routes/practice.js";
 import { projectsRouter } from "./routes/projects.js";
 import { filesRouter } from "./routes/files.js";
 import { statsRouter } from "./routes/stats.js";
@@ -99,6 +100,7 @@ async function main(): Promise<void> {
   app.use("/api/me", meRouter);
   app.use("/api/me/stats", statsRouter);
   app.use("/api/projects", projectsRouter);
+  app.use("/api/practice", practiceRouter);
   app.use("/api/files", filesRouter);
   app.use("/api/admin", adminRouter);
   app.use("/api/email", emailPrefsRouter);

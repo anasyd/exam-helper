@@ -26,6 +26,7 @@ services:
     build: ./server
     environment:
       - NODE_ENV=production
+      - ADAPTIVE_PRACTICE_ENABLED=${ADAPTIVE_PRACTICE_ENABLED:-false}
       - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
       - MONGODB_URI=mongodb://admin:${SERVICE_PASSWORD_MONGOROOT}@mongo:27017/examhelper?authSource=admin
       - SERVICE_FQDN_SERVER_4000=${SERVICE_FQDN_SERVER_4000}

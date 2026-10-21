@@ -36,6 +36,9 @@ export async function connectDb(): Promise<void> {
   );
   await db().collection("jobs").createIndex({ userId: 1, status: 1, createdAt: 1 }, { background: true });
   await db().collection("jobs").createIndex({ userId: 1, projectId: 1 }, { background: true });
+  await db().collection("practiceSessions").createIndex({ userId: 1, projectId: 1, id: 1 }, { unique: true });
+  await db().collection("practiceSessions").createIndex({ userId: 1, projectId: 1, createdAt: -1 });
+  await db().collection("practiceSessions").createIndex({ updatedAt: 1 }, { expireAfterSeconds: 90 * 86400 });
   logger.info(
     { uri: config.MONGODB_URI.replace(/\/\/[^@]+@/, "//***@"), db: DB_NAME },
     "mongo connected",
