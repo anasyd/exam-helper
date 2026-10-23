@@ -6,5 +6,8 @@
     "dev:server": "npm run dev --prefix server",
     "build:web": "npm run build --prefix web",
     "build:server": "npm run build --prefix server"
+  },
+  "engines": {
+    "node": ">=24.22.1 <25"
   }
 }

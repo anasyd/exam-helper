@@ -93,6 +93,8 @@ See **[docs/self-hosting.md](docs/self-hosting.md)** for the Coolify deployment 
 
 ## Local development
 
+Use Node.js 24.22.1 or a newer Node 24 patch release. With nvm, run `nvm install` and `nvm use` from the repository root.
+
 **Backend**
 ```bash
 cd server
